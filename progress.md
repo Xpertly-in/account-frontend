@@ -66,6 +66,7 @@
 - [ ] CA Dashboard
 - [ ] Admin Dashboard
 - [ ] SEO Optimization
+
   - [ ] Meta tags configuration
   - [ ] Open Graph tags
   - [ ] Dynamic meta descriptions
@@ -78,6 +79,22 @@
   - [ ] Performance optimization
   - [ ] URL structure and slugs
   - [ ] Breadcrumb navigation
+
+- [ ] Dark Theme Implementation
+  - [x] Install and configure next-themes
+  - [x] Create theme toggle component
+  - [x] Update TailwindCSS for dark mode
+  - [x] Implement dark mode color system
+  - [x] Update components for dark mode support
+    - [x] Header component
+    - [x] Footer component
+    - [x] SearchBar component
+    - [x] CACard component
+    - [x] Container component
+    - [x] Buttons and text elements
+  - [x] Add system preference detection
+  - [x] Implement theme persistence
+  - [ ] Test dark mode across devices
 
 ## Phase 4: Testing, Integration & Deployment
 

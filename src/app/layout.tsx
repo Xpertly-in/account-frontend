@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header.component";
 import { Footer } from "@/components/layout/Footer.component";
 import { QueryProvider } from "@/components/providers/QueryProvider.component";
+import { ThemeProvider } from "@/components/providers/ThemeProvider.component";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,15 +19,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <QueryProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -349,15 +349,43 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
   - Implement proper URL structure and slugs for CA profiles
   - Add breadcrumb navigation
 
+#### Dark Theme Implementation
+
+- **Task 20:** Implement Dark Mode Support
+  - Install and configure next-themes package
+  - Create theme toggle component with smooth transitions
+  - Update TailwindCSS configuration for dark mode
+  - Implement dark mode color palette:
+    - Background colors hierarchy
+    - Text colors hierarchy
+    - Border colors
+    - Shadow adjustments
+  - Update components for dark mode:
+    - SearchBar component
+    - CACard component
+    - Header and Footer
+    - Buttons and form elements
+    - Modal/dialogs
+  - Add dark mode support for:
+    - Gradient backgrounds
+    - Hover states and transitions
+    - Icons and decorative elements
+    - Form inputs and validation states
+  - Ensure proper contrast ratios in dark mode
+  - Add system preference detection
+  - Implement theme persistence
+  - Test across different browsers and devices
+  - Document dark mode implementation guidelines
+
 ### Phase 4: Testing, Integration & Deployment
 
-- **Task 20:** Perform Integration Testing.
+- **Task 21:** Perform Integration Testing.
   - Validate all user flows (Home, Listings, Profile, Contact, Dashboards).
   - Ensure that every component meets the mobile-first design and 200-line rules.
-- **Task 21:** Finalize Progress & Cursor Rules.
+- **Task 22:** Finalize Progress & Cursor Rules.
   - Confirm that `progress.md` is up-to-date.
   - Verify that `cursor_rules.md` (and optionally `.cursor_rules.json`) is current with all guidelines.
-- **Task 22:** Deployment.
+- **Task 23:** Deployment.
   - Deploy the application on Vercel.
   - Monitor deployment and update progress documentation as necessary.
 - **Progress Update:** Document final testing and deployment status in `progress.md`.

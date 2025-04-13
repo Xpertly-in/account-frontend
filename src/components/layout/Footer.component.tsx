@@ -3,38 +3,41 @@ import { Logo } from "@/components/ui/Logo.component";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200">
+    <footer className="bg-muted border-t border-border">
       <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-8">
           <div className="space-y-4">
             <Link href="/" className="inline-block">
               <Logo size="sm" />
             </Link>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Find and connect with verified Chartered Accountants in your area.
             </p>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Quick Links</h3>
+            <h3 className="text-lg font-semibold text-foreground">Quick Links</h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   href="/search"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Find CA
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">
+                <Link
+                  href="/about"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   About Us
                 </Link>
               </li>
               <li>
                 <Link
                   href="/contact"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Contact Us
                 </Link>
@@ -43,57 +46,69 @@ export function Footer() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">For CAs</h3>
+            <h3 className="text-lg font-semibold text-foreground">Services</h3>
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/ca/register"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  href="#"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Register as CA
+                  Tax Filing
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/ca/login"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  href="#"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  CA Login
+                  Audit & Assurance
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/ca/dashboard"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  href="#"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Dashboard
+                  Business Advisory
                 </Link>
               </li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Legal</h3>
+            <h3 className="text-lg font-semibold text-foreground">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/privacy"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  href="#"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-gray-600 hover:text-blue-600 transition-colors">
+                <Link
+                  href="#"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Cookie Policy
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-        <div className="mt-12 border-t border-gray-200 pt-8 text-center">
-          <p className="text-gray-600">
-            © {new Date().getFullYear()} Xpertly. All rights reserved.
+
+        <div className="mt-12 pt-8 border-t border-border">
+          <p className="text-muted-foreground text-center">
+            &copy; {new Date().getFullYear()} Xpertly. All rights reserved.
           </p>
         </div>
       </div>

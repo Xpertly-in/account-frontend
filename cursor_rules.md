@@ -55,7 +55,33 @@
   - Dark Slate: #1F2937
   - Muted Gray: #6B7280
 
-## 8. Component Guidelines
+## 8. Dark Mode Guidelines
+
+- Use next-themes for theme management
+- Follow semantic color naming
+- Maintain proper contrast ratios (WCAG AA standards)
+- Dark mode colors:
+  - Background hierarchy:
+    - Primary: #0F172A
+    - Secondary: #1E293B
+    - Surface: #334155
+  - Text hierarchy:
+    - Primary: #F8FAFC
+    - Secondary: #CBD5E1
+    - Muted: #64748B
+  - Accent colors:
+    - Primary: #3B82F6 → #60A5FA
+    - Secondary: #1D4ED8 → #3B82F6
+    - Accent: #10B981 → #34D399
+  - Interactive states:
+    - Hover: Lighten colors by 10%
+    - Active: Darken colors by 10%
+    - Focus: Use light ring colors
+  - Shadows:
+    - Use opacity-based shadows
+    - Adjust blur and spread for visibility
+
+## 9. Component Guidelines
 
 - Use shadcn UI components as base
 - Maintain consistent spacing and typography
@@ -63,7 +89,7 @@
 - Implement proper error handling
 - Follow responsive design patterns
 
-## 9. Visual Design Requirements
+## 10. Visual Design Requirements
 
 - Use vibrant gradients for backgrounds and accent elements
 - Apply proper shadow depths for visual hierarchy
@@ -78,7 +104,7 @@
 - Maintain proper spacing that scales with viewport size
 - Use only Phosphor icons for all icon needs
 
-## 10. Documentation
+## 11. Documentation
 
 - Keep all documentation up to date
 - Include setup instructions
