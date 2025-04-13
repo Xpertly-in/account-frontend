@@ -1,8 +1,8 @@
 "use client";
 
 import { Container } from "@/components/layout/Container.component";
-import { SearchBar } from "@/components/features/SearchBar.component";
-import { CACard } from "@/components/features/CACard.component";
+import { SearchBar } from "@/components/features/search";
+import { CACard } from "@/components/features/common";
 import { mockCAs } from "@/lib/utils/ca.utils";
 import { useState } from "react";
 

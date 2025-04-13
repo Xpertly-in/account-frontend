@@ -3,13 +3,13 @@
 import { MapPin, Star, Check, Trophy } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CAData } from "@/types/ca.type";
+import { CA } from "@/lib/types/ca.types";
 
 interface CACardProps {
-  ca: CAData;
+  ca: CA;
 }
 
-export function CACard({ ca }: CACardProps) {
+export default function CACard({ ca }: CACardProps) {
   // Calculate initials for avatar
   const initials = ca.name
     .split(" ")

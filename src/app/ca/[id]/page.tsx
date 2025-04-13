@@ -4,12 +4,14 @@ import { Container } from "@/components/layout/Container.component";
 import { mockCAs } from "@/lib/utils/ca.utils";
 import { notFound } from "next/navigation";
 import { useState, useEffect } from "react";
-import { CAProfileHero } from "@/components/features/CAProfileHero.component";
-import { CAContactInfo } from "@/components/features/CAContactInfo.component";
-import { CAProfessionalDetails } from "@/components/features/CAProfessionalDetails.component";
-import { CAAboutSection } from "@/components/features/CAAboutSection.component";
-import { CAServicesSection } from "@/components/features/CAServicesSection.component";
-import { CAReviewsSection } from "@/components/features/CAReviewsSection.component";
+import {
+  CAProfileHero,
+  CAContactInfo,
+  CAProfessionalDetails,
+  CAAboutSection,
+  CAServicesSection,
+  CAReviewsSection,
+} from "@/components/features/profile";
 import { DecorativeElements, AnimationStyles } from "@/components/ui/DecorativeElements.component";
 import { AdditionalInfo, ContactDetails } from "@/lib/types/ca.types";
 

@@ -22,7 +22,7 @@ export const CAProfileHero = ({ ca, isLoaded, initials, city, state }: CAProfile
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-12">
             {/* CA Avatar with premium styling and animation */}
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-blue-300 rounded-full blur-md opacity-70 group-hover:opacity-90 transition-all duration-300 scale-105 dark:from-blue-500 dark:to-blue-400"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/60 to-blue-300/60 rounded-full blur-sm opacity-50 group-hover:opacity-70 transition-all duration-300 scale-105 dark:from-blue-500/50 dark:to-blue-400/50"></div>
               <div className="relative flex h-28 w-28 md:h-40 md:w-40 items-center justify-center rounded-full bg-white text-2xl md:text-4xl font-bold text-primary border-4 border-white shadow-xl transform transition-all duration-500 group-hover:scale-105 dark:border-blue-500/30">
                 {ca.imageUrl ? (
                   <img
@@ -31,7 +31,7 @@ export const CAProfileHero = ({ ca, isLoaded, initials, city, state }: CAProfile
                     className="h-full w-full rounded-full object-cover"
                   />
                 ) : (
-                  <span className="bg-gradient-to-br from-primary to-blue-400 bg-clip-text text-transparent dark:from-blue-300 dark:to-blue-100">
+                  <span className="bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-blue-200 font-extrabold">
                     {initials}
                   </span>
                 )}

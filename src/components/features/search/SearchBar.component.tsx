@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, MagnifyingGlass } from "@phosphor-icons/react";
 
-export function SearchBar() {
+export default function SearchBar() {
   const router = useRouter();
   const [location, setLocation] = useState("");
 

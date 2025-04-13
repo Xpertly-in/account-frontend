@@ -1,6 +1,6 @@
 "use client";
 
-import { SearchBar } from "@/components/features/SearchBar.component";
+import { SearchBar } from "@/components/features/search";
 import { Container } from "@/components/layout/Container.component";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
