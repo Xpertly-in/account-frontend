@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, MagnifyingGlass } from "@phosphor-icons/react";
 
 export function SearchBar() {
   const router = useRouter();
@@ -20,7 +20,10 @@ export function SearchBar() {
       <form onSubmit={handleSearch} className="space-y-5">
         <div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3">
           <div className="relative flex-1">
-            <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-500" />
+            <MapPin
+              className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-500"
+              weight="bold"
+            />
             <Input
               type="text"
               placeholder="Enter location (city, area, etc.)"
@@ -33,7 +36,7 @@ export function SearchBar() {
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white py-6 px-8 rounded-xl text-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
           >
-            <Search className="mr-2 h-5 w-5" /> Find CA
+            <MagnifyingGlass className="mr-2 h-5 w-5" weight="bold" /> Find CA
           </Button>
         </div>
         <div className="flex flex-wrap gap-3 justify-center md:justify-start">
