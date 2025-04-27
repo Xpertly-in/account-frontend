@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header.component";
 import { Footer } from "@/components/layout/Footer.component";
 import { QueryProvider } from "@/components/providers/QueryProvider.component";
 import { ThemeProvider } from "@/components/providers/ThemeProvider.component";
+import { AuthProvider } from "@/components/providers/AuthProvider.component";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,11 +24,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <QueryProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
+            <AuthProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

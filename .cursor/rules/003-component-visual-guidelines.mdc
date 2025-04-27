@@ -1,0 +1,24 @@
+# Component and Visual Design Guidelines
+
+## Component Guidelines
+
+- Use shadcn UI components as base
+- Maintain consistent spacing and typography
+- Ensure proper accessibility
+- Implement proper error handling
+- Follow responsive design patterns
+
+## Visual Design Requirements
+
+- Use vibrant gradients for backgrounds and accent elements
+- Apply proper shadow depths for visual hierarchy
+- Implement interactive hover effects including:
+  - Transform effects (scale, translate, rotate)
+  - Shadow transitions
+  - Color shifts
+- Add subtle pattern backgrounds and decorative elements
+- Ensure all design elements are responsive
+- Use rounded corners consistently
+- Include visual feedback for all interactive elements
+- Maintain proper spacing that scales with viewport size
+- Use only Phosphor icons for all icon needs 

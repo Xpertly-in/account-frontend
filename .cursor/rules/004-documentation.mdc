@@ -1,0 +1,10 @@
+# Documentation Guidelines
+
+- Keep all documentation up to date
+- Include setup instructions
+- Document any environment variables
+- Maintain clear API documentation 
+- Update progress.md after completing tasks
+- Document component usage and props
+- Include example code where appropriate
+- Document any complex algorithms or business logic 
