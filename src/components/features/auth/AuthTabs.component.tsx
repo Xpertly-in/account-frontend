@@ -3,7 +3,7 @@
 import { useState } from "react";
 import LoginForm from "./LoginForm.component";
 import SignUpForm from "./SignUpForm.component";
-import { cn } from "@/lib/utils";
+import { cn } from "@/helper/tw.helper";
 import Link from "next/link";
 import { Briefcase } from "@phosphor-icons/react";
 

@@ -1,8 +1,8 @@
 import { Container } from "@/components/layout/Container.component";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/Button.ui";
 import { Check, MapPin, Trophy, Star, ChatCircleText, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
-import { CAProfileHeroProps } from "@/lib/types/ca.types";
+import { CAProfileHeroProps } from "@/types/ca.type";
 
 export const CAProfileHero = ({ ca, isLoaded, initials, city, state }: CAProfileHeroProps) => {
   return (

@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/Button.ui";
 import { Star, ChatCircleText, ArrowRight } from "@phosphor-icons/react";
-import { CAReviewsSectionProps } from "@/lib/types/ca.types";
+import { CAReviewsSectionProps } from "@/types/ca.type";
 
 export const CAReviewsSection = ({ rating, reviews, isLoaded }: CAReviewsSectionProps) => {
   return (

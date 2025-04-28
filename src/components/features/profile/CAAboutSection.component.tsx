@@ -1,4 +1,4 @@
-import { CAAboutSectionProps } from "@/lib/types/ca.types";
+import { CAAboutSectionProps } from "@/types/ca.type";
 
 export const CAAboutSection = ({ about, isLoaded }: CAAboutSectionProps) => {
   return (

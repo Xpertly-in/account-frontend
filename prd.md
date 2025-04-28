@@ -62,12 +62,17 @@
 
 ### Naming Conventions
 
-- **React Components:** Files containing React components must be named using PascalCase with a `.component.tsx` extension.
+- **React Components in features/layout:** Files containing React components must be named using PascalCase with a `.component.tsx` extension.
   - Example: `Header.component.tsx`, `CACard.component.tsx`
-- **Types/Interfaces:** Type definitions must be stored in the `/types` directory with a `.type.ts` extension, using camelCase.
+- **UI Components:** Base UI components must be named using PascalCase with a `.ui.tsx` extension.
+  - Example: `Button.ui.tsx`, `Card.ui.tsx`
+- **Provider Components:** Provider components must be named using PascalCase with a `.provider.tsx` extension.
+  - Example: `Auth.provider.tsx`, `Theme.provider.tsx`
+- **Helper Functions:** Helper functions must be stored in the `/helper` directory with a `.helper.ts` extension.
+  - Example: `tw.helper.ts`, `supabase.helper.ts`
+- **Types/Interfaces:** Type definitions must be stored in the `/types` directory with a `.type.ts` extension.
   - Example: `ca.type.ts`
-- **Utilities:** Utility functions and constants must be stored in the `/utils` directory with a `.utils.ts` extension, using camelCase.
-  - Example: `ca.utils.ts`
+- **Constants:** Constant values must be stored in the `/constants` directory.
 
 ### Directory Structure
 
@@ -75,14 +80,18 @@ The project follows a structured approach to file organization:
 
 ```
 src/
-  ├── app/          # Next.js App Router pages
-  ├── components/   # React components
-  │   ├── ui/       # Base UI components
-  │   ├── layout/   # Layout components
-  │   └── features/ # Feature-specific components
-  ├── types/        # TypeScript interfaces and types
-  ├── utils/        # Utility functions and constants
-  └── lib/          # Library configurations
+  ├── app/           # Next.js App Router pages
+  ├── components/    # React components
+  │   ├── layout/    # Layout components
+  │   └── features/  # Feature-specific components
+  ├── ui/            # Base UI components (buttons, inputs, etc.)
+  ├── store/         # State management
+  │   ├── context/   # Context-based state providers
+  │   └── jotai/     # Jotai state management
+  ├── helper/        # Helper functions and utilities
+  ├── constants/     # Constants and configuration values
+  ├── types/         # TypeScript interfaces and types
+  └── mock/          # Mock data for development
 ```
 
 ---
@@ -403,57 +412,3 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
   - Deploy the application on Vercel.
   - Monitor deployment and update progress documentation as necessary.
 - **Progress Update:** Document final testing and deployment status in `progress.md`.
-
----
-
-## 10. Milestones & Timeline
-
-- **Week 1:**
-  - Complete Phase 1 tasks: Project initialization, environment setup, and TailwindCSS configuration.
-- **Week 2:**
-  - Finalize Phase 2 tasks: UI/UX design, design system, and foundational components.
-- **Week 3:**
-  - Execute Phase 3 tasks: Home, Listings, Profile, and Contact features.
-- **Week 4:**
-  - Finalize Phase 3 and complete Phase 4: CA/Admin dashboards, integration testing, and deployment.
-
----
-
-## 11. Progress Tracking & Context Awareness
-
-- **Progress Document (`progress.md`):**
-  - Must be updated after every task and sub-task.
-  - Include detailed notes on component construction (ensuring sub-200 lines), mobile-first validation, and integration of the specified libraries.
-- **Cursor Rules Storage:**
-  - Store AI agent guidelines in a dedicated file.
-  - **Current Recommendation:** Use `cursor_rules.md` for human-readable instructions.
-  - **Additional Option:** Create a machine-readable file, e.g., `.cursor_rules.json`, for automated context parsing.
-  - The rules must outline:
-    - Mobile-first design mandates.
-    - Maximum of 200 lines per component.
-    - Detailed instructions for regularly updating `progress.md`.
-    - Mandatory use of Next.js, TailwindCSS (with our theme), shadcn UI components, react-query, and phosphoricons.
-
-_Example Entry:_
-Rule 1: All components must be designed with a mobile-first approach. Rule 2: No component should exceed 200 lines of code. Rule 3: Update progress.md after each task with detailed context. Rule 4: Use Next.js, TailwindCSS (with defined theme colors), shadcn UI, react-query, and phosphoricons.
-
----
-
-## 12. Quality & Code Reviews
-
-- **Code Quality:**
-  - Enforce regular code reviews using Prettier and ESLint to uphold project guidelines.
-  - Each component must be optimized for mobile and adhere to the 200-line maximum.
-- **Documentation:**
-  - Maintain and update this PRD, along with `progress.md` and the Cursor rules file, as project scope or guidelines evolve.
-- **Future Enhancements:**
-  - Replace the placeholder logo once the brand identity is finalized.
-  - Update development guidelines based on evolving best practices and team feedback.
-
----
-
-## 13. Summary
-
-This comprehensive PRD provides a detailed roadmap for building the Xpertly – CA Listing Portal. Every phase—from initialization to deployment—is rooted in a mobile-first design approach, enforces a maximum of 200 lines of code per component, and includes thorough progress tracking via `progress.md`. The technical stack, including Next.js, TailwindCSS (with our custom theme), shadcn UI, react-query, and phosphoricons, is specified, and we include clear guidelines for maintaining context using the Cursor rules file. Based on current best practices, storing these rules in a dedicated Markdown file (and optionally a JSON file) is both acceptable and recommended.
-
-_All team members and AI agents (Cursor) must follow these guidelines, ensuring that every task is documented, components remain modular, and the project context is preserved across sessions._

@@ -14,12 +14,34 @@
 
 ## 3. File Naming Conventions
 
-- React component files must be named: `ComponentName.component.tsx` (PascalCase)
-- Interface/type files must be in `/types` folder as `entityName.type.ts` (camelCase)
-- Utility files must be in `/utils` folder as `entityName.utils.ts` (camelCase)
-- Constants must be in `/utils` folder as `entityName.utils.ts` (camelCase)
+- Feature/layout component files must be named: `ComponentName.component.tsx` (PascalCase)
+- UI component files must be named: `ComponentName.ui.tsx` (PascalCase)
+- Provider components must be named: `Name.provider.tsx` (PascalCase)
+- Helper functions must be named: `name.helper.ts` (camelCase)
+- Interface/type files must be in `/types` folder (TypeScript interface files)
+- Constants must be stored in the `/constants` directory
 
-## 4. Progress Tracking
+## 4. Directory Structure
+
+The project follows this directory structure:
+
+```
+src/
+  ├── app/           # Next.js App Router pages
+  ├── components/    # React components
+  │   ├── layout/    # Layout components
+  │   └── features/  # Feature-specific components
+  ├── ui/            # Base UI components (buttons, inputs, etc.)
+  ├── store/         # State management
+  │   ├── context/   # Context-based state providers
+  │   └── jotai/     # Jotai state management
+  ├── helper/        # Helper functions and utilities
+  ├── constants/     # Constants and configuration values
+  ├── types/         # TypeScript interfaces and types
+  └── mock/          # Mock data for development
+```
+
+## 5. Progress Tracking
 
 - Update progress.md after every task and sub-task
 - Include detailed notes about:
@@ -28,7 +50,7 @@
   - Integration of specified libraries
   - Any challenges faced and solutions implemented
 
-## 5. Technology Stack
+## 6. Technology Stack
 
 - Next.js for the framework
 - TailwindCSS for styling (with custom theme colors)
@@ -37,14 +59,14 @@
 - Phosphoricons for icons
 - Supabase for backend services
 
-## 6. Code Quality
+## 7. Code Quality
 
 - Follow ESLint and Prettier configurations
 - Write clean, maintainable code
 - Include appropriate comments and documentation
 - Ensure proper TypeScript typing
 
-## 7. Theme Colors
+## 8. Theme Colors
 
 - Primary: #1E3A8A (Deep Blue)
 - Secondary: #3B82F6 (Lighter Blue)
@@ -55,7 +77,7 @@
   - Dark Slate: #1F2937
   - Muted Gray: #6B7280
 
-## 8. Dark Mode Guidelines
+## 9. Dark Mode Guidelines
 
 - Use next-themes for theme management
 - Follow semantic color naming
@@ -81,7 +103,7 @@
     - Use opacity-based shadows
     - Adjust blur and spread for visibility
 
-## 9. Component Guidelines
+## 10. Component Guidelines
 
 - Use shadcn UI components as base
 - Maintain consistent spacing and typography
@@ -89,7 +111,7 @@
 - Implement proper error handling
 - Follow responsive design patterns
 
-## 10. Visual Design Requirements
+## 11. Visual Design Requirements
 
 - Use vibrant gradients for backgrounds and accent elements
 - Apply proper shadow depths for visual hierarchy
@@ -104,7 +126,7 @@
 - Maintain proper spacing that scales with viewport size
 - Use only Phosphor icons for all icon needs
 
-## 11. Documentation
+## 12. Documentation
 
 - Keep all documentation up to date
 - Include setup instructions

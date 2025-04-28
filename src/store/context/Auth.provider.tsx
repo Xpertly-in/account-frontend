@@ -1,10 +1,10 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/helper/supabase.helper";
 import { AuthState } from "@/types/auth.type";
 import { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
-import { PASSWORD_RESET_REDIRECT_URL } from "@/utils/app.constants";
+import { PASSWORD_RESET_REDIRECT_URL } from "@/constants/app.constants";
 
 // Create a context for authentication
 const AuthContext = createContext<{

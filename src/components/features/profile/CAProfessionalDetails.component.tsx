@@ -1,5 +1,5 @@
 import { Certificate, Buildings, Calendar, User } from "@phosphor-icons/react";
-import { CAProfessionalDetailsProps } from "@/lib/types/ca.types";
+import { CAProfessionalDetailsProps } from "@/types/ca.type";
 
 export const CAProfessionalDetails = ({ additionalInfo, isLoaded }: CAProfessionalDetailsProps) => {
   return (

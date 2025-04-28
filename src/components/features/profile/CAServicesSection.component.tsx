@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/Button.ui";
 import { Check, ArrowRight } from "@phosphor-icons/react";
-import { CAServicesSectionProps } from "@/lib/types/ca.types";
+import { CAServicesSectionProps } from "@/types/ca.type";
 
 export const CAServicesSection = ({ services, isLoaded }: CAServicesSectionProps) => {
   return (

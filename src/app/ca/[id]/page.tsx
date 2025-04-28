@@ -1,7 +1,7 @@
 "use client";
 
 import { Container } from "@/components/layout/Container.component";
-import { mockCAs } from "@/lib/utils/ca.utils";
+import { mockCAs } from "@/mock/ca.mock";
 import { notFound } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
@@ -12,8 +12,8 @@ import {
   CAServicesSection,
   CAReviewsSection,
 } from "@/components/features/profile";
-import { DecorativeElements, AnimationStyles } from "@/components/ui/DecorativeElements.component";
-import { AdditionalInfo, ContactDetails } from "@/lib/types/ca.types";
+import { DecorativeElements, AnimationStyles } from "@/ui/DecorativeElements.ui";
+import { AdditionalInfo, ContactDetails } from "@/types/ca.type";
 
 export default function CAProfile({ params }: { params: { id: string } }) {
   const [isLoaded, setIsLoaded] = useState(false);

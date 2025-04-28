@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/ui/Input.ui";
 import { At, LockKey, Eye, EyeSlash } from "@phosphor-icons/react";
 import { AuthFormData } from "@/types/auth.type";
 
@@ -61,7 +61,7 @@ export default function LoginFormFields({ formData, handleChange }: LoginFormFie
         </div>
         <div className="flex justify-end">
           <Link
-            href="/forgot-password"
+            href="/login/forgot-password"
             className="text-xs text-primary transition-colors hover:text-primary/80 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Forgot password?

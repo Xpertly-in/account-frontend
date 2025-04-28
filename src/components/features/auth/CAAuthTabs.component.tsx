@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/helper/tw.helper";
 import LoginForm from "./LoginForm.component";
 import SignUpForm from "./SignUpForm.component";
 import { AnimatePresence, motion } from "framer-motion";

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Logo } from "@/components/ui/Logo.component";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ui/ThemeToggle.component";
-import { useAuth } from "@/components/providers/AuthProvider.component";
+import { Logo } from "@/ui/Logo.ui";
+import { Button } from "@/ui/Button.ui";
+import { ThemeToggle } from "@/ui/ThemeToggle.ui";
+import { useAuth } from "@/store/context/Auth.provider";
 import { User, SignOut, List, X, Briefcase } from "@phosphor-icons/react";
 
 export function Header() {

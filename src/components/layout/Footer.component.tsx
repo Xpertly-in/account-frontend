@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "@/components/ui/Logo.component";
+import { Logo } from "@/ui/Logo.ui";
 
 export function Footer() {
   return (

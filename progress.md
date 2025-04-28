@@ -23,8 +23,8 @@
 ### Task 4: Implement file naming conventions
 
 - [x] Set up component naming convention (ComponentName.component.tsx)
-- [x] Set up types directory and naming convention (entityName.type.ts)
-- [x] Set up utils directory and naming convention (entityName.utils.ts)
+- [x] Set up types directory and naming convention
+- [x] Set up helper directory and naming convention (name.helper.ts)
 - [x] Update PRD and cursor_rules.md with file naming conventions
 - [x] Clean up redundant files and organize project structure
 
@@ -34,6 +34,21 @@
 - [x] Fix formatting inconsistencies
 - [x] Ensure proper component structure
 - [x] Improve type declarations
+
+### Task 6: Codebase restructuring
+
+- [x] Set up proper directory structure
+  - [x] Created store/context directory for providers
+  - [x] Created ui directory for base UI components
+  - [x] Created helper directory for utility functions
+  - [x] Created constants directory for constants and configuration
+  - [x] Created mock directory for mock data
+- [x] Standardize naming conventions
+  - [x] UI components use `.ui.tsx` extension
+  - [x] Provider components use `.provider.tsx` extension
+  - [x] Helper functions use `.helper.ts` extension
+- [x] Update imports across the codebase for new directory structure
+- [x] Update PRD with new file naming conventions and directory structure
 
 ## Phase 2: UI/UX Design & Component Layout
 
@@ -78,7 +93,7 @@
 - [x] Authentication
 
   - [x] Set up Supabase client
-  - [x] Create AuthProvider context
+  - [x] Create Auth provider
   - [x] Develop LoginForm component
   - [x] Develop SignUpForm component
   - [x] Develop SignUpFormContent component
@@ -152,18 +167,18 @@
 
 ### UI Components
 
-- [x] Button (`src/components/ui/button.tsx`)
-- [x] Input (`src/components/ui/input.tsx`)
-- [x] Card (`src/components/ui/card.tsx`)
-- [x] Avatar (`src/components/ui/avatar.tsx`)
-- [x] Logo (`src/components/ui/Logo.component.tsx`)
-- [x] ThemeToggle (`src/components/ui/ThemeToggle.component.tsx`)
-- [x] DecorativeElements (`src/components/ui/DecorativeElements.component.tsx`)
-- [x] Checkbox (`src/components/ui/checkbox.tsx`)
+- [x] Button (`src/ui/Button.ui.tsx`)
+- [x] Input (`src/ui/Input.ui.tsx`)
+- [x] Card (`src/ui/Card.ui.tsx`)
+- [x] Avatar (`src/ui/Avatar.ui.tsx`)
+- [x] Checkbox (`src/ui/Checkbox.ui.tsx`)
+- [x] Logo (`src/ui/Logo.ui.tsx`)
+- [x] ThemeToggle (`src/ui/ThemeToggle.ui.tsx`)
+- [x] DecorativeElements (`src/ui/DecorativeElements.ui.tsx`)
 
 ### Feature Components
 
-- [x] LoginForm (`src/components/features/auth/LoginForm.component.tsx`) - ~~207~~ 137 lines
+- [x] LoginForm (`src/components/features/auth/LoginForm.component.tsx`) - 137 lines
 - [x] LoginFormFields (`src/components/features/auth/LoginFormFields.component.tsx`) - 73 lines
 - [x] LoginFormSecurity (`src/components/features/auth/LoginFormSecurity.component.tsx`) - 27 lines
 - [x] SignUpForm (`src/components/features/auth/SignUpForm.component.tsx`) - 113 lines
@@ -173,14 +188,25 @@
 - [x] CACard (`src/components/features/common/CACard.component.tsx`)
 - [x] CAAboutSection (`src/components/features/profile/CAAboutSection.component.tsx`)
 
+### Store/Provider Components
+
+- [x] Auth Provider (`src/store/context/Auth.provider.tsx`)
+- [x] Theme Provider (`src/store/context/Theme.provider.tsx`)
+- [x] Query Provider (`src/store/context/Query.provider.tsx`)
+
+### Helper Functions
+
+- [x] Tailwind Helper (`src/helper/tw.helper.ts`)
+- [x] Supabase Helper (`src/helper/supabase.helper.ts`)
+
 ### Pages
 
 - [x] Home Page (`src/app/page.tsx`)
 - [x] CA Login Page (`src/app/login/ca/page.tsx`)
-
-### Providers
-
-- [x] AuthProvider (`src/components/providers/AuthProvider.component.tsx`)
+- [x] CA Profile Page (`src/app/ca/[id]/page.tsx`)
+- [x] Search Page (`src/app/search/page.tsx`)
+- [x] Dashboard Page (`src/app/dashboard/page.tsx`)
+- [x] Forgot Password Page (`src/app/login/forgot-password/page.tsx`)
 
 ## Technical Debt and Issues
 

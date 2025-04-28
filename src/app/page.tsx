@@ -2,7 +2,7 @@
 
 import { SearchBar } from "@/components/features/search";
 import { Container } from "@/components/layout/Container.component";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/Button.ui";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
 import Link from "next/link";
 

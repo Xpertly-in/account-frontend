@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ForgotPasswordFormData } from "@/types/auth.type";
-import { useAuth } from "@/components/providers/AuthProvider.component";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useAuth } from "@/store/context/Auth.provider";
+import { Button } from "@/ui/Button.ui";
+import { Input } from "@/ui/Input.ui";
 import { At, ArrowRight, ArrowLeft } from "@phosphor-icons/react";
 import { toast } from "sonner";
 

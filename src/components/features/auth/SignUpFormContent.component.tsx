@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/ui/Button.ui";
+import { Input } from "@/ui/Input.ui";
+import { Checkbox } from "@/ui/Checkbox.ui";
 import { User, At, LockKey, Eye, EyeSlash, ArrowRight, Check } from "@phosphor-icons/react";
 import { AuthFormData } from "@/types/auth.type";
 

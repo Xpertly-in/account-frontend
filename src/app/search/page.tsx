@@ -3,7 +3,7 @@
 import { Container } from "@/components/layout/Container.component";
 import { SearchBar } from "@/components/features/search";
 import { CACard } from "@/components/features/common";
-import { mockCAs } from "@/lib/utils/ca.utils";
+import { mockCAs } from "@/mock/ca.mock";
 import { useState } from "react";
 
 export default function Search() {

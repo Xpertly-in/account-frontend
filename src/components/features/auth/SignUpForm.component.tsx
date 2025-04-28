@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/providers/AuthProvider.component";
+import { useAuth } from "@/store/context/Auth.provider";
 import { toast } from "sonner";
 import SignUpFormContent, { ExtendedSignUpFormData } from "./SignUpFormContent.component";
 

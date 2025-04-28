@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/Button.ui";
 import { Phone, EnvelopeSimple, Globe, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
-import { CAContactInfoProps } from "@/lib/types/ca.types";
+import { CAContactInfoProps } from "@/types/ca.type";
 
 export const CAContactInfo = ({ contactDetails, isLoaded, caId }: CAContactInfoProps) => {
   return (

@@ -1,9 +1,9 @@
 "use client";
 
 import { MapPin, Star, Check, Trophy } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/Button.ui";
 import Link from "next/link";
-import { CA } from "@/lib/types/ca.types";
+import { CA } from "@/types/ca.type";
 
 interface CACardProps {
   ca: CA;
