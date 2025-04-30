@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/providers/AuthProvider.component";
+import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
 
 export default function DashboardPage() {

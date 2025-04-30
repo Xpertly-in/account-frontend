@@ -8,8 +8,8 @@
     "build": "next build",
     "build:dev": "NODE_ENV=development next build",
     "build:prod": "NODE_ENV=production next build",
-    "start": "next start",
-    "start:prod": "NODE_ENV=production next start",
+    "start": "serve out",
+    "start:prod": "NODE_ENV=production serve out",
     "lint": "next lint"
   },
   "dependencies": {
@@ -38,6 +38,7 @@
     "eslint": "^8.56.0",
     "eslint-config-next": "14.1.0",
     "postcss": "^8",
+    "serve": "^14.2.4",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }
