@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { toast } from "sonner";
-import SignUpFormContent, { ExtendedSignUpFormData } from "./SignUpFormContent.component";
+import SignUpFormContent from "./SignUpFormContent.component";
+import { ExtendedSignUpFormData } from "@/types/auth.type";
 
 interface SignUpFormProps {
   hideContainer?: boolean;

@@ -3,6 +3,12 @@ export interface AuthFormData {
   password: string;
 }
 
+export interface ExtendedSignUpFormData extends AuthFormData {
+  name: string;
+  acceptTerms: boolean;
+  confirmPassword: string;
+}
+
 export interface SignUpFormData extends AuthFormData {
   name: string;
   confirmPassword: string;
