@@ -1,7 +1,7 @@
-import { CAData } from "@/types/ca.type";
+import { CA } from "@/types/ca.type";
 
 // Sample CA data for demonstration
-export const mockCAs: CAData[] = [
+export const mockCAs: CA[] = [
   {
     id: "1",
     name: "Rajesh Kumar",
