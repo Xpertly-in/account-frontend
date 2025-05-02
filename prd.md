@@ -400,15 +400,43 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
   - Test across different browsers and devices
   - Document dark mode implementation guidelines
 
-### Phase 4: Testing, Integration & Deployment
+### Phase 4: CA Onboarding & Authentication
 
-- **Task 22:** Perform Integration Testing.
-  - Validate all user flows (Home, Listings, Profile, Contact, Dashboards).
-  - Ensure that every component meets the mobile-first design and 200-line rules.
-- **Task 23:** Finalize Progress & Cursor Rules.
-  - Confirm that `progress.md` is up-to-date.
-  - Verify that `cursor_rules.md` (and optionally `.cursor_rules.json`) is current with all guidelines.
-- **Task 24:** Deployment.
-  - Deploy the application on Vercel.
-  - Monitor deployment and update progress documentation as necessary.
-- **Progress Update:** Document final testing and deployment status in `progress.md`.
+- **Task 4.1: Implement Mock Authentication**
+  - **Requirement:** Provide a simple authentication mechanism using `localStorage` for development purposes while Supabase is unavailable.
+  - **Sub-Tasks:**
+    - [x] Update `Auth.provider.tsx` to use `localStorage` instead of Supabase calls.
+    - [x] Modify `SignUpForm` to store mock user data in `localStorage` on successful signup.
+    - [x] Modify `LoginForm` to check `localStorage` for mock user data.
+    - [x] Ensure `signOut` clears `localStorage`.
+- **Task 4.2: Create CA Onboarding Flow**
+  - **Requirement:** Develop a multi-step onboarding process for new CA users after signup.
+  - **User Experience:** Must be mobile-first, intuitive, and provide clear progress indication.
+  - **Sub-Tasks:**
+    - [x] Create `/ca/onboarding` page route.
+    - [x] Implement route protection (redirect to login if not authenticated via mock auth).
+    - [x] Develop `DynamicForm` component to manage onboarding steps.
+    - [x] Define onboarding steps:
+      - [x] Welcome step (greeting, brief explanation).
+      - [x] Professional Details step (Years of Experience, Areas of Specialization).
+      - [x] Document Verification step (CA Certificate, Profile Photo).
+    - [x] Implement `FormProgressIndicator` component.
+    - [x] Implement `FormStepTitle` component (hiding title/step count for welcome step).
+    - [x] Implement `FormNavigation` component (sticky footer, hides Previous on first step).
+    - [x] Use appropriate UI components (`Select`, `CheckboxGroup`, `FileUpload`) directly within `DynamicForm`.
+    - [x] Ensure `DynamicForm` adheres to the 200-line limit.
+- **Task 4.3: Refine UI & Structure**
+  - **Requirement:** Ensure components adhere to project guidelines (naming, location, line limits).
+  - **Sub-Tasks:**
+    - [x] Move onboarding interfaces to `src/types/onboarding.type.ts`.
+    - [x] Move auth interfaces (`MockUser`, `AuthState`) to `src/types/auth.type.ts`.
+    - [x] Move `CheckboxGroupField` to `src/ui` and rename to `CheckboxGroup.ui.tsx`.
+    - [x] Delete unused field wrapper components (`TextField.component.tsx`, `SelectField.component.tsx`).
+    - [x] Replace non-Phosphor icons in `FileUpload.ui.tsx`.
+    - [x] Fix UI glitches (e.g., double chevron on Select).
+
+### Phase 5: Testing, Integration & Deployment (Previously Phase 4)
+
+- [ ] Integration Testing
+- [ ] Finalize Progress & Cursor Rules
+- [ ] Deployment

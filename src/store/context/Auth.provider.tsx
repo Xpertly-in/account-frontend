@@ -1,20 +1,19 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/helper/supabase.helper";
-import { AuthState } from "@/types/auth.type";
-import { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
-import { PASSWORD_RESET_REDIRECT_URL } from "@/constants/app.constants";
+// Import types from the new location
+import { AuthState, MockUser } from "@/types/auth.type";
 
 // Create a context for authentication
+// Use imported AuthState type
 const AuthContext = createContext<{
   auth: AuthState;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any; user: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any; user: any }>; // Keep user as any for now to match mock return
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
 }>({
-  auth: { user: null, session: null, isLoading: true },
+  auth: { user: null, isLoading: true },
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null, user: null }),
   signOut: async () => {},
@@ -25,91 +24,78 @@ const AuthContext = createContext<{
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Use imported AuthState type
   const [auth, setAuth] = useState<AuthState>({
     user: null,
-    session: null,
     isLoading: true,
   });
 
-  // Handle auth state changes
+  // Check for existing user on mount
   useEffect(() => {
-    // Initial session check
-    const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Error getting session:", error);
-        setAuth(prev => ({ ...prev, isLoading: false }));
-        return;
-      }
-
-      const { session } = data;
-
-      if (session) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setAuth({ user, session, isLoading: false });
+    try {
+      const storedUser = localStorage.getItem("mockUser");
+      if (storedUser) {
+        setAuth({
+          // Parse and assert type to MockUser
+          user: JSON.parse(storedUser) as MockUser,
+          isLoading: false,
+        });
       } else {
         setAuth(prev => ({ ...prev, isLoading: false }));
       }
-    };
-
-    getSession();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      if (session) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setAuth({ user, session, isLoading: false });
-      } else {
-        setAuth({ user: null, session: null, isLoading: false });
-      }
-    });
-
-    // Cleanup subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
+    } catch (error) {
+      console.error("Error loading user from localStorage", error);
+      setAuth(prev => ({ ...prev, isLoading: false }));
+    }
   }, []);
 
-  // Sign in with email and password
+  // Mock sign in
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const storedUser = localStorage.getItem("mockUser");
+      if (storedUser) {
+        // Parse and assert type to MockUser
+        const user = JSON.parse(storedUser) as MockUser;
+        if (user.email === email) {
+          setAuth({ user, isLoading: false });
+          return { error: null };
+        }
+      }
+      return { error: { message: "Invalid email or password" } };
+    } catch (error) {
+      console.error("Error signing in", error);
+      return { error: { message: "An unexpected error occurred" } };
+    }
   };
 
-  // Sign up with email and password
+  // Mock sign up
+  // Return type includes MockUser structure implicitly
   const signUp = async (email: string, password: string, name: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-        },
-      },
-    });
-    return { error, user: data.user };
+    try {
+      const mockUser: MockUser = {
+        id: Date.now().toString(),
+        email,
+        name,
+      };
+      localStorage.setItem("mockUser", JSON.stringify(mockUser));
+      // Return the created mock user structure
+      return { error: null, user: mockUser };
+    } catch (error) {
+      console.error("Error signing up", error);
+      return { error: { message: "An unexpected error occurred" }, user: null };
+    }
   };
 
-  // Sign out
+  // Mock sign out
   const signOut = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem("mockUser");
+    setAuth({ user: null, isLoading: false });
   };
 
-  // Reset password
+  // Mock reset password
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: PASSWORD_RESET_REDIRECT_URL,
-    });
-    return { error };
+    console.log(`Password reset requested for ${email}`);
+    return { error: null };
   };
 
   return (

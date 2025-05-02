@@ -23,8 +23,14 @@ export interface ResetPasswordFormData {
   confirmPassword: string;
 }
 
+// Define simplified Auth types
+export interface MockUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
 export interface AuthState {
-  user: any | null;
-  session: any | null;
+  user: MockUser | null;
   isLoading: boolean;
 }

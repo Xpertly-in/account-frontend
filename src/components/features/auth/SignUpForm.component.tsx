@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/store/context/Auth.provider";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import SignUpFormContent from "./SignUpFormContent.component";
 import { ExtendedSignUpFormData } from "@/types/auth.type";
@@ -13,7 +12,7 @@ interface SignUpFormProps {
 
 export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const pathname = usePathname();
   const [formData, setFormData] = useState<ExtendedSignUpFormData>({
     name: "",
     email: "",
@@ -23,6 +22,9 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+
+  // Check if we're in the CA context
+  const isCAContext = pathname?.includes("/ca") || pathname?.includes("/signup/ca");
 
   // Validate form when inputs change
   useEffect(() => {
@@ -55,20 +57,28 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(formData.email, formData.password, formData.name);
+      // Store mock user in localStorage
+      const mockUser = {
+        id: Date.now().toString(),
+        email: formData.email,
+        name: formData.name,
+      };
 
-      if (error) {
-        toast.error("Sign up failed", {
-          description: error.message || "Please check your information and try again.",
-        });
-        return;
-      }
+      localStorage.setItem("mockUser", JSON.stringify(mockUser));
 
       toast.success("Sign up successful", {
-        description: "Please check your email for verification.",
+        description: "Your account has been created.",
       });
 
-      router.push("/login");
+      // Short timeout to ensure toast is visible before redirect
+      setTimeout(() => {
+        // Redirect based on context
+        if (isCAContext) {
+          router.push("/ca/onboarding");
+        } else {
+          router.push("/login");
+        }
+      }, 500);
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error("Signup error:", error);

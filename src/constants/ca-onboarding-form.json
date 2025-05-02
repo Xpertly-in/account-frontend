@@ -1,0 +1,281 @@
+{
+  "id": "ca-onboarding-form",
+  "title": "CA Profile Setup",
+  "description": "Complete your profile information to get started with Xpertly",
+  "steps": [
+    {
+      "id": "basic-info",
+      "title": "Basic Information",
+      "subtitle": "Let's start with your basic details",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "label": "Full Name",
+          "placeholder": "Enter your full name",
+          "required": true,
+          "validation": {
+            "minLength": 3,
+            "maxLength": 100,
+            "message": "Name must be between 3 and 100 characters"
+          }
+        },
+        {
+          "id": "phone",
+          "type": "tel",
+          "label": "Phone Number",
+          "placeholder": "Enter your phone number",
+          "required": true,
+          "validation": {
+            "pattern": "^[0-9]{10}$",
+            "message": "Please enter a valid 10-digit phone number"
+          }
+        },
+        {
+          "id": "profilePicture",
+          "type": "file",
+          "label": "Profile Picture",
+          "description": "Upload a professional photo (JPG, PNG, max 5MB)",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "professional-details",
+      "title": "Professional Details",
+      "subtitle": "Tell us about your professional background",
+      "fields": [
+        {
+          "id": "qualification",
+          "type": "select",
+          "label": "Highest Qualification",
+          "placeholder": "Select your qualification",
+          "required": true,
+          "options": [
+            { "value": "ca", "label": "Chartered Accountant" },
+            { "value": "cma", "label": "Cost and Management Accountant" },
+            { "value": "cs", "label": "Company Secretary" },
+            { "value": "mba", "label": "MBA Finance" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "experience",
+          "type": "select",
+          "label": "Years of Experience",
+          "placeholder": "Select years of experience",
+          "required": true,
+          "options": [
+            { "value": "0-2", "label": "0-2 Years" },
+            { "value": "3-5", "label": "3-5 Years" },
+            { "value": "6-10", "label": "6-10 Years" },
+            { "value": "11-15", "label": "11-15 Years" },
+            { "value": "16-20", "label": "16-20 Years" },
+            { "value": "20+", "label": "20+ Years" }
+          ]
+        },
+        {
+          "id": "specializations",
+          "type": "checkbox",
+          "label": "Areas of Specialization",
+          "description": "Select all that apply",
+          "required": true,
+          "options": [
+            { "value": "taxation", "label": "Taxation" },
+            { "value": "audit", "label": "Audit" },
+            { "value": "gst", "label": "GST" },
+            { "value": "corporate_finance", "label": "Corporate Finance" },
+            { "value": "financial_planning", "label": "Financial Planning" },
+            { "value": "bookkeeping", "label": "Bookkeeping" },
+            { "value": "payroll", "label": "Payroll" },
+            { "value": "business_advisory", "label": "Business Advisory" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "about-services",
+      "title": "About & Services",
+      "subtitle": "Tell potential clients about yourself and your services",
+      "fields": [
+        {
+          "id": "about",
+          "type": "textarea",
+          "label": "About Me",
+          "placeholder": "Write a brief description about yourself and your professional journey",
+          "required": true,
+          "validation": {
+            "minLength": 100,
+            "maxLength": 1000,
+            "message": "Description must be between 100 and 1000 characters"
+          }
+        },
+        {
+          "id": "services",
+          "type": "checkbox",
+          "label": "Services Offered",
+          "description": "Select all services that you offer",
+          "required": true,
+          "options": [
+            { "value": "tax_filing", "label": "Income Tax Filing" },
+            { "value": "gst_filing", "label": "GST Filing" },
+            { "value": "company_incorporation", "label": "Company Incorporation" },
+            { "value": "accounting", "label": "Accounting Services" },
+            { "value": "audit", "label": "Audit Services" },
+            { "value": "compliance", "label": "Compliance Services" },
+            { "value": "financial_consulting", "label": "Financial Consulting" }
+          ]
+        },
+        {
+          "id": "consultationFee",
+          "type": "number",
+          "label": "Initial Consultation Fee (₹)",
+          "placeholder": "Enter your consultation fee",
+          "required": true,
+          "validation": {
+            "min": 0,
+            "message": "Fee cannot be negative"
+          }
+        },
+        {
+          "id": "hourlyRate",
+          "type": "number",
+          "label": "Hourly Rate (₹)",
+          "placeholder": "Enter your hourly rate",
+          "required": false,
+          "validation": {
+            "min": 0,
+            "message": "Rate cannot be negative"
+          }
+        }
+      ]
+    },
+    {
+      "id": "address-location",
+      "title": "Address & Location",
+      "subtitle": "Share your office address and location",
+      "fields": [
+        {
+          "id": "street",
+          "type": "text",
+          "label": "Street Address",
+          "placeholder": "Enter your street address",
+          "required": true
+        },
+        {
+          "id": "city",
+          "type": "text",
+          "label": "City",
+          "placeholder": "Enter your city",
+          "required": true
+        },
+        {
+          "id": "state",
+          "type": "select",
+          "label": "State",
+          "placeholder": "Select your state",
+          "required": true,
+          "options": [
+            { "value": "andhra_pradesh", "label": "Andhra Pradesh" },
+            { "value": "delhi", "label": "Delhi" },
+            { "value": "gujarat", "label": "Gujarat" },
+            { "value": "haryana", "label": "Haryana" },
+            { "value": "karnataka", "label": "Karnataka" },
+            { "value": "kerala", "label": "Kerala" },
+            { "value": "maharashtra", "label": "Maharashtra" },
+            { "value": "punjab", "label": "Punjab" },
+            { "value": "rajasthan", "label": "Rajasthan" },
+            { "value": "tamil_nadu", "label": "Tamil Nadu" },
+            { "value": "telangana", "label": "Telangana" },
+            { "value": "uttar_pradesh", "label": "Uttar Pradesh" },
+            { "value": "west_bengal", "label": "West Bengal" }
+          ]
+        },
+        {
+          "id": "zipCode",
+          "type": "text",
+          "label": "ZIP/Postal Code",
+          "placeholder": "Enter your postal code",
+          "required": true,
+          "validation": {
+            "pattern": "^[0-9]{6}$",
+            "message": "Please enter a valid 6-digit postal code"
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "documents",
+      "title": "Verification Documents",
+      "subtitle": "Upload required documents for verification",
+      "fields": [
+        {
+          "id": "caRegistrationCertificate",
+          "type": "file",
+          "label": "CA Registration Certificate",
+          "description": "Upload your CA registration certificate (PDF, max 10MB)",
+          "required": true
+        },
+        {
+          "id": "identityProof",
+          "type": "file",
+          "label": "Identity Proof",
+          "description": "Upload government issued ID (Aadhar, PAN, etc.)",
+          "required": true
+        },
+        {
+          "id": "declaration",
+          "type": "checkbox",
+          "label": "Declaration",
+          "options": [
+            {
+              "value": "agree",
+              "label": "I hereby declare that all the information provided is true and correct to the best of my knowledge"
+            }
+          ],
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "social-online",
+      "title": "Social & Online Presence",
+      "subtitle": "Add your social media and website links",
+      "fields": [
+        {
+          "id": "website",
+          "type": "text",
+          "label": "Website",
+          "placeholder": "https://yourwebsite.com",
+          "required": false,
+          "validation": {
+            "pattern": "^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$",
+            "message": "Please enter a valid URL"
+          }
+        },
+        {
+          "id": "linkedin",
+          "type": "text",
+          "label": "LinkedIn Profile",
+          "placeholder": "https://linkedin.com/in/yourprofile",
+          "required": false
+        },
+        {
+          "id": "twitter",
+          "type": "text",
+          "label": "Twitter/X Profile",
+          "placeholder": "https://x.com/yourusername",
+          "required": false
+        },
+        {
+          "id": "facebook",
+          "type": "text",
+          "label": "Facebook Page",
+          "placeholder": "https://facebook.com/yourpage",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

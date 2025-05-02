@@ -159,6 +159,28 @@
 - [ ] Finalize Progress & Cursor Rules
 - [ ] Deployment
 
+## Phase 5: CA Onboarding Flow
+
+- [x] Recreate onboarding page (`/ca/onboarding`)
+- [x] Recreate dashboard page (`/ca/dashboard`)
+- [x] Implement mock authentication using localStorage (no Supabase dependency)
+- [x] Fix CA signup redirection to onboarding page
+- [x] Resolve routing conflicts between dynamic `/ca/[id]` and static routes
+- [x] Add dedicated CA signup page (`/signup/ca`)
+- [x] Remove redundant "Personal Information" step from onboarding form
+- [x] Add "Welcome" step to onboarding form
+- [x] Improve multi-select UI using `CheckboxGroup` component
+- [x] Fix double chevron issue on select inputs
+- [x] Refactor `DynamicForm` component (< 200 lines)
+  - [x] Extract `FormProgressIndicator` component
+  - [x] Extract `FormStepTitle` component
+  - [x] Extract `FormNavigation` component
+- [x] Refactor `DynamicForm` to use base UI components directly (removed wrappers)
+- [x] Move `CheckboxGroupField` to `ui` directory (`CheckboxGroup.ui.tsx`)
+- [x] Move onboarding interfaces to `src/types/onboarding.type.ts`
+- [x] Move auth interfaces (`MockUser`, `AuthState`) to `src/types/auth.type.ts`
+- [x] Replace non-Phosphor icons in `FileUpload.ui.tsx` with Phosphor icons
+
 ## UI Components
 
 ### Layout Components
@@ -175,6 +197,8 @@
 - [x] Logo (`src/ui/Logo.ui.tsx`)
 - [x] ThemeToggle (`src/ui/ThemeToggle.ui.tsx`)
 - [x] DecorativeElements (`src/ui/DecorativeElements.ui.tsx`)
+- [x] CheckboxGroup (`src/ui/CheckboxGroup.ui.tsx`)
+- [x] FileUpload (`src/ui/FileUpload.ui.tsx`) (with Phosphor icons)
 
 ### Feature Components
 
@@ -187,6 +211,10 @@
 - [x] SearchBar (`src/components/features/search/SearchBar.component.tsx`)
 - [x] CACard (`src/components/features/common/CACard.component.tsx`)
 - [x] CAAboutSection (`src/components/features/profile/CAAboutSection.component.tsx`)
+- [x] DynamicForm (`src/components/features/onboarding/DynamicForm.component.tsx`)
+- [x] FormProgressIndicator (`src/components/features/onboarding/FormProgressIndicator.component.tsx`)
+- [x] FormStepTitle (`src/components/features/onboarding/FormStepTitle.component.tsx`)
+- [x] FormNavigation (`src/components/features/onboarding/FormNavigation.component.tsx`)
 
 ### Store/Provider Components
 
@@ -207,6 +235,9 @@
 - [x] Search Page (`src/app/search/page.tsx`)
 - [x] Dashboard Page (`src/app/dashboard/page.tsx`)
 - [x] Forgot Password Page (`src/app/login/forgot-password/page.tsx`)
+- [x] CA Onboarding Page (`src/app/ca/onboarding/page.tsx`)
+- [x] CA Dashboard Page (`src/app/ca/dashboard/page.tsx`)
+- [x] CA Signup Page (`src/app/signup/ca/page.tsx`)
 
 ## Technical Debt and Issues
 
@@ -239,4 +270,4 @@ The following component exceeded the 200-line limit established in our guideline
 
 ---
 
-Last Updated: May 16, 2024
+Last Updated: May 17, 2024
