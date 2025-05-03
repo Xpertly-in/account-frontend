@@ -12,16 +12,13 @@ import { useAuth } from "@/store/context/Auth.provider";
 import FormProgressIndicator from "./FormProgressIndicator.component";
 import FormStepTitle from "./FormStepTitle.component";
 import FormNavigation from "./FormNavigation.component";
-import { FormField, FormStep, FormValues, FormDefinition } from "@/types/onboarding.type";
+import { FormField, FormValues, FormDefinition } from "@/types/onboarding.type";
 import { validateStep, getInitialFormValues, shouldShowField } from "@/helper/form.helper";
 import formDefinitionData from "@/constants/ca-onboarding-form.json";
 const formDefinition: FormDefinition = formDefinitionData as unknown as FormDefinition;
 
 // Type for validation errors state
 type ValidationErrors = { [key: string]: string | undefined };
-
-// Form steps configuration
-const formSteps = formDefinition.steps;
 
 export default function DynamicForm() {
   const router = useRouter();
@@ -94,7 +91,6 @@ export default function DynamicForm() {
   };
 
   const handleSubmit = () => {
-    console.log("Form submitted:", formData);
     router.push("/ca/dashboard");
   };
 
@@ -227,11 +223,34 @@ export default function DynamicForm() {
         } else {
           const singleOption = field.options?.[0];
           const checkboxLabel = singleOption ? singleOption.label : field.label;
+          const checkboxValue = singleOption ? singleOption.value : "true";
+          const isChecked = Array.isArray(formData[field.id])
+            ? (formData[field.id] as string[]).includes(checkboxValue)
+            : !!formData[field.id];
+
           return (
             <div
               key={field.id}
-              className="flex items-start space-x-2 rounded-md border border-input p-4"
+              className="flex items-start space-x-3 rounded-md border border-input p-4"
             >
+              <input
+                type="checkbox"
+                id={field.id}
+                name={field.id}
+                checked={isChecked}
+                onChange={e => {
+                  if (field.options && field.options.length === 1) {
+                    // If it's a single option from options array, store as array for consistency
+                    handleInputChange(field.id, e.target.checked ? [checkboxValue] : []);
+                  } else {
+                    // Simple boolean checkbox
+                    handleInputChange(field.id, e.target.checked);
+                  }
+                }}
+                required={field.required}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary mt-1"
+                aria-invalid={!!error}
+              />
               <div className="grid gap-1.5 leading-none">
                 <label
                   htmlFor={field.id}
@@ -243,6 +262,7 @@ export default function DynamicForm() {
                 {field.description && (
                   <p className="text-xs text-muted-foreground">{field.description}</p>
                 )}
+                {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
               </div>
             </div>
           );
