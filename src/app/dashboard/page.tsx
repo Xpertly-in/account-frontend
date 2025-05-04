@@ -1,20 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
 import { User, Calendar, FileText } from "@phosphor-icons/react";
+import { supabase } from "@/helper/supabase.helper";
 
 export default function DashboardPage() {
   const { auth } = useAuth();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth.isLoading && !auth.user) {
-      router.push("/login");
-    }
-  }, [auth.isLoading, auth.user, router]);
+    const checkAuth = async () => {
+      if (!auth.isLoading) {
+        if (auth.user) {
+          setIsLoading(false);
+          return;
+        }
+        // Try to get from localStorage as a fallback
+        const storedUser = localStorage.getItem("mockUser");
+        if (storedUser) {
+          setIsLoading(false);
+          return;
+        }
+        // Try to get Supabase session as a fallback (for Google sign-in)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setIsLoading(false);
+        } else {
+          router.push("/login");
+        }
+      }
+    };
+
+    checkAuth();
+  }, [auth, router]);
 
   if (auth.isLoading) {
     return (

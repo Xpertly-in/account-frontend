@@ -1,4 +1,7 @@
 import { ExtendedSignUpFormData } from "@/types/auth.type";
+import { useGoogleAuth } from "@/store/context/GoogleAuth.provider";
+import { GoogleButton } from "@/ui/GoogleButton.ui";
+import { AuthDivider } from "@/ui/AuthDivider.ui";
 import SignUpFormHeader from "./SignUpFormHeader.component";
 import SignUpFormFields from "./SignUpFormFields.component";
 import SignUpFormTerms from "./SignUpFormTerms.component";
@@ -24,6 +27,16 @@ export default function SignUpFormContent({
   setFormData,
   isFormValid = false,
 }: SignUpFormContentProps) {
+  const { signIn: signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleAuth();
+
+  const handleGoogleSignUp = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Google sign-up error:", error);
+    }
+  };
+
   return (
     <>
       <SignUpFormHeader />
@@ -34,6 +47,16 @@ export default function SignUpFormContent({
         <SignUpFormTerms formData={formData} setFormData={setFormData} />
 
         <SignUpFormButton isLoading={isLoading} isFormValid={isFormValid} />
+
+        <AuthDivider />
+
+        <GoogleButton
+          onClick={handleGoogleSignUp}
+          isLoading={isGoogleLoading}
+          error={googleError || undefined}
+        >
+          Sign up with Google
+        </GoogleButton>
 
         <SignUpFormFooter hideContainer={hideContainer} />
       </form>

@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer.component";
 import { QueryProvider } from "@/store/context/Query.provider";
 import { ThemeProvider } from "@/store/context/Theme.provider";
 import { AuthProvider } from "@/store/context/Auth.provider";
+import { GoogleAuthProvider } from "@/store/context/GoogleAuth.provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,11 +26,13 @@ export default function RootLayout({
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
+              <GoogleAuthProvider>
+                <div className="flex min-h-screen flex-col">
+                  <Header />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </div>
+              </GoogleAuthProvider>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

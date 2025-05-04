@@ -2,11 +2,34 @@
 
 import { Container } from "@/components/layout/Container.component";
 import CAAuthTabs from "@/components/features/auth/CAAuthTabs.component";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useAuth } from "@/store/context/Auth.provider";
+import { supabase } from "@/helper/supabase.helper";
 
 export default function CALoginContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { auth } = useAuth();
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "login";
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (auth.user) {
+        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
+        localStorage.removeItem("postLoginRedirect");
+        router.replace(redirectTo);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
+        localStorage.removeItem("postLoginRedirect");
+        router.replace(redirectTo);
+      }
+    };
+    checkAuth();
+  }, [auth, router]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">

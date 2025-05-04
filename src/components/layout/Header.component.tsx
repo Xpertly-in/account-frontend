@@ -7,21 +7,34 @@ import { Button } from "@/ui/Button.ui";
 import { ThemeToggle } from "@/ui/ThemeToggle.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { User, SignOut, List, X, Briefcase } from "@phosphor-icons/react";
+import { supabase } from "@/helper/supabase.helper";
 
 export function Header() {
   const { auth, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
   // Wait for hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Check for Supabase session
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setHasSession(!!session?.user);
+    };
+    checkSession();
+  }, []);
+
   const handleSignOut = async () => {
     await signOut();
     window.location.href = "/";
   };
+
+  const isLoggedIn = mounted && (auth.user || hasSession);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/50 dark:bg-background/90">
@@ -65,7 +78,7 @@ export function Header() {
           <div className="hidden items-center space-x-4 md:flex">
             <ThemeToggle />
 
-            {mounted && auth.user ? (
+            {isLoggedIn ? (
               <div className="flex items-center space-x-4">
                 <Link href="/dashboard">
                   <Button
@@ -92,7 +105,7 @@ export function Header() {
                     className="rounded-lg bg-gradient-to-r from-primary to-secondary text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
                   >
                     <Briefcase weight="bold" className="mr-2 h-4 w-4" />
-                    CA Login
+                    Login
                   </Button>
                 </Link>
               </div>
@@ -131,7 +144,7 @@ export function Header() {
               <ThemeToggle />
             </div>
 
-            {mounted && auth.user ? (
+            {isLoggedIn ? (
               <div className="flex flex-col space-y-3 pt-2">
                 <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                   <Button
@@ -162,7 +175,7 @@ export function Header() {
                     className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
                   >
                     <Briefcase weight="bold" className="mr-2 h-4 w-4" />
-                    CA Login
+                    Login
                   </Button>
                 </Link>
               </div>

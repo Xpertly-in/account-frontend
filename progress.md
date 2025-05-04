@@ -118,6 +118,42 @@
       - [x] Created LoginFormFields component (73 lines)
       - [x] Created LoginFormSecurity component (27 lines)
     - [ ] Split SignUpFormContent into smaller components
+  - [ ] Google Authentication Integration
+    - [ ] Set up Google OAuth in Supabase
+      - [ ] Configure Google OAuth provider in Supabase dashboard
+      - [ ] Add Google OAuth credentials to environment variables
+    - [ ] Create Google Sign-in Button Component
+      - [ ] Design mobile-first Google sign-in button with Phosphor icon
+      - [ ] Implement responsive styling with TailwindCSS
+      - [ ] Add loading and error states
+    - [ ] Update Authentication UI
+      - [ ] Add "OR" divider in login tab
+      - [ ] Add "OR" divider in signup tab
+      - [ ] Position Google button after existing auth buttons
+    - [ ] Implement Google Sign-in Flow
+      - [ ] Add Google sign-in handler in Auth provider
+      - [ ] Implement multiple account selection support
+      - [ ] Handle sign-in success/failure states
+    - [ ] Implement Google Sign-up Flow
+      - [ ] Add Google sign-up handler in Auth provider
+      - [ ] Implement multiple account selection support
+      - [ ] Handle sign-up success/failure states
+    - [ ] Add User Profile Handling
+      - [ ] Create user profile extraction from Google data
+      - [ ] Auto-populate onboarding form with Google profile data
+    - [ ] Implement Redirect Logic
+      - [ ] Add profile check before redirect
+      - [ ] Redirect to onboarding if profile doesn't exist
+      - [ ] Redirect to dashboard if profile exists
+    - [ ] Add Error Handling
+      - [ ] Implement error messages for failed authentication
+      - [ ] Add toast notifications for success/failure states
+    - [ ] Testing
+      - [ ] Test Google sign-in flow
+      - [ ] Test Google sign-up flow
+      - [ ] Test profile auto-population
+      - [ ] Test redirect logic
+      - [ ] Test mobile responsiveness
 
 - [ ] Contact Form
 - [ ] CA Dashboard

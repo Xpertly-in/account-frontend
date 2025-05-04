@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthFormData } from "@/types/auth.type";
 import { useAuth } from "@/store/context/Auth.provider";
+import { useGoogleAuth } from "@/store/context/GoogleAuth.provider";
 import { Button } from "@/ui/Button.ui";
+import { GoogleButton } from "@/ui/GoogleButton.ui";
+import { AuthDivider } from "@/ui/AuthDivider.ui";
 import { ArrowRight } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import LoginFormFields from "./LoginFormFields.component";
@@ -18,6 +21,7 @@ interface LoginFormProps {
 export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   const router = useRouter();
   const { signIn } = useAuth();
+  const { signIn: signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleAuth();
   const [formData, setFormData] = useState<AuthFormData>({
     email: "",
     password: "",
@@ -65,6 +69,15 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      toast.error("Failed to sign in with Google");
+      console.error("Google sign-in error:", error);
+    }
+  };
+
   const formContent = (
     <>
       <div className="mb-6 text-center">
@@ -95,17 +108,17 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
           )}
         </Button>
 
+        <AuthDivider />
+
+        <GoogleButton
+          onClick={handleGoogleSignIn}
+          isLoading={isGoogleLoading}
+          error={googleError || undefined}
+        />
+
         <LoginFormSecurity />
 
-        {!hideContainer && (
-          <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-border dark:border-blue-800/50"></div>
-            <span className="mx-3 flex-shrink text-xs text-muted-foreground dark:text-blue-100/50">
-              OR
-            </span>
-            <div className="flex-grow border-t border-border dark:border-blue-800/50"></div>
-          </div>
-        )}
+        
 
         {!hideContainer && (
           <div className="text-center text-sm text-muted-foreground dark:text-blue-100/70">

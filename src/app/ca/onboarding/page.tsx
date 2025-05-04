@@ -6,6 +6,7 @@ import { Card } from "@/ui/Card.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import DynamicForm from "@/components/features/onboarding/DynamicForm.component";
 import { DecorativeElements } from "@/ui/DecorativeElements.ui";
+import { supabase } from "@/helper/supabase.helper";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -13,19 +14,24 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user exists in localStorage if auth context is not available
-    const checkAuth = () => {
+    const checkAuth = async () => {
       if (!auth.isLoading) {
-        if (!auth.user) {
-          // Try to get from localStorage as a fallback
-          const storedUser = localStorage.getItem("mockUser");
-          if (!storedUser) {
-            router.push("/login");
-          } else {
-            setIsLoading(false);
-          }
-        } else {
+        if (auth.user) {
           setIsLoading(false);
+          return;
+        }
+        // Try to get from localStorage as a fallback
+        const storedUser = localStorage.getItem("mockUser");
+        if (storedUser) {
+          setIsLoading(false);
+          return;
+        }
+        // Try to get Supabase session as a fallback (for Google sign-in)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setIsLoading(false);
+        } else {
+          router.push("/login");
         }
       }
     };

@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 // Import types from the new location
 import { AuthState, MockUser } from "@/types/auth.type";
+import { supabase } from "@/helper/supabase.helper";
+import { useRouter } from "next/navigation";
 
 // Create a context for authentication
 // Use imported AuthState type
@@ -29,6 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: null,
     isLoading: true,
   });
+
+  const router = useRouter();
 
   // Check for existing user on mount
   useEffect(() => {
@@ -88,7 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Mock sign out
   const signOut = async () => {
+    // Remove mock user
     localStorage.removeItem("mockUser");
+    // Sign out from Supabase (handles Google and email users)
+    await supabase.auth.signOut();
     setAuth({ user: null, isLoading: false });
   };
 
@@ -97,6 +104,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log(`Password reset requested for ${email}`);
     return { error: null };
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (auth.user) {
+        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
+        localStorage.removeItem("postLoginRedirect");
+        router.replace(redirectTo);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
+        localStorage.removeItem("postLoginRedirect");
+        router.replace(redirectTo);
+      }
+    };
+    checkAuth();
+  }, [auth, router]);
 
   return (
     <AuthContext.Provider value={{ auth, signIn, signUp, signOut, resetPassword }}>
