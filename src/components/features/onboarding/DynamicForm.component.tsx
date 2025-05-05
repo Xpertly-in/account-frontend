@@ -301,8 +301,7 @@ export default function DynamicForm() {
         );
       default:
         console.warn("Unhandled field type in renderField:", field.type, field);
-        const _: never = field;
-        return null;
+        throw new Error(`Unhandled field type: ${field.type}`);
     }
   };
 
