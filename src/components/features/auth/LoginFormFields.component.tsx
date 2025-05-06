@@ -28,7 +28,7 @@ export default function LoginFormFields({ formData, handleChange }: LoginFormFie
             value={formData.email}
             onChange={handleChange}
             required
-            className="pl-10"
+            className="pl-10 h-11"
           />
         </div>
       </div>
@@ -45,7 +45,7 @@ export default function LoginFormFields({ formData, handleChange }: LoginFormFie
             value={formData.password}
             onChange={handleChange}
             required
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 h-11"
           />
           <button
             type="button"
