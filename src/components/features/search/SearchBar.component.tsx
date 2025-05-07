@@ -27,23 +27,23 @@ export default function SearchBar() {
             <Input
               type="text"
               placeholder="Enter location (city, area, etc.)"
-              className="pl-12 py-6 text-lg rounded-xl border-gray-200 bg-white focus:border-blue-500 focus:ring-blue-500 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400 dark:shadow-inner dark:shadow-blue-900/10 dark:focus:border-blue-400 dark:focus:ring-blue-400 w-full"
+              className="pl-12 h-14 text-lg rounded-xl border-gray-200 bg-white transition-all duration-300 ease-in-out focus:border-transparent focus:ring-2 focus:ring-blue-500/50 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.1)] dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400 dark:shadow-inner dark:shadow-blue-900/10 dark:focus:ring-blue-400/50 dark:focus:shadow-[0_0_0_4px_rgba(96,165,250,0.1)] w-full"
               value={location}
               onChange={e => setLocation(e.target.value)}
             />
           </div>
           <Button
             type="submit"
-            className="bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6 px-8 rounded-xl text-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-400 dark:hover:to-blue-500 dark:shadow-blue-900/10 dark:hover:shadow-blue-500/20 md:w-auto w-full"
+            className="bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white h-14 px-8 rounded-xl text-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-400 dark:hover:to-blue-500 dark:shadow-blue-900/10 dark:hover:shadow-blue-500/20 md:w-auto w-full"
           >
             <MagnifyingGlass className="mr-2 h-5 w-5" weight="bold" /> Find CA
           </Button>
         </div>
-        <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+        <div className="flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start">
           <Button
             type="button"
             variant="outline"
-            className="rounded-full py-1 px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200"
+            className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
             onClick={() => setLocation("Mumbai")}
           >
             Mumbai
@@ -51,7 +51,7 @@ export default function SearchBar() {
           <Button
             type="button"
             variant="outline"
-            className="rounded-full py-1 px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200"
+            className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
             onClick={() => setLocation("Delhi")}
           >
             Delhi
@@ -59,7 +59,7 @@ export default function SearchBar() {
           <Button
             type="button"
             variant="outline"
-            className="rounded-full py-1 px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200"
+            className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
             onClick={() => setLocation("Bangalore")}
           >
             Bangalore
@@ -67,7 +67,7 @@ export default function SearchBar() {
           <Button
             type="button"
             variant="outline"
-            className="rounded-full py-1 px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200"
+            className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
             onClick={() => setLocation("Chennai")}
           >
             Chennai

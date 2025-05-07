@@ -75,7 +75,7 @@ export function Header() {
           </button>
 
           {/* Desktop menu */}
-          <div className="hidden items-center space-x-4 md:flex">
+          <div className="hidden items-center space-x-6 md:flex">
             <ThemeToggle />
 
             {isLoggedIn ? (
@@ -98,13 +98,13 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center">
                 <Link href="/login/ca">
                   <Button
                     variant="default"
-                    className="rounded-lg bg-gradient-to-r from-primary to-secondary text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
+                    className="rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
                   >
-                    <Briefcase weight="bold" className="mr-2 h-4 w-4" />
+                    <Briefcase weight="bold" className="h-4 w-4" />
                     Login
                   </Button>
                 </Link>
@@ -149,7 +149,7 @@ export function Header() {
                 <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="outline"
-                    className="w-full justify-start rounded-lg border-primary/20 px-4 py-2 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
+                    className="w-full justify-start rounded-lg border-primary/20 px-4 py-2.5 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
                   >
                     <User size={20} weight="bold" className="mr-2" />
                     Dashboard
@@ -172,7 +172,7 @@ export function Header() {
                 <Link href="/login/ca" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="default"
-                    className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
+                    className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
                   >
                     <Briefcase weight="bold" className="mr-2 h-4 w-4" />
                     Login
