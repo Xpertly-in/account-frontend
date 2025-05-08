@@ -31,15 +31,19 @@ export default function DynamicForm() {
 
   useEffect(() => {
     let name = "CA";
-    if (auth.user?.name) {
-      name = auth.user.name;
+    if (auth.user?.user_metadata?.name) {
+      name = auth.user.user_metadata.name;
     } else {
       try {
-        const storedUser = localStorage.getItem("mockUser");
-        if (storedUser) name = JSON.parse(storedUser).name || name;
-      } catch {}
+        const storedUser = JSON.parse(localStorage.getItem("mockUser") || "{}");
+        if (storedUser.name) {
+          name = storedUser.name;
+        }
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+      }
     }
-    setUserName(name);
+    setFormData(prev => ({ ...prev, name }));
   }, [auth.user]);
 
   useEffect(() => {
