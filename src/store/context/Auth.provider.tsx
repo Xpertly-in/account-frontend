@@ -1,17 +1,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-// Import types from the new location
-import { AuthState, MockUser } from "@/types/auth.type";
+import { AuthState } from "@/types/auth.type";
 import { supabase } from "@/helper/supabase.helper";
 import { useRouter } from "next/navigation";
+import { User } from "@supabase/supabase-js";
 
 // Create a context for authentication
-// Use imported AuthState type
 const AuthContext = createContext<{
   auth: AuthState;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any; user: any }>; // Keep user as any for now to match mock return
+  signIn: (email: string, password: string) => Promise<{ error: any; data?: { user: User | null } }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any; user: User | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
 }>({
@@ -26,7 +25,6 @@ const AuthContext = createContext<{
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Use imported AuthState type
   const [auth, setAuth] = useState<AuthState>({
     user: null,
     isLoading: true,
@@ -34,94 +32,117 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
 
-  // Check for existing user on mount
+  // Check for existing session on mount
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("mockUser");
-      if (storedUser) {
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         setAuth({
-          // Parse and assert type to MockUser
-          user: JSON.parse(storedUser) as MockUser,
+          user: session?.user || null,
           isLoading: false,
         });
-      } else {
+      } catch (error) {
+        console.error("Error checking session", error);
         setAuth(prev => ({ ...prev, isLoading: false }));
       }
-    } catch (error) {
-      console.error("Error loading user from localStorage", error);
-      setAuth(prev => ({ ...prev, isLoading: false }));
-    }
+    };
+
+    checkSession();
   }, []);
 
-  // Mock sign in
+  // Sign in with Supabase
   const signIn = async (email: string, password: string) => {
     try {
-      const storedUser = localStorage.getItem("mockUser");
-      if (storedUser) {
-        // Parse and assert type to MockUser
-        const user = JSON.parse(storedUser) as MockUser;
-        if (user.email === email) {
-          setAuth({ user, isLoading: false });
-          return { error: null };
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error };
       }
-      return { error: { message: "Invalid email or password" } };
+
+      setAuth({ user: data.user, isLoading: false });
+      return { error: null, data: { user: data.user } };
     } catch (error) {
       console.error("Error signing in", error);
       return { error: { message: "An unexpected error occurred" } };
     }
   };
 
-  // Mock sign up
-  // Return type includes MockUser structure implicitly
+  // Sign up with Supabase
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const mockUser: MockUser = {
-        id: Date.now().toString(),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        name,
-      };
-      localStorage.setItem("mockUser", JSON.stringify(mockUser));
-      // Return the created mock user structure
-      return { error: null, user: mockUser };
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+        },
+      });
+
+      if (error) {
+        return { error, user: null };
+      }
+
+      // Create CA profile record
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('ca_profiles')
+          .insert([
+            {
+              user_id: data.user.id,
+              email: data.user.email,
+              name: name,
+            },
+          ]);
+
+        if (profileError) {
+          console.error('Error creating CA profile:', profileError);
+          // Don't return error here as the user is already created
+        }
+      }
+
+      return { error: null, user: data.user };
     } catch (error) {
       console.error("Error signing up", error);
       return { error: { message: "An unexpected error occurred" }, user: null };
     }
   };
 
-  // Mock sign out
+  // Sign out with Supabase
   const signOut = async () => {
-    // Remove mock user
-    localStorage.removeItem("mockUser");
-    // Sign out from Supabase (handles Google and email users)
     await supabase.auth.signOut();
     setAuth({ user: null, isLoading: false });
   };
 
-  // Mock reset password
+  // Reset password with Supabase
   const resetPassword = async (email: string) => {
-    console.log(`Password reset requested for ${email}`);
-    return { error: null };
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      return { error };
+    } catch (error) {
+      console.error("Error resetting password", error);
+      return { error: { message: "An unexpected error occurred" } };
+    }
   };
 
+  // Listen for auth state changes
   useEffect(() => {
-    const checkAuth = async () => {
-      if (auth.user) {
-        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
-        localStorage.removeItem("postLoginRedirect");
-        router.replace(redirectTo);
-        return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setAuth({ user: session.user, isLoading: false });
+      } else if (event === 'SIGNED_OUT') {
+        setAuth({ user: null, isLoading: false });
       }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
-        localStorage.removeItem("postLoginRedirect");
-        router.replace(redirectTo);
-      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
     };
-    checkAuth();
-  }, [auth, router]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ auth, signIn, signUp, signOut, resetPassword }}>

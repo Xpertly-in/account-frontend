@@ -43,9 +43,6 @@ export default function DynamicForm() {
   }, [auth.user]);
 
   useEffect(() => {
-    if (formRef.current) {
-      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
     setValidationErrors({});
   }, [currentStep]);
 
@@ -308,7 +305,7 @@ export default function DynamicForm() {
   const currentStepData = formDefinition.steps[currentStep];
 
   return (
-    <div className="relative" ref={formRef}>
+    <div className="relative w-full" ref={formRef}>
       <FormProgressIndicator steps={formDefinition.steps} currentStepIndex={currentStep} />
       <FormStepTitle
         title={currentStepData.title}

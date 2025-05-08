@@ -7,6 +7,7 @@ import { QueryProvider } from "@/store/context/Query.provider";
 import { ThemeProvider } from "@/store/context/Theme.provider";
 import { AuthProvider } from "@/store/context/Auth.provider";
 import { GoogleAuthProvider } from "@/store/context/GoogleAuth.provider";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,6 +33,7 @@ export default function RootLayout({
                   <main className="flex-1">{children}</main>
                   <Footer />
                 </div>
+                <Toaster position="top-center" richColors expand closeButton />
               </GoogleAuthProvider>
             </AuthProvider>
           </QueryProvider>
