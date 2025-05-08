@@ -1,3 +1,5 @@
+import { User } from '@supabase/supabase-js';
+
 export interface AuthFormData {
   email: string;
   password: string;
@@ -31,6 +33,6 @@ export interface MockUser {
 }
 
 export interface AuthState {
-  user: MockUser | null;
+  user: User | null;
   isLoading: boolean;
 }

@@ -13,36 +13,7 @@ export default function CADashboardPage() {
   const [userName, setUserName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
 
-  useEffect(() => {
-    // Check auth from context or localStorage
-    const checkAuth = () => {
-      if (!auth.isLoading) {
-        if (auth.user) {
-          setUserName(auth.user.name);
-          setUserEmail(auth.user.email);
-          setIsLoading(false);
-        } else {
-          // Try to get from localStorage as a fallback
-          const storedUser = localStorage.getItem("mockUser");
-          if (storedUser) {
-            try {
-              const user = JSON.parse(storedUser);
-              setUserName(user.name);
-              setUserEmail(user.email);
-              setIsLoading(false);
-            } catch (e) {
-              console.error("Error parsing stored user", e);
-              router.push("/login");
-            }
-          } else {
-            router.push("/login");
-          }
-        }
-      }
-    };
 
-    checkAuth();
-  }, [auth, router]);
 
   const handleSignOut = async () => {
     await signOut();

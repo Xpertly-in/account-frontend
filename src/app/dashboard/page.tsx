@@ -8,46 +8,7 @@ import { User, Calendar, FileText } from "@phosphor-icons/react";
 import { supabase } from "@/helper/supabase.helper";
 
 export default function DashboardPage() {
-  const { auth } = useAuth();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!auth.isLoading) {
-        if (auth.user) {
-          setIsLoading(false);
-          return;
-        }
-        // Try to get from localStorage as a fallback
-        const storedUser = localStorage.getItem("mockUser");
-        if (storedUser) {
-          setIsLoading(false);
-          return;
-        }
-        // Try to get Supabase session as a fallback (for Google sign-in)
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setIsLoading(false);
-        } else {
-          router.push("/login");
-        }
-      }
-    };
-
-    checkAuth();
-  }, [auth, router]);
-
-  if (auth.isLoading) {
-    return (
-      <div className="flex min-h-[70vh] w-full flex-col items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
-      </div>
-    );
-  }
-
-  if (!auth.user) return null;
 
   return (
     <div className="container mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">

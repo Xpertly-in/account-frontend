@@ -13,6 +13,8 @@ import { ArrowRight } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import LoginFormFields from "./LoginFormFields.component";
 import LoginFormSecurity from "./LoginFormSecurity.component";
+import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
 interface LoginFormProps {
   hideContainer?: boolean;
@@ -47,12 +49,39 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
     setIsLoading(true);
 
     try {
-      const { error } = await signIn(formData.email, formData.password);
+      const { error: signInError, data } = await signIn(formData.email, formData.password);
+      const user = data?.user;
 
-      if (error) {
+      if (signInError) {
+        if (signInError.message === "Invalid login credentials") {
+          toast.error("Invalid credentials", {
+            description: "Please check your email and password and try again.",
+          });
+        } else {
+          toast.error("Login failed", {
+            description: signInError.message || "Please check your credentials and try again.",
+          });
+        }
+        return;
+      }
+
+      if (!user) {
         toast.error("Login failed", {
-          description: error.message || "Please check your credentials and try again.",
+          description: "No user data received. Please try again.",
         });
+        return;
+      }
+
+      // Check onboarding status in ca_profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from("ca_profiles")
+        .select("onboarding_completed")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("Error checking profile status");
         return;
       }
 
@@ -60,7 +89,15 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         description: "Welcome back!",
       });
 
-      router.push("/dashboard");
+      // Redirect based on onboarding status
+      if (!profile?.onboarding_completed) {
+        router.push("/ca/onboarding");
+      } else {
+        // Get the stored redirect path or default to dashboard
+        const redirectTo = localStorage.getItem("postLoginRedirect") || "/ca/dashboard";
+        localStorage.removeItem("postLoginRedirect");
+        router.push(redirectTo);
+      }
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error("Login error:", error);
@@ -117,8 +154,6 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         />
 
         <LoginFormSecurity />
-
-        
 
         {!hideContainer && (
           <div className="text-center text-sm text-muted-foreground dark:text-blue-100/70">
