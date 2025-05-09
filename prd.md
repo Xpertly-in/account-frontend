@@ -567,9 +567,9 @@ Tests are organized to mirror the source code structure:
 src/
   └── tests/
       ├── ui/                  # Tests for UI components
-      ├── components/          # Tests for feature components
-      │   ├── layout/
-      │   └── features/
+      ├── components/          # Tests for components
+      │   ├── layout/          # Tests for layout components
+      │   └── features/        # Tests for feature components
       │       ├── auth/
       │       ├── search/
       │       ├── profile/
@@ -584,7 +584,7 @@ src/
           └── data/
 ```
 
-Each test file follows the naming convention `[ComponentName].test.tsx` to clearly identify the component being tested.
+Each test file follows the naming convention of `[ComponentName].test.tsx` for components and `[helperName].test.ts` for helper functions.
 
 ### 12.4 Test Coverage Targets
 

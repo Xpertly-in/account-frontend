@@ -29,19 +29,19 @@ Tests should be organized in a structure mirroring the source code:
 ```
 src/
   └── tests/
-      ├── ui/
-      ├── components/
-      │   ├── layout/
-      │   └── features/
+      ├── ui/                  # Tests for UI components
+      ├── components/          # Tests for components
+      │   ├── layout/          # Tests for layout components
+      │   └── features/        # Tests for feature components
       │       ├── auth/
       │       ├── search/
       │       ├── profile/
       │       ├── common/
       │       └── onboarding/
-      ├── store/
+      ├── store/               # Tests for state management
       │   └── context/
-      ├── helper/
-      └── mocks/
+      ├── helper/              # Tests for helper functions
+      └── mocks/               # Mock data and services
           ├── handlers.ts
           ├── server.ts
           └── data/
