@@ -3,6 +3,7 @@
 ## 1. Testing Framework Setup
 
 ### Testing Stack
+
 - **Jest**: Primary testing framework
 - **React Testing Library**: For testing React components
 - **jest-dom**: For enhanced DOM matchers
@@ -10,6 +11,7 @@
 - **jest-axe**: For accessibility testing
 
 ### Configuration Files
+
 - **jest.config.js**: Main Jest configuration
 - **jest.setup.js**: Test setup file with global test configurations
 - **test-utils.tsx**: Reusable testing utilities including custom render methods
@@ -17,6 +19,7 @@
 ## 2. Test Organization
 
 All test files should follow these naming conventions:
+
 - Component tests: `[ComponentName].test.tsx`
 - Helper function tests: `[helperName].test.ts`
 - Provider tests: `[ProviderName].test.tsx`
@@ -47,6 +50,7 @@ src/
 ## 3. Mock Data & Service Setup
 
 ### Mock Data
+
 - Create comprehensive mock data for all entities:
   - CA profiles with all possible field variations
   - User authentication states
@@ -55,6 +59,7 @@ src/
   - API responses
 
 ### Mock Services
+
 - Use MSW to intercept and mock all Supabase and external API calls
 - Create dedicated mock handlers for:
   - Authentication operations
@@ -66,6 +71,7 @@ src/
 ## 4. Test Coverage Targets
 
 Aim for the following coverage targets:
+
 - **UI Components**: 100% coverage
 - **Feature Components**: 90%+ coverage
 - **Layout Components**: 95%+ coverage
@@ -76,6 +82,7 @@ Aim for the following coverage targets:
 ## 5. Common Test Cases for All Components
 
 ### Rendering Tests
+
 1. **Default Rendering**: Component renders with default props
 2. **Variations**: Component renders with different props/states
 3. **Mobile-First Responsive Tests**: Component displays correctly on mobile devices
@@ -83,22 +90,26 @@ Aim for the following coverage targets:
 5. **Placeholder/Loading States**: Component displays loading states correctly
 
 ### Interaction Tests
+
 1. **User Events**: Click, hover, input, etc.
 2. **Form Interactions**: Validation, submission, error states
 3. **State Changes**: Component responds to state changes correctly
 
 ### Accessibility Tests
+
 1. **ARIA Attributes**: Proper ARIA roles and attributes
 2. **Keyboard Navigation**: Tab order, focus management
 3. **Screen Reader Compatibility**: Proper text alternatives
 4. **Color Contrast**: Sufficient contrast ratios
 
 ### Integration Tests
+
 1. **Component Composition**: Component works with other components
 2. **Context Consumption**: Component consumes context correctly
 3. **Event Propagation**: Events propagate correctly between components
 
 ### Edge Cases
+
 1. **Empty Data**: Component handles empty data correctly
 2. **Error States**: Component displays error states correctly
 3. **Boundary Conditions**: Component handles extreme values correctly
@@ -108,6 +119,7 @@ Aim for the following coverage targets:
 ### UI Components
 
 #### Button.ui.tsx
+
 ```typescript
 // Button.test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -125,21 +137,22 @@ describe("Button Component", () => {
   test("renders with icon", () => {});
   test("renders in loading state", () => {});
   test("renders with fullWidth prop", () => {});
-  
-  // Interaction tests  
+
+  // Interaction tests
   test("calls onClick handler when clicked", () => {});
   test("doesn't call onClick when disabled", () => {});
-  
+
   // Accessibility tests
   test("has proper ARIA attributes", () => {});
   test("is accessible to screen readers", () => {});
-  
+
   // Edge cases
   test("handles long text content", () => {});
 });
 ```
 
 #### Input.ui.tsx
+
 ```typescript
 // Input.test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -153,22 +166,23 @@ describe("Input Component", () => {
   test("renders with error state", () => {});
   test("renders with disabled state", () => {});
   test("renders with icon", () => {});
-  
+
   // Interaction tests
   test("calls onChange handler when text is entered", () => {});
   test("doesn't call onChange when disabled", () => {});
   test("displays error message when in error state", () => {});
-  
+
   // Accessibility tests
   test("has proper ARIA attributes", () => {});
   test("is accessible to screen readers", () => {});
-  
+
   // Edge cases
   test("handles long input values", () => {});
 });
 ```
 
 Similar detailed test cases for each UI component:
+
 - Card.ui.tsx
 - Avatar.ui.tsx
 - Checkbox.ui.tsx
@@ -186,6 +200,7 @@ Similar detailed test cases for each UI component:
 ### Layout Components
 
 #### Header.component.tsx
+
 ```typescript
 // Header.test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -200,30 +215,32 @@ describe("Header Component", () => {
   test("renders login/signup links when user is not authenticated", () => {});
   test("renders user menu when user is authenticated", () => {});
   test("renders correctly in dark mode", () => {});
-  
+
   // Interaction tests
   test("opens mobile menu when hamburger icon is clicked", () => {});
   test("closes mobile menu when close icon is clicked", () => {});
   test("navigates to correct page when navigation link is clicked", () => {});
   test("toggles theme when theme toggle is clicked", () => {});
-  
+
   // Accessibility tests
   test("has proper ARIA attributes", () => {});
   test("is accessible to screen readers", () => {});
   test("supports keyboard navigation", () => {});
-  
+
   // Edge cases
   test("handles long navigation link text", () => {});
 });
 ```
 
 Similar detailed test cases for each layout component:
+
 - Footer.component.tsx
 - Container.component.tsx
 
 ### Feature Components - Auth
 
 #### LoginForm.component.tsx
+
 ```typescript
 // LoginForm.test.tsx
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -238,30 +255,31 @@ describe("LoginForm Component", () => {
   test("renders forgot password link", () => {});
   test("renders login button", () => {});
   test("renders correctly in dark mode", () => {});
-  
+
   // Validation tests
   test("validates email format", () => {});
   test("validates required fields", () => {});
   test("displays validation errors for invalid inputs", () => {});
-  
+
   // Form submission tests
   test("submits form with valid data", async () => {});
   test("shows error message for invalid credentials", async () => {});
   test("shows loading state during form submission", async () => {});
-  
+
   // Integration tests
   test("integrates with Auth provider", async () => {});
-  
+
   // Accessibility tests
   test("has proper ARIA attributes", () => {});
   test("supports keyboard navigation", () => {});
-  
+
   // Edge cases
   test("handles API errors gracefully", async () => {});
 });
 ```
 
 Similar detailed test cases for each auth feature component:
+
 - SignUpForm.component.tsx
 - CAAuthTabs.component.tsx
 - LoginFormFields.component.tsx
@@ -277,6 +295,7 @@ Similar detailed test cases for each auth feature component:
 ### Feature Components - Search
 
 #### SearchBar.component.tsx
+
 ```typescript
 // SearchBar.test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -291,20 +310,20 @@ describe("SearchBar Component", () => {
   test("renders in mobile view", () => {});
   test("renders in desktop view", () => {});
   test("renders correctly in dark mode", () => {});
-  
+
   // Interaction tests
   test("updates search text on input", () => {});
   test("selects location from dropdown", () => {});
   test("toggles verified checkbox", () => {});
   test("calls onSearch handler when search button is clicked", () => {});
-  
+
   // Form submission tests
   test("submits search query with valid data", () => {});
-  
+
   // Accessibility tests
   test("has proper ARIA attributes", () => {});
   test("supports keyboard navigation", () => {});
-  
+
   // Edge cases
   test("handles empty search query", () => {});
 });
@@ -313,6 +332,7 @@ describe("SearchBar Component", () => {
 ### Feature Components - Profile
 
 Test cases for each profile component:
+
 - CAProfileWrapper.tsx
 - CAProfileContent.tsx
 - CAServicesSection.component.tsx
@@ -325,6 +345,7 @@ Test cases for each profile component:
 ### Feature Components - Common
 
 #### CACard.component.tsx
+
 ```typescript
 // CACard.test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -342,15 +363,15 @@ describe("CACard Component", () => {
   test("renders in mobile view", () => {});
   test("renders in desktop view", () => {});
   test("renders correctly in dark mode", () => {});
-  
+
   // Interaction tests
   test("navigates to CA profile page when clicked", () => {});
   test("displays hover effect on hover", () => {});
-  
+
   // Accessibility tests
   test("has proper ARIA attributes", () => {});
   test("is accessible to screen readers", () => {});
-  
+
   // Edge cases
   test("handles long CA names", () => {});
   test("handles missing data fields", () => {});
@@ -360,6 +381,7 @@ describe("CACard Component", () => {
 ### Feature Components - Onboarding
 
 Test cases for each onboarding component:
+
 - DynamicForm.component.tsx
 - FormNavigation.component.tsx
 - FormStepTitle.component.tsx
@@ -368,6 +390,7 @@ Test cases for each onboarding component:
 ### Store/Context Components
 
 #### Auth.provider.tsx
+
 ```typescript
 // Auth.provider.test.tsx
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -376,7 +399,7 @@ import { AuthProvider, useAuth } from "@/store/context/Auth.provider";
 describe("Auth Provider", () => {
   // Rendering tests
   test("renders children components", () => {});
-  
+
   // Authentication flow tests
   test("provides authentication state to children", () => {});
   test("handles sign up flow", async () => {});
@@ -385,10 +408,10 @@ describe("Auth Provider", () => {
   test("handles password reset flow", async () => {});
   test("updates auth state correctly after login", async () => {});
   test("updates auth state correctly after logout", async () => {});
-  
+
   // Error handling tests
   test("handles authentication errors", async () => {});
-  
+
   // Edge cases
   test("preserves auth state on page reload (localStorage)", async () => {});
   test("handles expired tokens", async () => {});
@@ -396,6 +419,7 @@ describe("Auth Provider", () => {
 ```
 
 Similar test cases for each provider:
+
 - GoogleAuth.provider.tsx
 - Query.provider.tsx
 - Theme.provider.tsx
@@ -403,6 +427,7 @@ Similar test cases for each provider:
 ### Helper Functions
 
 Test cases for each helper function:
+
 - googleAuth.helper.ts
 - form.helper.ts
 - ca-profile.helper.ts
@@ -425,41 +450,45 @@ describe("Button Component", () => {
     render(<Button>Click me</Button>);
     expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
   });
-  
+
   test("renders primary variant", () => {
     render(<Button variant="primary">Primary</Button>);
     const button = screen.getByRole("button", { name: /primary/i });
     expect(button).toHaveClass("bg-primary");
   });
-  
+
   test("renders in loading state", () => {
     render(<Button isLoading>Loading</Button>);
     expect(screen.getByRole("button")).toBeDisabled();
     expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
   });
-  
-  // Interaction tests  
+
+  // Interaction tests
   test("calls onClick handler when clicked", () => {
     const handleClick = jest.fn();
     render(<Button onClick={handleClick}>Click me</Button>);
     fireEvent.click(screen.getByRole("button", { name: /click me/i }));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
-  
+
   test("doesn't call onClick when disabled", () => {
     const handleClick = jest.fn();
-    render(<Button disabled onClick={handleClick}>Click me</Button>);
+    render(
+      <Button disabled onClick={handleClick}>
+        Click me
+      </Button>
+    );
     fireEvent.click(screen.getByRole("button", { name: /click me/i }));
     expect(handleClick).not.toHaveBeenCalled();
   });
-  
+
   // Accessibility tests
   test("has no accessibility violations", async () => {
     const { container } = render(<Button>Accessible Button</Button>);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
-  
+
   // Mobile responsiveness tests
   test("has touch-friendly size on mobile", () => {
     render(<Button>Mobile Button</Button>);
@@ -476,16 +505,13 @@ Specific tests to ensure the mobile-first design approach is followed:
 1. **Viewport Size Testing**:
    - Test components at mobile viewport first (320px-375px width)
    - Test progressive enhancement at larger breakpoints
-   
 2. **Touch Target Testing**:
    - Verify interactive elements are at least 44px × 44px
    - Ensure adequate spacing between touch targets
-   
 3. **Responsive Layout Testing**:
    - Verify elements stack vertically on mobile views
    - Test that grids appropriately adjust columns
    - Verify text remains readable at all screen sizes
-   
 4. **Media Query Testing**:
    - Verify TailwindCSS responsive classes work correctly
    - Test that components respond to media query breakpoints
@@ -498,18 +524,18 @@ Create utility functions to verify components adhere to the 200-line rule:
 
 ```typescript
 // lineCount.test.ts
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
-describe('200-Line Rule Compliance', () => {
+describe("200-Line Rule Compliance", () => {
   const COMPONENT_DIRS = [
-    path.join(__dirname, '../../ui'),
-    path.join(__dirname, '../../components'),
+    path.join(__dirname, "../../ui"),
+    path.join(__dirname, "../../components"),
   ];
-  
+
   const MAX_LINES = 200;
-  
-  test('all components should be under 200 lines', () => {
+
+  test("all components should be under 200 lines", () => {
     // Implementation to check all component files
   });
 });
@@ -521,21 +547,16 @@ Create a special test utility to verify dark mode support:
 
 ```typescript
 // darkMode.test.tsx
-import { render } from '@testing-library/react';
-import { ThemeProvider } from '@/store/context/Theme.provider';
+import { render } from "@testing-library/react";
+import { ThemeProvider } from "@/store/context/Theme.provider";
 
-const renderWithTheme = (ui, { theme = 'light', ...options } = {}) => {
-  return render(
-    <ThemeProvider defaultTheme={theme}>
-      {ui}
-    </ThemeProvider>,
-    options
-  );
+const renderWithTheme = (ui, { theme = "light", ...options } = {}) => {
+  return render(<ThemeProvider defaultTheme={theme}>{ui}</ThemeProvider>, options);
 };
 
 // Use this in component tests:
-test('renders correctly in dark mode', () => {
-  renderWithTheme(<ComponentToTest />, { theme: 'dark' });
+test("renders correctly in dark mode", () => {
+  renderWithTheme(<ComponentToTest />, { theme: "dark" });
   // Assertions about dark mode styles
 });
 ```
@@ -555,14 +576,16 @@ For each component, document:
 Configure Jest to run in CI pipeline:
 
 1. **GitHub Actions Configuration**:
+
    - Run tests on pull requests
    - Run tests on merges to main branch
    - Generate and store coverage reports
 
 2. **Coverage Reports**:
+
    - Set minimum coverage thresholds
    - Generate visual coverage reports
 
 3. **Performance Monitoring**:
    - Track test execution time
-   - Optimize slow-running tests 
+   - Optimize slow-running tests
