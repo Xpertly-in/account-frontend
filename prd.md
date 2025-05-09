@@ -267,6 +267,7 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
 ### Phase 3: Authentication & User Management
 
 - **Task 1:** Implement Core Authentication
+
   - [x] Set up Supabase client and authentication
   - [x] Create Auth provider for state management
   - [x] Develop login and signup forms
@@ -274,13 +275,17 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
   - [x] Add error handling and notifications
 
 - **Task 2:** Implement Google Authentication
+
   - **Google OAuth Setup:**
+
     - Configure Google OAuth provider in Supabase dashboard
     - Add Google OAuth credentials to environment variables
     - Set up proper redirect URIs in Google Cloud Console
-  
+
   - **Component Development:**
+
     - **GoogleButton Component:**
+
       - Create `GoogleButton.ui.tsx` (under 200 lines)
         - Implement mobile-first design with TailwindCSS
         - Add Google logo using Phosphor icons
@@ -288,87 +293,97 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
         - Add hover and focus effects
         - Ensure proper accessibility attributes
         - Support dark mode
-    
+
     - **AuthDivider Component:**
+
       - Create `AuthDivider.ui.tsx` (under 200 lines)
         - Design "OR" divider with decorative elements
         - Implement responsive styling
         - Add subtle animations
         - Support dark mode
-    
+
     - **GoogleAuthProvider Component:**
+
       - Create `GoogleAuth.provider.tsx` (under 200 lines)
         - Handle Google OAuth state management
         - Manage multiple account selection
         - Implement error handling
         - Add loading states
         - Handle authentication success/failure
-  
+
     - **GoogleProfileExtractor Component:**
       - Create `GoogleProfileExtractor.helper.ts` (under 200 lines)
         - Extract user profile data from Google response
         - Map Google data to application profile structure
         - Handle missing or incomplete data
         - Add type safety with TypeScript
-  
+
   - **Integration Tasks:**
+
     - **Login Form Integration:**
+
       - Update `LoginForm.component.tsx`
         - Add AuthDivider after existing login button
         - Integrate GoogleButton component
         - Handle Google authentication flow
         - Update form layout for mobile-first design
-    
+
     - **Signup Form Integration:**
+
       - Update `SignUpForm.component.tsx`
         - Add AuthDivider after existing signup button
         - Integrate GoogleButton component
         - Handle Google authentication flow
         - Update form layout for mobile-first design
-    
+
     - **Auth Provider Updates:**
       - Update `Auth.provider.tsx`
         - Add Google authentication methods
         - Implement profile check logic
         - Handle redirect logic
         - Add error handling for Google auth
-  
+
   - **Profile Management:**
+
     - **Onboarding Integration:**
+
       - Update `DynamicForm.component.tsx`
         - Add auto-population logic for Google profile data
         - Handle partial profile data
         - Add validation for Google-provided data
         - Implement profile completion check
-    
+
     - **Profile Check Logic:**
       - Create `ProfileCheck.helper.ts` (under 200 lines)
         - Check if user profile exists
         - Determine redirect destination
         - Handle edge cases
-  
+
   - **Testing Implementation:**
+
     - **Component Testing:**
+
       - Test GoogleButton component
         - Mobile responsiveness
         - Dark mode support
         - Loading states
         - Error handling
         - Accessibility
-    
+
     - **Flow Testing:**
+
       - Test Google sign-in flow
         - Multiple account selection
         - Success/failure scenarios
         - Error handling
         - Loading states
-    
+
     - **Integration Testing:**
       - Test profile auto-population
       - Test redirect logic
       - Test error scenarios
       - Test mobile responsiveness
-  
+
   - **Documentation:**
     - Update authentication documentation
     - Add Google auth setup guide
@@ -526,3 +541,162 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
 - [ ] Integration Testing
 - [ ] Finalize Progress & Cursor Rules
 - [ ] Deployment
+
+---
+
+## 12. Unit Testing Strategy
+
+### 12.1 Testing Overview
+
+The Xpertly CA Listing Portal implements a comprehensive testing strategy to ensure high-quality, maintainable code and a reliable user experience. Our approach focuses on thorough unit testing combined with component-level integration testing.
+
+### 12.2 Testing Framework
+
+- **Primary Testing Tools**:
+  - Jest: Core testing framework for running tests
+  - React Testing Library: For testing React components with a user-centric approach
+  - jest-dom: For enhanced DOM assertions
+  - jest-axe: For accessibility testing
+  - MSW (Mock Service Worker): For mocking API calls to Supabase and external services
+
+### 12.3 Test Organization
+
+Tests are organized to mirror the source code structure:
+
+```
+src/
+  └── tests/
+      ├── ui/                  # Tests for UI components
+      ├── components/          # Tests for feature components
+      │   ├── layout/
+      │   └── features/
+      │       ├── auth/
+      │       ├── search/
+      │       ├── profile/
+      │       ├── common/
+      │       └── onboarding/
+      ├── store/               # Tests for state management
+      │   └── context/
+      ├── helper/              # Tests for helper functions
+      └── mocks/               # Mock data and services
+          ├── handlers.ts
+          ├── server.ts
+          └── data/
+```
+
+Each test file follows the naming convention `[ComponentName].test.tsx` to clearly identify the component being tested.
+
+### 12.4 Test Coverage Targets
+
+The project aims for the following test coverage targets:
+
+| Component Type     | Coverage Target |
+| ------------------ | --------------- |
+| UI Components      | 100%            |
+| Feature Components | ≥90%            |
+| Layout Components  | ≥95%            |
+| Providers          | ≥95%            |
+| Helper Functions   | 100%            |
+| Pages              | ≥85%            |
+
+### 12.5 Testing Approach
+
+#### 12.5.1 Mobile-First Design Testing
+
+Testing focuses first on mobile viewports, then progressively tests larger screen sizes. This ensures our mobile-first design approach is properly implemented.
+
+Specific tests include:
+
+- Rendering tests at multiple viewport sizes (starting with mobile: 320px-375px)
+- Touch target size verification (minimum 44px × 44px)
+- UI element stacking and layout changes across breakpoints
+- Proper functioning of responsive TailwindCSS classes
+
+#### 12.5.2 Dark Mode Testing
+
+Each component is tested in both light and dark modes using a custom render function that wraps components in a ThemeProvider. Tests verify that:
+
+- Color schemes change appropriately
+- Contrast ratios meet WCAG AA standards in both modes
+- Text remains readable in dark mode
+- UI elements maintain visual hierarchy
+
+#### 12.5.3 Component Size Constraint Testing
+
+Automated tests verify that each component adheres to the 200-line limit established in the project guidelines. This ensures component modularity and maintainability.
+
+#### 12.5.4 Accessibility Testing
+
+Each component undergoes accessibility testing with jest-axe to verify:
+
+- ARIA attributes are properly applied
+- Color contrast meets WCAG AA standards
+- Keyboard navigation is supported
+- Screen reader compatibility
+
+### 12.6 Common Test Cases
+
+Every component undergoes the following standard test cases:
+
+#### Rendering Tests
+
+1. Default rendering with default props
+2. Rendering with different prop variations
+3. Mobile-first responsive rendering
+4. Dark mode rendering
+5. Loading/placeholder state rendering
+
+#### Interaction Tests
+
+1. User events (click, hover, input)
+2. Form interactions (validation, submission)
+3. State change responses
+4. Keyboard navigation
+
+#### Error State Tests
+
+1. Handling of empty/missing data
+2. Handling of error states
+3. Boundary condition handling
+4. Network error handling
+
+### 12.7 Mock Data & Services
+
+Mock data is provided for all external dependencies:
+
+- Supabase authentication calls
+- CA profile data
+- Search requests and responses
+- File uploads
+- Google authentication
+
+MSW intercepts network requests to provide consistent, predictable responses during testing.
+
+### 12.8 Test Implementation
+
+All components have detailed test files with the following structure:
+
+1. **Import and Setup**: Import component, testing utilities, and set up mocks
+2. **Rendering Tests**: Verify component renders correctly in various states
+3. **Interaction Tests**: Verify component responds correctly to user interactions
+4. **Integration Tests**: Verify component works correctly with other components
+5. **Edge Case Tests**: Verify component handles boundary conditions
+
+### 12.9 Continuous Integration
+
+Tests are integrated into the CI pipeline to:
+
+- Run on every pull request
+- Block merges if tests fail
+- Track coverage metrics over time
+- Ensure all code meets quality standards
+
+### 12.10 Performance Testing
+
+In addition to functional tests, components are tested for performance:
+
+- Render time measurement
+- Re-render efficiency
+- Bundle size impact
+
+This comprehensive testing strategy ensures the Xpertly CA Listing Portal maintains high quality, accessibility, and mobile-first responsive design throughout development.
