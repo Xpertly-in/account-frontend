@@ -4,14 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:prod": "NODE_ENV=production next dev",
     "build": "next build",
-    "build:dev": "NODE_ENV=development next build",
-    "build:prod": "NODE_ENV=production next build",
     "start": "serve out",
-    "start:prod": "NODE_ENV=production serve out",
     "lint": "next lint",
     "test": "jest --no-cache --testTimeout=10000",
+    "build-deploy": "npm run build && firebase deploy",
     "test:watch": "jest --watch --no-cache --testTimeout=10000",
     "test:ui": "jest --no-cache --testTimeout=10000 src/tests/ui",
     "test:components": "jest --no-cache --testTimeout=10000 src/tests/components"

@@ -3,12 +3,13 @@
 import { Container } from "@/components/layout/Container.component";
 import CAAuthTabs from "@/components/features/auth/CAAuthTabs.component";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useAuth } from "@/store/context/Auth.provider";
 import { supabase } from "@/helper/supabase.helper";
 
-export default function CALoginContent() {
-  const searchParams = useSearchParams();
+// Separate component to handle search params safely
+function CALogin() {
+  const searchParams = useSearchParams() ?? new URLSearchParams();
   const router = useRouter();
   const { auth } = useAuth();
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "login";
@@ -21,7 +22,9 @@ export default function CALoginContent() {
         router.replace(redirectTo);
         return;
       }
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user) {
         const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
         localStorage.removeItem("postLoginRedirect");
@@ -48,5 +51,20 @@ export default function CALoginContent() {
         <CAAuthTabs defaultTab={defaultTab as "login" | "signup"} />
       </Container>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function CALoginContent() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-lg text-gray-500">Loading...</p>
+        </div>
+      }
+    >
+      <CALogin />
+    </Suspense>
   );
 }

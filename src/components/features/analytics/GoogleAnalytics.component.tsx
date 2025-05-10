@@ -1,27 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { GA_MEASUREMENT_ID, trackPageView } from "@/helper/googleAnalytics.helper";
 import { useAtom, initializeAnalyticsAtom, trackPageViewAtom } from "@/store/jotai";
 import { useAnalyticsEnabled } from "@/hooks/useAnalyticsEnabled";
 
-export const GoogleAnalytics = () => {
+// This component ensures that search params are used safely for static export
+function AnalyticsPageTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, initializeAnalytics] = useAtom(initializeAnalyticsAtom);
   const [, trackPageViewState] = useAtom(trackPageViewAtom);
   const isAnalyticsEnabled = useAnalyticsEnabled();
 
   useEffect(() => {
-    // Initialize analytics state
-    initializeAnalytics();
-  }, [initializeAnalytics]);
-
-  useEffect(() => {
     // Track page views in Jotai state (always)
-    const url = pathname + searchParams.toString();
+    let url = pathname || "";
+    if (searchParams) {
+      url += `?${searchParams.toString()}`;
+    }
     const title = document.title;
 
     trackPageViewState({
@@ -36,6 +34,18 @@ export const GoogleAnalytics = () => {
     }
   }, [pathname, searchParams, trackPageViewState, isAnalyticsEnabled]);
 
+  return null;
+}
+
+export const GoogleAnalytics = () => {
+  const [, initializeAnalytics] = useAtom(initializeAnalyticsAtom);
+  const isAnalyticsEnabled = useAnalyticsEnabled();
+
+  useEffect(() => {
+    // Initialize analytics state
+    initializeAnalytics();
+  }, [initializeAnalytics]);
+
   // Don't render analytics scripts if analytics are disabled
   if (!isAnalyticsEnabled) {
     return null;
@@ -43,6 +53,11 @@ export const GoogleAnalytics = () => {
 
   return (
     <>
+      {/* Wrap the component that uses search params in Suspense */}
+      <Suspense fallback={null}>
+        <AnalyticsPageTracker />
+      </Suspense>
+
       <Script
         strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
