@@ -114,8 +114,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign out with Supabase
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setAuth({ user: null, isLoading: false });
+    try {
+      // Clear any stored data
+      localStorage.removeItem("mockUser");
+      localStorage.removeItem("postLoginRedirect");
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Update local state
+      setAuth({ user: null, isLoading: false });
+      
+      // Force a hard refresh to clear any cached state
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Even if there's an error, try to clear local state and redirect
+      setAuth({ user: null, isLoading: false });
+      window.location.href = "/";
+    }
   };
 
   // Reset password with Supabase
