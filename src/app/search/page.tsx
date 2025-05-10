@@ -1,10 +1,7 @@
-"use client";
-
 import { Container } from "@/components/layout/Container.component";
 import { SearchBar } from "@/components/features/search";
 import { CACard } from "@/components/features/common";
 import { mockCAs } from "@/mock/ca.mock";
-import { useState } from "react";
 
 export default function Search() {
   const filteredCAs = mockCAs;
