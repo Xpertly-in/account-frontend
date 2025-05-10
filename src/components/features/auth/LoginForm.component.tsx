@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import LoginFormFields from "./LoginFormFields.component";
 import LoginFormSecurity from "./LoginFormSecurity.component";
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { EventCategory } from "@/helper/googleAnalytics.helper";
 

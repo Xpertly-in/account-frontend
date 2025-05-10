@@ -438,6 +438,117 @@
   - [x] Implemented mocks for UI components
   - [x] Updated test files to use centralized mocks
   - [x] Documented proper mock usage in helper file
+- [x] Create consolidated analytics documentation
+  - [x] Combined analytics_events.md and google_analytics_setup.md into a single source of truth
+  - [x] Created comprehensive inventory of components requiring analytics tracking
+  - [x] Developed a phased implementation plan for remaining components
+  - [x] Added detailed documentation for existing and planned analytics events
+  - [x] Improved implementation examples for developers
+
+### Analytics Implementation Todo
+
+#### Phase 1: Critical User Flows
+
+- [ ] **SignUp Flow Tracking**
+
+  - [ ] `SignUpForm.component.tsx`
+    - [ ] Track form submission attempts (`signup_attempt` event)
+    - [ ] Track successful/failed signups (`signup_form` event with success/error params)
+    - [ ] Track signup method (email vs Google)
+  - [ ] `SignUpFormTerms.component.tsx`
+    - [ ] Track terms acceptance clicks (`terms_acceptance` event)
+  - [ ] `GoogleAuth.provider.tsx`
+    - [ ] Track Google auth flow steps (`google_auth_flow` event)
+    - [ ] Track error states and user cancellations
+
+- [ ] **Profile Engagement Tracking**
+
+  - [ ] `CAProfileHero.component.tsx`
+    - [ ] Track hero section impressions (`profile_view` event)
+    - [ ] Track social link clicks (`social_link_click` event)
+    - [ ] Track profile image clicks for enlargement
+  - [ ] `CAContactInfo.component.tsx`
+    - [ ] Track contact method clicks (phone, email, etc.)
+    - [ ] Track copy-to-clipboard actions
+    - [ ] Track expanded section views
+
+- [ ] **Onboarding Funnel Tracking**
+  - [ ] `DynamicForm.component.tsx`
+    - [ ] Track form step completions (`onboarding_step_complete` event)
+    - [ ] Track form step views (`onboarding_step_view` event)
+    - [ ] Track form submission attempts and validations
+  - [ ] `FormNavigation.component.tsx`
+    - [ ] Track navigation actions (next/back/skip buttons)
+    - [ ] Track abandonment points in the flow
+
+#### Phase 2: Enhanced User Experience
+
+- [ ] **Detailed Auth Tracking**
+
+  - [ ] `CAAuthTabs.component.tsx` / `AuthTabs.component.tsx`
+    - [ ] Track tab switches (`tab_change` event)
+    - [ ] Track dwell time on each tab
+  - [ ] `ForgotPasswordForm.component.tsx`
+    - [ ] Track password reset requests (`password_reset` event)
+    - [ ] Track email submission success/failure
+    - [ ] Track reset link clicks
+
+- [ ] **Profile Component Tracking**
+
+  - [ ] `CAProfessionalDetails.component.tsx`
+    - [ ] Track section expansion/collapse
+    - [ ] Track interaction with certification details
+  - [ ] `CAServicesSection.component.tsx`
+    - [ ] Track service tag clicks
+    - [ ] Track section scrolling behavior
+  - [ ] `CAReviewsSection.component.tsx`
+    - [ ] Track review impressions
+    - [ ] Track pagination/navigation through reviews
+    - [ ] Track sorting/filtering of reviews
+
+- [ ] **Page-level Enhancements**
+  - [ ] `app/page.tsx` (Homepage)
+    - [ ] Track CTA button clicks
+    - [ ] Track scroll depth and section viewability
+    - [ ] Track entry points to other sections
+  - [ ] `app/search/page.tsx`
+    - [ ] Track filter usage patterns
+    - [ ] Track search refinements
+    - [ ] Track pagination interactions
+
+#### Phase 3: Complete Coverage
+
+- [ ] **Detailed Form Interactions**
+
+  - [ ] `SignUpFormFields.component.tsx` / `LoginFormFields.component.tsx`
+    - [ ] Track field validation errors
+    - [ ] Track field completion rates
+    - [ ] Track field focus time
+  - [ ] `SignUpFormButton.component.tsx`
+    - [ ] Track button state changes
+    - [ ] Track time to clickability
+
+- [ ] **Edge Case Handling**
+
+  - [ ] Track error states throughout the application
+  - [ ] Track browser-specific behaviors
+  - [ ] Track performance issues encountered
+
+- [ ] **Additional App Pages**
+  - [ ] `app/ca/dashboard/page.tsx`
+    - [ ] Track dashboard widget interactions
+    - [ ] Track notification handling
+    - [ ] Track settings changes
+  - [ ] `app/auth/page.tsx`
+    - [ ] Track auth entry points
+    - [ ] Track authentication method preferences
+
+#### Phase 4: Optimization
+
+- [ ] Review analytics data quality
+- [ ] Optimize event parameters for better reporting
+- [ ] Add custom dimensions for enhanced segmentation
+- [ ] Implement enhanced e-commerce tracking if applicable
 
 ### Next Steps
 
