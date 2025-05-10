@@ -37,21 +37,25 @@ export const EventAction = {
 
 // Page View Tracking
 export const trackPageView = (url: string, title?: string) => {
-  window.gtag("config", GA_MEASUREMENT_ID, {
-    page_path: url,
-    page_title: title,
-  });
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("config", GA_MEASUREMENT_ID, {
+      page_path: url,
+      page_title: title,
+    });
+  }
 };
 
 // Custom Event Tracking
 export const trackEvent = (event: GA4Event) => {
-  window.gtag("event", event.name, {
-    event_category: event.category,
-    event_action: event.action,
-    event_label: event.label,
-    value: event.value,
-    ...event.params,
-  });
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", event.name, {
+      event_category: event.category,
+      event_action: event.action,
+      event_label: event.label,
+      value: event.value,
+      ...event.params,
+    });
+  }
 };
 
 // User Interaction Tracking

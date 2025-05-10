@@ -252,18 +252,42 @@ export const createSupabaseMocks = () => {
 // Global Window Mocks
 // ------------------------
 export const mockGlobalWindow = () => {
-  // Mock window.gtag
-  const gtagMock = jest.fn();
-  Object.defineProperty(window, "gtag", { value: gtagMock, writable: true });
+  // Mock gtag function
+  Object.defineProperty(window, "gtag", {
+    value: jest.fn(),
+    writable: true,
+  });
 
-  // Mock window.dataLayer
-  const dataLayerMock: any[] = [];
-  Object.defineProperty(window, "dataLayer", { value: dataLayerMock, writable: true });
+  // Mock matchMedia
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // Deprecated
+      removeListener: jest.fn(), // Deprecated
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
 
-  // Mock document.cookie
-  Object.defineProperty(document, "cookie", { value: "", writable: true });
+  // Mock scrollTo
+  Object.defineProperty(window, "scrollTo", {
+    writable: true,
+    value: jest.fn(),
+  });
 
-  return { gtagMock, dataLayerMock };
+  // Mock dataLayer for GA
+  window.dataLayer = window.dataLayer || [];
+
+  // Return mocked functions for additional control in tests
+  return {
+    gtagMock: window.gtag,
+    matchMediaMock: window.matchMedia,
+    scrollToMock: window.scrollTo,
+  };
 };
 
 // ------------------------

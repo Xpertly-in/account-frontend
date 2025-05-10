@@ -4,6 +4,12 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { Provider } from "@/store/jotai";
 import { mockGlobalWindow } from "@/tests/mocks/jestMock.helper";
 
+// Set up window mocks
+beforeAll(() => {
+  // Explicitly mock window.gtag
+  const { gtagMock } = mockGlobalWindow();
+});
+
 // Mock the helper functions directly
 jest.mock("@/hooks/useAnalyticsEnabled", () => ({
   __esModule: true,

@@ -338,10 +338,13 @@
   - [x] Fixed import paths in all components that reference Jotai stores
   - [x] Moved type definitions out of store files to dedicated type files
   - [x] Updated file naming to follow `.store.ts` convention
-  - [x] Removed unnecessary providers and custom components
-  - [x] Followed proper structure: base atoms, derived atoms, then action atoms
-  - [x] No new providers are to be created
-  - [x] All state management should be Jotai-based
+  - [x] Configured analytics atoms to persist in localStorage
+  - [x] Configured onboarding atoms to persist in localStorage
+  - [x] Used descriptive localStorage keys with xpertly\_ prefix
+  - [x] Fixed testing infrastructure to support localStorage persistence
+  - [x] Added window.gtag mocking for analytics testing
+  - [x] Made Google Analytics helper more resilient with proper null checks
+  - [x] Fixed test failures by handling undefined window.gtag cases
 
 ## Phase 5: CA Onboarding Flow
 

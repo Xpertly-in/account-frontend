@@ -1,4 +1,4 @@
-import { atom } from "@/store/jotai";
+import { atom, atomWithStorage } from "@/store/jotai";
 import {
   AnalyticsState,
   GA4Event,
@@ -6,15 +6,21 @@ import {
   UserInteractionEvent,
 } from "@/types/analytics.type";
 
-// Base atoms
-export const analyticsStateAtom = atom<AnalyticsState>({
+// Base atoms - using atomWithStorage for persistence
+export const analyticsStateAtom = atomWithStorage<AnalyticsState>("xpertly_analytics_state", {
   isInitialized: false,
   lastPageView: "",
   lastEvent: null,
 });
 
-export const pageViewHistoryAtom = atom<PageViewEvent[]>([]);
-export const userInteractionHistoryAtom = atom<UserInteractionEvent[]>([]);
+export const pageViewHistoryAtom = atomWithStorage<PageViewEvent[]>(
+  "xpertly_page_view_history",
+  []
+);
+export const userInteractionHistoryAtom = atomWithStorage<UserInteractionEvent[]>(
+  "xpertly_user_interaction_history",
+  []
+);
 
 // Derived atoms
 export const isAnalyticsInitializedAtom = atom(get => get(analyticsStateAtom).isInitialized);

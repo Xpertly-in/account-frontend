@@ -3,6 +3,12 @@ import { screen, fireEvent, waitFor } from "@testing-library/react";
 import LoginForm from "@/components/features/auth/LoginForm.component";
 import * as React from "react";
 import { render, renderWithTheme, checkA11y, checkA11yInDarkMode } from "@/tests/test-utils";
+import { mockGlobalWindow } from "@/tests/mocks/jestMock.helper";
+
+// Set up window mocks
+beforeAll(() => {
+  mockGlobalWindow();
+});
 
 // Mock all dependencies
 jest.mock("next/navigation", () => {
