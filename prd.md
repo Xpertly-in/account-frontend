@@ -700,3 +700,122 @@ In addition to functional tests, components are tested for performance:
 - Bundle size impact
 
 This comprehensive testing strategy ensures the Xpertly CA Listing Portal maintains high quality, accessibility, and mobile-first responsive design throughout development.
+
+## 13. Analytics Integration
+
+### Overview
+
+The Xpertly CA Listing Portal implements Google Analytics 4 (GA4) for comprehensive user behavior tracking and analytics. The implementation uses Jotai for state management and follows a mobile-first approach.
+
+### Events to Track
+
+1. Page Views
+
+   - All page navigations
+   - Search result pages
+   - Profile pages
+
+2. User Interactions
+
+   - Button clicks
+   - Form submissions
+   - Search queries
+   - Filter applications
+
+3. Profile Views
+
+   - CA profile views
+   - Contact form submissions
+   - Profile interactions
+
+4. Form Submissions
+   - Contact form completions
+   - Search form submissions
+   - Filter form submissions
+
+### Privacy Considerations
+
+- All analytics data is anonymized
+- No personal information is collected
+- Users can opt-out of analytics tracking
+- Compliance with GDPR and CCPA requirements
+
+### Developer Setup
+
+1. Add GA4 Measurement ID to environment variables:
+
+   ```
+   NEXT_PUBLIC_GA_MEASUREMENT_ID=G-DP11JWRL6V
+   ```
+
+2. Import and use analytics hooks:
+
+   ```typescript
+   import { useAnalytics } from "@/hooks/useAnalytics";
+
+   const { trackEvent } = useAnalytics();
+   ```
+
+3. Track events:
+   ```typescript
+   trackEvent({
+     name: "button_click",
+     category: "user_interaction",
+     action: "click",
+     label: "search_button",
+   });
+   ```
+
+## 14. State Management with Jotai
+
+### Overview
+
+The application uses Jotai for state management, providing a lightweight and flexible solution for managing application state.
+
+### Benefits
+
+- Atomic state management
+- No context providers needed
+- Better performance than Context API
+- Simpler testing and debugging
+- TypeScript support out of the box
+
+### Guidelines
+
+1. Atom Creation
+
+   - Create atoms in dedicated files under `src/store/jotai`
+   - Use descriptive names for atoms
+   - Include proper TypeScript types
+
+2. Usage Patterns
+
+   ```typescript
+   // Create atom
+   const countAtom = atom(0);
+
+   // Use atom
+   const [count, setCount] = useAtom(countAtom);
+
+   // Derived atom
+   const doubledAtom = atom(get => get(countAtom) * 2);
+   ```
+
+3. Server-Side Rendering
+
+   - Use `useHydrateAtoms` for SSR
+   - Initialize atoms with default values
+   - Handle hydration mismatches
+
+4. Best Practices
+   - Keep atoms focused and small
+   - Use derived atoms for computed values
+   - Implement proper error handling
+   - Follow TypeScript best practices
+
+### Migration from Context
+
+- Replace Context providers with Jotai atoms
+- Update components to use `useAtom` hook
+- Remove unnecessary wrapper components
+- Update tests to use Jotai utilities

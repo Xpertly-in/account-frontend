@@ -4,12 +4,16 @@ import { MapPin, Star, Check, Trophy } from "@phosphor-icons/react";
 import { Button } from "@/ui/Button.ui";
 import Link from "next/link";
 import { CA } from "@/types/ca.type";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useCallback } from "react";
 
 interface CACardProps {
   ca: CA;
 }
 
 export default function CACard({ ca }: CACardProps) {
+  const { trackProfileView, trackUserInteraction } = useAnalytics();
+
   // Calculate initials for avatar
   const initials = ca.name
     .split(" ")
@@ -19,6 +23,35 @@ export default function CACard({ ca }: CACardProps) {
 
   // Separate city and state from location string
   const [city, state] = ca.location.split(", ");
+
+  // Track profile view
+  const handleProfileClick = useCallback(() => {
+    trackProfileView(ca.id.toString(), "ca_profile");
+    trackUserInteraction({
+      action: "click",
+      label: "view_profile",
+      params: {
+        ca_id: ca.id.toString(),
+        ca_name: ca.name,
+        ca_location: ca.location,
+      },
+      timestamp: Date.now(),
+    });
+  }, [ca, trackProfileView, trackUserInteraction]);
+
+  // Track contact click
+  const handleContactClick = useCallback(() => {
+    trackUserInteraction({
+      action: "click",
+      label: "contact_ca",
+      params: {
+        ca_id: ca.id.toString(),
+        ca_name: ca.name,
+        ca_location: ca.location,
+      },
+      timestamp: Date.now(),
+    });
+  }, [ca, trackUserInteraction]);
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-border/50 bg-card shadow-md transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 dark:border-blue-800/30 dark:bg-gray-900/95 dark:hover:shadow-blue-600/10 hover:-translate-y-1">
@@ -102,12 +135,14 @@ export default function CACard({ ca }: CACardProps) {
             asChild
             variant="outline"
             className="flex-1 border-border bg-card transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary dark:border-blue-700/50 dark:bg-gray-800/50 dark:text-blue-200 dark:hover:border-blue-500 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
+            onClick={handleProfileClick}
           >
             <Link href={`/ca/${ca.id}`}>View Profile</Link>
           </Button>
           <Button
             asChild
             className="flex-1 bg-gradient-to-r from-primary to-secondary text-primary-foreground transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600 dark:text-white dark:shadow-none dark:hover:shadow-blue-500/20 dark:hover:from-blue-400 dark:hover:to-blue-500"
+            onClick={handleContactClick}
           >
             <Link href={`/contact/${ca.id}`}>Contact</Link>
           </Button>

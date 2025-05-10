@@ -5,14 +5,42 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/ui/Button.ui";
 import { Input } from "@/ui/Input.ui";
 import { MapPin, MagnifyingGlass } from "@phosphor-icons/react";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { EventCategory } from "@/helper/googleAnalytics.helper";
 
 export default function SearchBar() {
   const router = useRouter();
   const [location, setLocation] = useState("");
+  const { trackEvent, trackUserInteraction } = useAnalytics();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Track search event
+    trackEvent({
+      name: "search",
+      category: EventCategory.USER_INTERACTION,
+      action: "submit",
+      label: "location_search",
+      params: { location },
+    });
+
     router.push(`/search?location=${encodeURIComponent(location)}`);
+  };
+
+  const handleQuickLocation = (locationName: string) => {
+    setLocation(locationName);
+
+    // Track quick location selection
+    trackUserInteraction({
+      action: "click",
+      label: "quick_location",
+      value: 1,
+      params: { location: locationName },
+      timestamp: Date.now(),
+    });
+
+    router.push(`/search?location=${encodeURIComponent(locationName)}`);
   };
 
   return (
@@ -44,7 +72,7 @@ export default function SearchBar() {
             type="button"
             variant="outline"
             className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
-            onClick={() => setLocation("Mumbai")}
+            onClick={() => handleQuickLocation("Mumbai")}
           >
             Mumbai
           </Button>
@@ -52,7 +80,7 @@ export default function SearchBar() {
             type="button"
             variant="outline"
             className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
-            onClick={() => setLocation("Delhi")}
+            onClick={() => handleQuickLocation("Delhi")}
           >
             Delhi
           </Button>
@@ -60,7 +88,7 @@ export default function SearchBar() {
             type="button"
             variant="outline"
             className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
-            onClick={() => setLocation("Bangalore")}
+            onClick={() => handleQuickLocation("Bangalore")}
           >
             Bangalore
           </Button>
@@ -68,7 +96,7 @@ export default function SearchBar() {
             type="button"
             variant="outline"
             className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
-            onClick={() => setLocation("Chennai")}
+            onClick={() => handleQuickLocation("Chennai")}
           >
             Chennai
           </Button>

@@ -380,3 +380,42 @@
 - [x] SearchBar (`src/components/features/search/SearchBar.component.tsx`)
 - [x] CACard (`src/components/features/common/CACard.component.tsx`)
 - [x] CAAboutSection (`
+
+## Analytics Integration
+
+### Completed Tasks
+
+- [x] Set up Google Analytics 4 configuration
+- [x] Create analytics helper functions
+- [x] Implement Jotai atoms for analytics state
+- [x] Create GoogleAnalytics component
+- [x] Add GA4 script to layout
+- [x] Update documentation
+- [x] Implement analytics tracking in components
+  - [x] Added analytics tracking to SearchBar component
+  - [x] Added analytics tracking to CACard component
+- [x] Implement analytics opt-out functionality
+  - [x] Created AnalyticsOptOut component
+  - [x] Created useAnalyticsEnabled hook
+  - [x] Updated useAnalytics hook to respect opt-out preferences
+  - [x] Updated GoogleAnalytics component to respect opt-out preferences
+- [x] Add analytics event tracking to forms
+  - [x] Added analytics tracking to LoginForm component
+  - [x] Track login attempts, successes, and failures
+  - [x] Track Google authentication attempts
+- [x] Document analytics events
+  - [x] Created analytics_events.md documentation
+  - [x] Documented all event categories and parameters
+  - [x] Added implementation examples
+  - [x] Documented opt-out functionality
+- [x] Add analytics testing
+  - [x] Created tests for useAnalytics hook
+  - [x] Tested opt-out functionality
+  - [x] Tested all tracking methods
+  - [x] Added mocks for Google Analytics
+
+### Todo Tasks
+
+- [ ] Set up analytics dashboard
+- [ ] Create analytics reports
+- [ ] Set up analytics monitoring

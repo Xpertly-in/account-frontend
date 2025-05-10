@@ -15,6 +15,8 @@ import LoginFormFields from "./LoginFormFields.component";
 import LoginFormSecurity from "./LoginFormSecurity.component";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { EventCategory } from "@/helper/googleAnalytics.helper";
 
 interface LoginFormProps {
   hideContainer?: boolean;
@@ -23,7 +25,12 @@ interface LoginFormProps {
 export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   const router = useRouter();
   const { signIn } = useAuth();
-  const { signIn: signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleAuth();
+  const {
+    signIn: signInWithGoogle,
+    isLoading: isGoogleLoading,
+    error: googleError,
+  } = useGoogleAuth();
+  const { trackFormSubmission, trackEvent, trackUserInteraction } = useAnalytics();
   const [formData, setFormData] = useState<AuthFormData>({
     email: "",
     password: "",
@@ -48,11 +55,29 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
+    // Track login attempt
+    trackEvent({
+      name: "login_attempt",
+      category: EventCategory.FORM_SUBMISSION,
+      action: "submit",
+      label: "login_form",
+      params: {
+        method: "email",
+        email_domain: formData.email.split("@")[1],
+      },
+    });
+
     try {
       const { error: signInError, data } = await signIn(formData.email, formData.password);
       const user = data?.user;
 
       if (signInError) {
+        // Track failed login
+        trackFormSubmission("login_form", false, {
+          method: "email",
+          error: signInError.message,
+        });
+
         if (signInError.message === "Invalid login credentials") {
           toast.error("Invalid credentials", {
             description: "Please check your email and password and try again.",
@@ -66,6 +91,12 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
       }
 
       if (!user) {
+        // Track failed login
+        trackFormSubmission("login_form", false, {
+          method: "email",
+          error: "No user data received",
+        });
+
         toast.error("Login failed", {
           description: "No user data received. Please try again.",
         });
@@ -85,6 +116,12 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         return;
       }
 
+      // Track successful login
+      trackFormSubmission("login_form", true, {
+        method: "email",
+        redirect: !profile?.onboarding_completed ? "onboarding" : "dashboard",
+      });
+
       toast.success("Login successful", {
         description: "Welcome back!",
       });
@@ -99,6 +136,12 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         router.push(redirectTo);
       }
     } catch (error) {
+      // Track login error
+      trackFormSubmission("login_form", false, {
+        method: "email",
+        error: "Unexpected error",
+      });
+
       toast.error("An unexpected error occurred");
       console.error("Login error:", error);
     } finally {
@@ -107,9 +150,23 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   };
 
   const handleGoogleSignIn = async () => {
+    // Track Google sign-in attempt
+    trackUserInteraction({
+      action: "click",
+      label: "google_sign_in",
+      params: { method: "google" },
+      timestamp: Date.now(),
+    });
+
     try {
       await signInWithGoogle();
     } catch (error) {
+      // Track failed Google sign-in
+      trackFormSubmission("login_form", false, {
+        method: "google",
+        error: "Google sign-in failed",
+      });
+
       toast.error("Failed to sign in with Google");
       console.error("Google sign-in error:", error);
     }

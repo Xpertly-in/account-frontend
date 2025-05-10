@@ -7,6 +7,8 @@ import { QueryProvider } from "@/store/context/Query.provider";
 import { ThemeProvider } from "@/store/context/Theme.provider";
 import { AuthProvider } from "@/store/context/Auth.provider";
 import { GoogleAuthProvider } from "@/store/context/GoogleAuth.provider";
+import { GoogleAnalytics } from "@/components/features/analytics/GoogleAnalytics.component";
+import { AnalyticsOptOut } from "@/components/features/analytics/AnalyticsOptOut.component";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -34,6 +36,8 @@ export default function RootLayout({
                   <Footer />
                 </div>
                 <Toaster position="top-center" richColors expand closeButton />
+                <GoogleAnalytics />
+                <AnalyticsOptOut />
               </GoogleAuthProvider>
             </AuthProvider>
           </QueryProvider>
