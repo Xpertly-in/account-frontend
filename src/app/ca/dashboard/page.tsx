@@ -18,17 +18,10 @@ export default function CADashboardPage() {
   const handleSignOut = async () => {
     await signOut();
     // Also remove from localStorage as a fallback
-    localStorage.removeItem("mockUser");
-    router.push("/login");
+
+    router.push("/ca/login");
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
 
   return (
     <main className="relative min-h-screen w-full bg-gradient-to-b from-background to-background/90 px-4 pb-16 pt-6 sm:px-6 md:px-8 lg:pb-24 lg:pt-8">
