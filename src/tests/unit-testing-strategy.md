@@ -68,6 +68,24 @@ src/
   - File upload operations
   - Search operations
 
+### Centralized Jest Mocks
+
+- Use the centralized mock helper (`jestMock.helper.tsx`) for common mocks:
+  - Navigation mocks (usePathname, useSearchParams)
+  - Next.js component mocks (Script, Link, Image)
+  - Analytics function mocks
+  - Storage mocks (localStorage, sessionStorage)
+  - Supabase client mocks
+  - Global window object mocks (window.gtag, window.dataLayer)
+  - UI component mocks
+  - Context provider mocks
+- Follow best practices for mocking:
+  - Use direct mocking approach with `jest.mock()` at the top of test files
+  - Import only needed helper functions from the centralized mock file
+  - Avoid variable hoisting issues by properly structuring mocks
+  - Verify mock implementation with test runs
+  - Ensure type safety in all mock implementations
+
 ## 4. Test Coverage Targets
 
 Aim for the following coverage targets:

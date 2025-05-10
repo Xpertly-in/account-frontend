@@ -672,6 +672,19 @@ Mock data is provided for all external dependencies:
 
 MSW intercepts network requests to provide consistent, predictable responses during testing.
 
+In addition, a centralized Jest mock helper (`jestMock.helper.tsx`) provides reusable mock implementations for:
+
+- **Next.js Navigation**: usePathname, useSearchParams
+- **Next.js Components**: Script, Link, Image components
+- **Analytics Functions**: Tracking functions, hooks, and state
+- **Storage**: localStorage, sessionStorage
+- **Supabase**: Client, auth functions, and responses
+- **Global Window Objects**: window.gtag, window.dataLayer
+- **UI Components**: Common UI component mocks
+- **Context Providers**: Auth, Theme, etc.
+
+This centralized approach ensures consistency in mocking across tests, reduces duplication, and follows DRY principles.
+
 ### 12.8 Test Implementation
 
 All components have detailed test files with the following structure:
