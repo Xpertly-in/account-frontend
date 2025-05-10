@@ -199,9 +199,48 @@ The Xpertly platform must follow these visual design guidelines to create a prem
 
 These enhanced visual elements must be implemented consistently while maintaining performance, accessibility, and the mobile-first approach. All visual enhancements should scale appropriately across device sizes.
 
+## 8. State Management Guidelines
+
+### 8.1 Jotai Implementation
+
+The project uses Jotai for state management, following these strict guidelines:
+
+- **File Organization:**
+
+  - All store-related code MUST be in the `/store/jotai` directory
+  - Store files must use the `.store.ts` extension (e.g., `analytics.store.ts`, `onboarding.store.ts`)
+  - Type definitions MUST be in dedicated type files in the `/types` directory
+
+- **Import Patterns:**
+
+  - Use `jotai/vanilla` for atom creation
+  - Use `jotai/react` for React-specific hooks
+  - Import all Jotai functionality from centralized exports in `src/store/jotai/index.ts`
+
+- **Critical Rules:**
+
+  - NO new providers should be created
+  - NO duplication of type definitions in store files
+  - Store files should only contain atom definitions, not type definitions
+  - Maintain correct separation between server and client components when using Jotai
+
+- **Structuring Atoms:**
+
+  - Group related atoms in the same file
+  - Use meaningful, consistent naming with the `Atom` suffix (e.g., `userProfileAtom`)
+  - Follow a standard organization: base atoms first, then derived atoms, then action atoms
+
+- **Avoiding Common Issues:**
+  - Always update imports when renaming files to prevent "module not found" errors
+  - Do not create atom instances outside of store files
+  - Maintain state tracking integrity when refactoring
+  - Prevent "multiple Jotai instances" error through proper import patterns
+
+These guidelines must be strictly followed to maintain code quality and prevent state management issues.
+
 ---
 
-## 8. Development Environment & Contextual Awareness
+## 9. Development Environment & Contextual Awareness
 
 - **Using Cursor IDE:**
   - **Context Management:** Every file should include inline comments that reference the mobile-first design philosophy and the 200-line rule.
@@ -223,7 +262,7 @@ Rule 1: All components must follow a mobile-first approach. Rule 2: No component
 
 ---
 
-## 9. Detailed Task Breakdown
+## 10. Detailed Task Breakdown
 
 Every phase reaffirms the mobile-first design approach, component line limits, library usage, and thorough progress tracking. The tasks below cover every step from setup to deployment.
 
@@ -525,310 +564,4 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
     - [x] Implement `FormStepTitle` component (hiding title/step count for welcome step).
     - [x] Implement `FormNavigation` component (sticky footer, hides Previous on first step).
     - [x] Use appropriate UI components (`Select`, `CheckboxGroup`, `FileUpload`) directly within `DynamicForm`.
-    - [x] Ensure `DynamicForm` adheres to the 200-line limit.
-- **Task 4.3: Refine UI & Structure**
-  - **Requirement:** Ensure components adhere to project guidelines (naming, location, line limits).
-  - **Sub-Tasks:**
-    - [x] Move onboarding interfaces to `src/types/onboarding.type.ts`.
-    - [x] Move auth interfaces (`MockUser`, `AuthState`) to `src/types/auth.type.ts`.
-    - [x] Move `CheckboxGroupField` to `src/ui` and rename to `CheckboxGroup.ui.tsx`.
-    - [x] Delete unused field wrapper components (`TextField.component.tsx`, `SelectField.component.tsx`).
-    - [x] Replace non-Phosphor icons in `FileUpload.ui.tsx`.
-    - [x] Fix UI glitches (e.g., double chevron on Select).
-
-### Phase 5: Testing, Integration & Deployment (Previously Phase 4)
-
-- [ ] Integration Testing
-- [ ] Finalize Progress & Cursor Rules
-- [ ] Deployment
-
----
-
-## 12. Unit Testing Strategy
-
-### 12.1 Testing Overview
-
-The Xpertly CA Listing Portal implements a comprehensive testing strategy to ensure high-quality, maintainable code and a reliable user experience. Our approach focuses on thorough unit testing combined with component-level integration testing.
-
-### 12.2 Testing Framework
-
-- **Primary Testing Tools**:
-  - Jest: Core testing framework for running tests
-  - React Testing Library: For testing React components with a user-centric approach
-  - jest-dom: For enhanced DOM assertions
-  - jest-axe: For accessibility testing
-  - MSW (Mock Service Worker): For mocking API calls to Supabase and external services
-
-### 12.3 Test Organization
-
-Tests are organized to mirror the source code structure:
-
-```
-src/
-  └── tests/
-      ├── ui/                  # Tests for UI components
-      ├── components/          # Tests for components
-      │   ├── layout/          # Tests for layout components
-      │   └── features/        # Tests for feature components
-      │       ├── auth/
-      │       ├── search/
-      │       ├── profile/
-      │       ├── common/
-      │       └── onboarding/
-      ├── store/               # Tests for state management
-      │   └── context/
-      ├── helper/              # Tests for helper functions
-      └── mocks/               # Mock data and services
-          ├── handlers.ts
-          ├── server.ts
-          └── data/
-```
-
-Each test file follows the naming convention of `[ComponentName].test.tsx` for components and `[helperName].test.ts` for helper functions.
-
-### 12.4 Test Coverage Targets
-
-The project aims for the following test coverage targets:
-
-| Component Type     | Coverage Target |
-| ------------------ | --------------- |
-| UI Components      | 100%            |
-| Feature Components | ≥90%            |
-| Layout Components  | ≥95%            |
-| Providers          | ≥95%            |
-| Helper Functions   | 100%            |
-| Pages              | ≥85%            |
-
-### 12.5 Testing Approach
-
-#### 12.5.1 Mobile-First Design Testing
-
-Testing focuses first on mobile viewports, then progressively tests larger screen sizes. This ensures our mobile-first design approach is properly implemented.
-
-Specific tests include:
-
-- Rendering tests at multiple viewport sizes (starting with mobile: 320px-375px)
-- Touch target size verification (minimum 44px × 44px)
-- UI element stacking and layout changes across breakpoints
-- Proper functioning of responsive TailwindCSS classes
-
-#### 12.5.2 Dark Mode Testing
-
-Each component is tested in both light and dark modes using a custom render function that wraps components in a ThemeProvider. Tests verify that:
-
-- Color schemes change appropriately
-- Contrast ratios meet WCAG AA standards in both modes
-- Text remains readable in dark mode
-- UI elements maintain visual hierarchy
-
-#### 12.5.3 Component Size Constraint Testing
-
-Automated tests verify that each component adheres to the 200-line limit established in the project guidelines. This ensures component modularity and maintainability.
-
-#### 12.5.4 Accessibility Testing
-
-Each component undergoes accessibility testing with jest-axe to verify:
-
-- ARIA attributes are properly applied
-- Color contrast meets WCAG AA standards
-- Keyboard navigation is supported
-- Screen reader compatibility
-
-### 12.6 Common Test Cases
-
-Every component undergoes the following standard test cases:
-
-#### Rendering Tests
-
-1. Default rendering with default props
-2. Rendering with different prop variations
-3. Mobile-first responsive rendering
-4. Dark mode rendering
-5. Loading/placeholder state rendering
-
-#### Interaction Tests
-
-1. User events (click, hover, input)
-2. Form interactions (validation, submission)
-3. State change responses
-4. Keyboard navigation
-
-#### Error State Tests
-
-1. Handling of empty/missing data
-2. Handling of error states
-3. Boundary condition handling
-4. Network error handling
-
-### 12.7 Mock Data & Services
-
-Mock data is provided for all external dependencies:
-
-- Supabase authentication calls
-- CA profile data
-- Search requests and responses
-- File uploads
-- Google authentication
-
-MSW intercepts network requests to provide consistent, predictable responses during testing.
-
-In addition, a centralized Jest mock helper (`jestMock.helper.tsx`) provides reusable mock implementations for:
-
-- **Next.js Navigation**: usePathname, useSearchParams
-- **Next.js Components**: Script, Link, Image components
-- **Analytics Functions**: Tracking functions, hooks, and state
-- **Storage**: localStorage, sessionStorage
-- **Supabase**: Client, auth functions, and responses
-- **Global Window Objects**: window.gtag, window.dataLayer
-- **UI Components**: Common UI component mocks
-- **Context Providers**: Auth, Theme, etc.
-
-This centralized approach ensures consistency in mocking across tests, reduces duplication, and follows DRY principles.
-
-### 12.8 Test Implementation
-
-All components have detailed test files with the following structure:
-
-1. **Import and Setup**: Import component, testing utilities, and set up mocks
-2. **Rendering Tests**: Verify component renders correctly in various states
-3. **Interaction Tests**: Verify component responds correctly to user interactions
-4. **Integration Tests**: Verify component works correctly with other components
-5. **Edge Case Tests**: Verify component handles boundary conditions
-
-### 12.9 Continuous Integration
-
-Tests are integrated into the CI pipeline to:
-
-- Run on every pull request
-- Block merges if tests fail
-- Track coverage metrics over time
-- Ensure all code meets quality standards
-
-### 12.10 Performance Testing
-
-In addition to functional tests, components are tested for performance:
-
-- Render time measurement
-- Re-render efficiency
-- Bundle size impact
-
-This comprehensive testing strategy ensures the Xpertly CA Listing Portal maintains high quality, accessibility, and mobile-first responsive design throughout development.
-
-## 13. Analytics Integration
-
-### Overview
-
-The Xpertly CA Listing Portal implements Google Analytics 4 (GA4) for comprehensive user behavior tracking and analytics. The implementation uses Jotai for state management and follows a mobile-first approach.
-
-### Events to Track
-
-1. Page Views
-
-   - All page navigations
-   - Search result pages
-   - Profile pages
-
-2. User Interactions
-
-   - Button clicks
-   - Form submissions
-   - Search queries
-   - Filter applications
-
-3. Profile Views
-
-   - CA profile views
-   - Contact form submissions
-   - Profile interactions
-
-4. Form Submissions
-   - Contact form completions
-   - Search form submissions
-   - Filter form submissions
-
-### Privacy Considerations
-
-- All analytics data is anonymized
-- No personal information is collected
-- Users can opt-out of analytics tracking
-- Compliance with GDPR and CCPA requirements
-
-### Developer Setup
-
-1. Add GA4 Measurement ID to environment variables:
-
-   ```
-   NEXT_PUBLIC_GA_MEASUREMENT_ID=G-DP11JWRL6V
-   ```
-
-2. Import and use analytics hooks:
-
-   ```typescript
-   import { useAnalytics } from "@/hooks/useAnalytics";
-
-   const { trackEvent } = useAnalytics();
-   ```
-
-3. Track events:
-   ```typescript
-   trackEvent({
-     name: "button_click",
-     category: "user_interaction",
-     action: "click",
-     label: "search_button",
-   });
-   ```
-
-## 14. State Management with Jotai
-
-### Overview
-
-The application uses Jotai for state management, providing a lightweight and flexible solution for managing application state.
-
-### Benefits
-
-- Atomic state management
-- No context providers needed
-- Better performance than Context API
-- Simpler testing and debugging
-- TypeScript support out of the box
-
-### Guidelines
-
-1. Atom Creation
-
-   - Create atoms in dedicated files under `src/store/jotai`
-   - Use descriptive names for atoms
-   - Include proper TypeScript types
-
-2. Usage Patterns
-
-   ```typescript
-   // Create atom
-   const countAtom = atom(0);
-
-   // Use atom
-   const [count, setCount] = useAtom(countAtom);
-
-   // Derived atom
-   const doubledAtom = atom(get => get(countAtom) * 2);
-   ```
-
-3. Server-Side Rendering
-
-   - Use `useHydrateAtoms` for SSR
-   - Initialize atoms with default values
-   - Handle hydration mismatches
-
-4. Best Practices
-   - Keep atoms focused and small
-   - Use derived atoms for computed values
-   - Implement proper error handling
-   - Follow TypeScript best practices
-
-### Migration from Context
-
-- Replace Context providers with Jotai atoms
-- Update components to use `useAtom` hook
-- Remove unnecessary wrapper components
-- Update tests to use Jotai utilities
+    - [x] Ensure `DynamicForm`

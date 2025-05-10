@@ -1,9 +1,9 @@
-import { useAtom } from "jotai";
 import {
+  useAtom,
   trackEventAtom,
   trackPageViewAtom,
   trackUserInteractionAtom,
-} from "@/store/jotai/analytics.atoms";
+} from "@/store/jotai";
 import {
   trackEvent as trackGAEvent,
   trackPageView as trackGAPageView,

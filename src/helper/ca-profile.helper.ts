@@ -1,5 +1,6 @@
 import { supabase } from "./supabase.helper";
-import { CAProfile, FormValues } from "@/store/jotai/onboarding.store";
+import { FormValues } from "@/types/onboarding.type";
+import { CAProfile } from "@/types/ca-profile.type";
 import { transformFormValuesToProfile } from "./form.helper";
 
 // Table name for CA profiles

@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { GoogleAnalytics } from "@/components/features/analytics/GoogleAnalytics.component";
-import { Provider } from "jotai";
+import { Provider } from "@/store/jotai";
 import { mockGlobalWindow } from "@/tests/mocks/jestMock.helper";
 
 // Mock navigation

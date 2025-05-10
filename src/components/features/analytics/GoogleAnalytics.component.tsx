@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAtom } from "jotai";
 import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { GA_MEASUREMENT_ID, trackPageView } from "@/helper/googleAnalytics.helper";
-import { initializeAnalyticsAtom, trackPageViewAtom } from "@/store/jotai/analytics.atoms";
+import { useAtom, initializeAnalyticsAtom, trackPageViewAtom } from "@/store/jotai";
 import { useAnalyticsEnabled } from "@/hooks/useAnalyticsEnabled";
 
 export const GoogleAnalytics = () => {

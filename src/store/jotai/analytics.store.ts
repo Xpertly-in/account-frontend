@@ -1,4 +1,4 @@
-import { atom } from "jotai";
+import { atom } from "@/store/jotai";
 import {
   AnalyticsState,
   GA4Event,

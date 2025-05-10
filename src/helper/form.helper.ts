@@ -1,4 +1,4 @@
-import { FormField, FormDefinition, FormValues } from "@/store/jotai/onboarding.store";
+import { FormField, FormDefinition, FormValues } from "@/types/onboarding.type";
 
 /**
  * Validates a field value based on specified validation rules

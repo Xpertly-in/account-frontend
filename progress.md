@@ -323,6 +323,26 @@
 - [ ] Finalize Progress & Cursor Rules
 - [ ] Deployment
 
+## Phase 5: State Management & Performance Optimization
+
+- [x] Jotai Store Architecture Refactoring
+  - [x] Identified and fixed "Multiple Jotai instances" error
+  - [x] Ensured consistent import patterns across all files
+  - [x] Renamed `analytics.atoms.ts` to `analytics.store.ts`
+  - [x] Updated all store files to use centralized imports from index.ts
+  - [x] Created centralized exports in `src/store/jotai/index.ts`
+  - [x] Used `jotai/vanilla` for atom creation
+  - [x] Used `jotai/react` for React-specific hooks
+  - [x] Ensured all components import from centralized exports
+  - [x] Preserved all Jotai state tracking in analytics components and hooks
+  - [x] Fixed import paths in all components that reference Jotai stores
+  - [x] Moved type definitions out of store files to dedicated type files
+  - [x] Updated file naming to follow `.store.ts` convention
+  - [x] Removed unnecessary providers and custom components
+  - [x] Followed proper structure: base atoms, derived atoms, then action atoms
+  - [x] No new providers are to be created
+  - [x] All state management should be Jotai-based
+
 ## Phase 5: CA Onboarding Flow
 
 - [x] Recreate onboarding page (`/ca/onboarding`)

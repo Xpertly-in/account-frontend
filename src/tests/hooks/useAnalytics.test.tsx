@@ -1,7 +1,7 @@
 import React from "react";
 import { renderHook, act } from "@testing-library/react";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { Provider } from "jotai";
+import { Provider } from "@/store/jotai";
 import { mockGlobalWindow } from "@/tests/mocks/jestMock.helper";
 
 // Mock the helper functions directly
