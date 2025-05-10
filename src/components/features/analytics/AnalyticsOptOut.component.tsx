@@ -9,7 +9,7 @@ import { GA_MEASUREMENT_ID } from "@/helper/googleAnalytics.helper";
 // Local storage key for analytics preference
 const ANALYTICS_OPT_OUT_KEY = "xpertly_analytics_opt_out";
 
-export const AnalyticsOptOut = () => {
+const AnalyticsOptOut = () => {
   const [isOptedOut, setIsOptedOut] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -103,3 +103,5 @@ export const AnalyticsOptOut = () => {
     </div>
   );
 };
+
+export default AnalyticsOptOut;

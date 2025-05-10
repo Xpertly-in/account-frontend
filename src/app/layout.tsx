@@ -3,12 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header.component";
 import { Footer } from "@/components/layout/Footer.component";
-import { QueryProvider } from "@/store/context/Query.provider";
-import { ThemeProvider } from "@/store/context/Theme.provider";
-import { AuthProvider } from "@/store/context/Auth.provider";
-import { GoogleAuthProvider } from "@/store/context/GoogleAuth.provider";
-import { GoogleAnalytics } from "@/components/features/analytics/GoogleAnalytics.component";
-import { AnalyticsOptOut } from "@/components/features/analytics/AnalyticsOptOut.component";
+import { Providers } from "@/store/Providers";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -26,22 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <QueryProvider>
-            <AuthProvider>
-              <GoogleAuthProvider>
-                <div className="flex min-h-screen flex-col">
-                  <Header />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                </div>
-                <Toaster position="top-center" richColors expand closeButton />
-                <GoogleAnalytics />
-                <AnalyticsOptOut />
-              </GoogleAuthProvider>
-            </AuthProvider>
-          </QueryProvider>
-        </ThemeProvider>
+        <Providers>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+          <Toaster position="top-center" richColors expand closeButton />
+        </Providers>
       </body>
     </html>
   );

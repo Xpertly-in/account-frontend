@@ -345,6 +345,9 @@
   - [x] Added window.gtag mocking for analytics testing
   - [x] Made Google Analytics helper more resilient with proper null checks
   - [x] Fixed test failures by handling undefined window.gtag cases
+  - [x] Created dedicated JotaiProvider in store folder to avoid provider duplication
+  - [x] Fixed build errors related to static generation and React context usage
+  - [x] Correctly configured Next.js for client-side rendering of components using React context
 
 ## Phase 5: CA Onboarding Flow
 
