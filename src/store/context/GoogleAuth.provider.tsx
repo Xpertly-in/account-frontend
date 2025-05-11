@@ -24,7 +24,7 @@ export function GoogleAuthProvider({ children }: { children: React.ReactNode }) 
       setError(null);
 
       const response = await signInWithGoogle();
-      
+
       if (response?.url) {
         // Redirect to Google OAuth page
         window.location.href = response.url;
@@ -49,4 +49,4 @@ export function useGoogleAuth() {
     throw new Error("useGoogleAuth must be used within a GoogleAuthProvider");
   }
   return context;
-} 
+}

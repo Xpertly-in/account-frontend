@@ -27,7 +27,11 @@ export default function SignUpFormContent({
   setFormData,
   isFormValid = false,
 }: SignUpFormContentProps) {
-  const { signIn: signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleAuth();
+  const {
+    signIn: signInWithGoogle,
+    isLoading: isGoogleLoading,
+    error: googleError,
+  } = useGoogleAuth();
 
   const handleGoogleSignUp = async () => {
     try {
