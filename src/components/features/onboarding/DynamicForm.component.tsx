@@ -599,7 +599,15 @@ export default function DynamicForm() {
     };
 
     for (const [field, label] of Object.entries(requiredFields)) {
-      if (!formData[field] || formData[field].trim() === '') {
+      const value = formData[field];
+    
+      if (
+        value === undefined ||
+        value === null ||
+        (typeof value === 'string' && value.trim() === '') ||
+        (value instanceof File && value.size === 0) ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         errors[field] = `${label} is required`;
         isValid = false;
       }
