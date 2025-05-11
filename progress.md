@@ -561,7 +561,7 @@
   - [ ] Track performance issues encountered
 
 - [ ] **Additional App Pages**
-  - [ ] `app/ca/dashboard/page.tsx`
+  - [ ] `app/ca/dashboard/page.tsx` (Standardized dashboard location)
     - [ ] Track dashboard widget interactions
     - [ ] Track notification handling
     - [ ] Track settings changes

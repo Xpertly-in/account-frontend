@@ -17,7 +17,7 @@ function CALogin() {
   useEffect(() => {
     const checkAuth = async () => {
       if (auth.user) {
-        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
+        const redirectTo = localStorage.getItem("postLoginRedirect") || "/ca/dashboard";
         localStorage.removeItem("postLoginRedirect");
         router.replace(redirectTo);
         return;
@@ -26,7 +26,7 @@ function CALogin() {
         data: { session },
       } = await supabase.auth.getSession();
       if (session?.user) {
-        const redirectTo = localStorage.getItem("postLoginRedirect") || "/dashboard";
+        const redirectTo = localStorage.getItem("postLoginRedirect") || "/ca/dashboard";
         localStorage.removeItem("postLoginRedirect");
         router.replace(redirectTo);
       }

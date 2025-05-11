@@ -51,11 +51,7 @@ export const extractGoogleProfile = (user: any): GoogleProfile => {
 
 export const checkProfileExists = async (userId: string) => {
   try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", userId)
-      .single();
+    const { data, error } = await supabase.from("profiles").select("id").eq("id", userId).single();
 
     if (error) throw error;
     return !!data;
@@ -85,16 +81,19 @@ export const ensureCaProfile = async (user: any) => {
     }
 
     // If not found, upsert new profile (prevents duplicates)
-    const { error: upsertError } = await supabase.from("ca_profiles").upsert([
-      {
-        user_id: user.id,
-        name: user.user_metadata?.full_name || user.email,
-        email: user.email,
-        profile_picture: user.user_metadata?.avatar_url || null,
-        onboarding_completed: false,
-        // Other fields can be left null or set to defaults
-      },
-    ], { onConflict: 'user_id' });
+    const { error: upsertError } = await supabase.from("ca_profiles").upsert(
+      [
+        {
+          user_id: user.id,
+          name: user.user_metadata?.full_name || user.email,
+          email: user.email,
+          profile_picture: user.user_metadata?.avatar_url || null,
+          onboarding_completed: false,
+          // Other fields can be left null or set to defaults
+        },
+      ],
+      { onConflict: "user_id" }
+    );
 
     if (upsertError) throw upsertError;
 
@@ -104,4 +103,4 @@ export const ensureCaProfile = async (user: any) => {
     console.error("Error ensuring ca_profile:", error);
     throw error;
   }
-}; 
+};

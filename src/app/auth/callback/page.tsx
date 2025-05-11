@@ -17,17 +17,17 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log("[AuthCallback] session:", session);
-        console.log("[AuthCallback] getSession error:", error);
-
-        if (error) throw error;
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+        if (error) {
+          throw error;
+        }
 
         if (session?.user) {
-          console.log("[AuthCallback] session.user:", session.user);
           // Ensure ca_profile exists and get onboarding_completed status
           const onboardingCompleted = await ensureCaProfile(session.user);
-          console.log("[AuthCallback] onboardingCompleted:", onboardingCompleted);
 
           if (onboardingCompleted) {
             router.push("/ca/dashboard");
@@ -56,4 +56,4 @@ export default function AuthCallback() {
       </div>
     </div>
   );
-} 
+}

@@ -3,17 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
-import { Card } from "@/ui/Card.ui";
+import { Toaster } from "sonner";
+import { User, Calendar, FileText } from "@phosphor-icons/react";
 import { Button } from "@/ui/Button.ui";
 
 export default function CADashboardPage() {
   const router = useRouter();
   const { auth, signOut } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
 
-
+  useEffect(() => {
+    // Set user information if available
+    if (auth.user) {
+      setUserName(auth.user.user_metadata?.name || "User");
+      setUserEmail(auth.user.email || "");
+    }
+  }, [auth.user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -22,47 +28,49 @@ export default function CADashboardPage() {
     router.push("/login");
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
-
   return (
-    <main className="relative min-h-screen w-full bg-gradient-to-b from-background to-background/90 px-4 pb-16 pt-6 sm:px-6 md:px-8 lg:pb-24 lg:pt-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-6 text-center md:mb-10">
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl lg:text-4xl">
-            CA Dashboard
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground md:text-base">
-            Welcome to your professional dashboard
+    <div className="container mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold sm:text-4xl">Dashboard</h1>
+          <p className="mt-2 text-muted-foreground">Welcome, {userName}</p>
+        </div>
+        <Button onClick={handleSignOut} variant="outline" size="sm" className="mt-4 sm:mt-0">
+          Sign Out
+        </Button>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/30 dark:from-primary/30 dark:to-primary/40">
+            <User className="h-6 w-6 text-primary dark:text-blue-400" />
+          </div>
+          <h3 className="text-xl font-semibold">Profile</h3>
+          <p className="mt-2 text-muted-foreground">
+            Manage your profile information and preferences.
           </p>
         </div>
 
-        <Card className="mx-auto overflow-hidden border bg-card/90 p-6 shadow-lg backdrop-blur-sm sm:rounded-xl md:max-w-4xl">
-          <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold">Welcome, {userName}</h2>
-                <p className="text-sm text-muted-foreground">{userEmail}</p>
-              </div>
-              <Button onClick={handleSignOut} variant="outline" size="sm">
-                Sign Out
-              </Button>
-            </div>
-
-            <div className="rounded-lg bg-muted/30 p-4">
-              <h3 className="mb-3 text-lg font-medium">Dashboard Coming Soon</h3>
-              <p className="text-sm text-muted-foreground">
-                We're building your personalized dashboard. Check back soon for updates!
-              </p>
-            </div>
+        <div className="rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-secondary/20 to-secondary/30 dark:from-secondary/30 dark:to-secondary/40">
+            <Calendar className="h-6 w-6 text-secondary dark:text-blue-400" />
           </div>
-        </Card>
+          <h3 className="text-xl font-semibold">Bookings</h3>
+          <p className="mt-2 text-muted-foreground">
+            View and manage your appointments with clients.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-accent/20 to-accent/30 dark:from-accent/30 dark:to-accent/40">
+            <FileText className="h-6 w-6 text-accent dark:text-green-400" />
+          </div>
+          <h3 className="text-xl font-semibold">Documents</h3>
+          <p className="mt-2 text-muted-foreground">Access and manage your client documents.</p>
+        </div>
       </div>
-    </main>
+
+      <Toaster position="top-center" richColors expand closeButton />
+    </div>
   );
 }

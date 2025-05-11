@@ -23,7 +23,9 @@ export function Header() {
   // Check for Supabase session
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       setHasSession(!!session?.user);
     };
     checkSession();
@@ -80,7 +82,7 @@ export function Header() {
 
             {isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <Link href="/dashboard">
+                <Link href="/ca/dashboard">
                   <Button
                     variant="outline"
                     className="rounded-lg border-primary/20 px-4 py-2 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
@@ -146,7 +148,7 @@ export function Header() {
 
             {isLoggedIn ? (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/ca/dashboard" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="outline"
                     className="w-full justify-start rounded-lg border-primary/20 px-4 py-2.5 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
