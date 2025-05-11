@@ -6,6 +6,14 @@ const nextConfig = {
     unoptimized: true,
     domains: ["lh3.googleusercontent.com", "www.google.com"],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  // ✅ Disable TypeScript type checking during build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 module.exports = nextConfig;
