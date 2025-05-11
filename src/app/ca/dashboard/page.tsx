@@ -24,8 +24,8 @@ export default function CADashboardPage() {
   const handleSignOut = async () => {
     await signOut();
     // Also remove from localStorage as a fallback
-    localStorage.removeItem("mockUser");
-    router.push("/login");
+
+    router.push("/ca/login");
   };
 
   return (

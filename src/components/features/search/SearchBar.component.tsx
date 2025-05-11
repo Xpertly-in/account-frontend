@@ -8,7 +8,11 @@ import { MapPin, MagnifyingGlass } from "@phosphor-icons/react";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { EventCategory } from "@/helper/googleAnalytics.helper";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  onSearch?: (location: string) => void;
+}
+
+export default function SearchBar({ onSearch }: SearchBarProps) {
   const router = useRouter();
   const [location, setLocation] = useState("");
   const { trackEvent, trackUserInteraction } = useAnalytics();
@@ -25,7 +29,11 @@ export default function SearchBar() {
       params: { location },
     });
 
-    router.push(`/search?location=${encodeURIComponent(location)}`);
+    if (onSearch) {
+      onSearch(location);
+    } else {
+      router.push(`/search?location=${encodeURIComponent(location)}`);
+    }
   };
 
   const handleQuickLocation = (locationName: string) => {
@@ -40,7 +48,11 @@ export default function SearchBar() {
       timestamp: Date.now(),
     });
 
-    router.push(`/search?location=${encodeURIComponent(locationName)}`);
+    if (onSearch) {
+      onSearch(locationName);
+    } else {
+      router.push(`/search?location=${encodeURIComponent(locationName)}`);
+    }
   };
 
   return (
@@ -67,7 +79,7 @@ export default function SearchBar() {
             <MagnifyingGlass className="mr-2 h-5 w-5" weight="bold" /> Find CA
           </Button>
         </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start">
+        <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             variant="outline"

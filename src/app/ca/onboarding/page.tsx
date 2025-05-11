@@ -49,25 +49,13 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-background to-background/90">
-      {/* Decorative elements - hidden on mobile */}
-      <div className="hidden md:block">
-        <DecorativeElements />
-      </div>
-
-      <div className="container mx-auto px-4 py-6 sm:px-6 md:px-8 lg:py-8">
+      <div className="container mx-auto px-0 py-6 sm:px-0 md:px-2 lg:py-8">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-6 text-center md:mb-10">
-            <h1 className="text-2xl font-bold text-foreground md:text-3xl lg:text-4xl">
-              Complete Your CA Profile
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground md:text-base">
-              Let's set up your professional profile to connect with clients
-            </p>
-          </div>
+          
 
-          <Card className="mx-auto overflow-hidden border-0 bg-card/90 p-0 shadow-lg backdrop-blur-sm sm:rounded-xl sm:border md:max-w-4xl">
+        
             <DynamicForm />
-          </Card>
+          
         </div>
       </div>
     </div>
