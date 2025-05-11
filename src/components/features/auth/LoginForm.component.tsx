@@ -127,7 +127,7 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
 
       // Redirect based on onboarding status
       if (!profile?.onboarding_completed) {
-        router.push("/ca/onboarding");
+        router.push("/ca/onboarding");  // Make sure path starts with /ca/
       } else {
         // Get the stored redirect path or default to dashboard
         const redirectTo = localStorage.getItem("postLoginRedirect") || "/ca/dashboard";

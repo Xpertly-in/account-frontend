@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header.component";
 import { Footer } from "@/components/layout/Footer.component";
 import { Providers } from "@/store/Providers";
 import { Toaster } from "sonner";
+import { ClientProviders } from "@/components/providers/ClientProviders";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,14 +22,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <Toaster position="top-center" richColors expand closeButton />
-        </Providers>
+        <ClientProviders>
+          <Providers>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster position="top-center" richColors expand closeButton />
+          </Providers>
+        </ClientProviders>
       </body>
     </html>
   );
