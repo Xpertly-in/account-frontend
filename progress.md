@@ -155,6 +155,84 @@
       - [ ] Test redirect logic
       - [ ] Test mobile responsiveness
 
+- [ ] Role Selection Screen
+
+  - [ ] Create RoleSelection component
+    - [ ] Design mobile-first layout with glassmorphism panels
+    - [ ] Add welcome heading and supportive subtext
+    - [ ] Implement two visually distinct role selection cards
+      - [ ] Add gradient headers in brand colors
+      - [ ] Add Phosphor icons (Briefcase for CA, Handshake for Customer)
+      - [ ] Add role labels and descriptions
+      - [ ] Create interactive hover/tap states
+    - [ ] Add decorative background elements
+    - [ ] Implement accessibility features
+      - [ ] High contrast text
+      - [ ] Large touch targets
+      - [ ] Keyboard navigation support
+      - [ ] Screen reader friendly labels
+    - [ ] Add dark mode support
+  - [ ] Implement state management
+    - [ ] Update user.store.ts to include role information
+    - [ ] Create user role types
+    - [ ] Implement role persistence
+  - [ ] Add routing logic
+    - [ ] Redirect to role selection after signup
+    - [ ] Route to appropriate onboarding path based on selection
+    - [ ] Create role-specific route guards
+  - [ ] Integrate analytics
+    - [ ] Track role selection screen impressions
+    - [ ] Track role selection events
+    - [ ] Track time spent on decision
+  - [ ] Test implementation
+    - [ ] Test responsive layout
+    - [ ] Test role selection functionality
+    - [ ] Test routing logic
+    - [ ] Test accessibility compliance
+
+- [ ] User Onboarding Flow
+
+  - [ ] Create UserOnboardingForm component
+    - [ ] Design mobile-first layout with glassmorphism panels
+    - [ ] Add form fields with proper validation:
+      - [ ] Profile picture upload
+      - [ ] Phone number input (optional)
+      - [ ] WhatsApp availability toggle
+      - [ ] City & State dropdown
+      - [ ] Services needed multi-select (using shared services list)
+      - [ ] Urgency/timeline dropdown
+      - [ ] Additional notes textarea
+    - [ ] Implement progress indicator
+    - [ ] Add form navigation controls
+    - [ ] Add skip options for optional fields
+    - [ ] Add decorative elements matching design spec
+  - [ ] Create field components
+    - [ ] ProfilePictureUpload component
+    - [ ] PhoneNumberInput component
+    - [ ] LocationSelect component
+    - [ ] ServicesMultiSelect component
+    - [ ] UrgencySelect component
+  - [ ] Implement state management
+    - [ ] Update user.store.ts for customer profile data
+    - [ ] Create user profile types
+    - [ ] Implement form state persistence
+    - [ ] Connect to Supabase user profile
+  - [ ] Add validation logic
+    - [ ] Client-side validation for all fields
+    - [ ] Error handling and messaging
+    - [ ] Create validation helpers
+  - [ ] Style per design spec
+    - [ ] Apply premium visual styling
+    - [ ] Add animations and transitions
+    - [ ] Support dark mode
+    - [ ] Ensure responsive behavior
+  - [ ] Test implementation
+    - [ ] Test form rendering and responsiveness
+    - [ ] Test validation logic
+    - [ ] Test data persistence
+    - [ ] Test form submission
+    - [ ] Test accessibility compliance
+
 - [ ] Contact Form
 - [ ] CA Dashboard
 - [ ] Admin Dashboard
@@ -405,7 +483,8 @@
 - [x] CAAuthTabs (`src/components/features/auth/CAAuthTabs.component.tsx`) - 84 lines
 - [x] SearchBar (`src/components/features/search/SearchBar.component.tsx`)
 - [x] CACard (`src/components/features/common/CACard.component.tsx`)
-- [x] CAAboutSection (`
+- [ ] RoleSelection (`src/components/features/onboarding/RoleSelection.component.tsx`)
+- [ ] UserOnboardingForm (`src/components/features/onboarding/UserOnboardingForm.component.tsx`)
 
 ## Analytics Integration
 
@@ -486,6 +565,19 @@
   - [ ] `GoogleAuth.provider.tsx`
     - [ ] Track Google auth flow steps (`google_auth_flow` event)
     - [ ] Track error states and user cancellations
+  - [ ] `RoleSelection.component.tsx`
+
+    - [ ] Track role selection screen views
+    - [ ] Track role selection events
+    - [ ] Track time spent on decision
+    - [ ] Track abandonment at this step
+
+  - [ ] `UserOnboardingForm.component.tsx`
+    - [ ] Track form starts and completions
+    - [ ] Track field completion rates
+    - [ ] Track time spent on each field
+    - [ ] Track skip rates for optional fields
+    - [ ] Monitor form submission success/failure
 
 - [ ] **Profile Engagement Tracking**
 

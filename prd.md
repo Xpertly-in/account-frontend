@@ -199,6 +199,222 @@ The Xpertly platform must follow these visual design guidelines to create a prem
 
 These enhanced visual elements must be implemented consistently while maintaining performance, accessibility, and the mobile-first approach. All visual enhancements should scale appropriately across device sizes.
 
+## 7.2 Role Selection Screen
+
+After signup, users must be presented with a modern, premium role selection screen that branches them into distinct onboarding paths based on their selection. This screen is a critical part of the user journey that sets expectations and personalizes the experience.
+
+### Design Requirements
+
+- **Layout:**
+
+  - Mobile-first design with responsive behavior
+  - Centered content with appropriate padding
+  - Maximum width constraint for larger screens
+  - Soft glassmorphism panels with subtle transparency
+  - Decorative background elements (blurs, plus signs, dots)
+
+- **Content Structure:**
+
+  - Bold welcome heading ("Welcome to Xpertly")
+  - Supportive subtext ("Let's get to know you a bit…")
+  - Two large, visually distinct role selection cards
+  - Generous spacing between elements
+
+- **Role Selection Cards:**
+
+  - Each card must have:
+    - Gradient header in brand colors (primary for CA, accent for Customer)
+    - Bold, prominent Phosphor icon (Briefcase for CA, Handshake for Customer)
+    - Clear label ("I'm a CA", "I'm a Customer")
+    - Brief description of the role
+    - Rounded corners and elegant shadows
+    - Interactive hover/tap states
+    - Clear visual distinction between options
+
+- **Visual Style:**
+
+  - Vibrant gradients using brand colors
+  - Subtle background decorations
+  - Rounded corners (min 12px radius)
+  - Elegant shadows for depth
+  - Premium, clean aesthetic inspired by Hubble's Pluto gifting platform
+
+- **Accessibility:**
+  - High contrast text for readability
+  - Large touch targets (minimum 44x44px)
+  - Keyboard navigation support
+  - Screen reader friendly labeling
+  - Focus indicators for keyboard users
+
+### Functionality Requirements
+
+- **User Flow:**
+
+  - Screen appears immediately after successful signup
+  - Selection of "I'm a CA" routes to CA-specific onboarding
+  - Selection of "I'm a Customer" routes to customer-specific onboarding
+  - Role selection must be stored in user profile
+
+- **State Management:**
+
+  - User role must be stored in Jotai store
+  - Role selection must persist across sessions
+  - Role information must be saved to backend when available
+
+- **Analytics:**
+  - Track impressions of role selection screen
+  - Track selection of each role type
+  - Track time spent on decision
+  - Track any abandonment at this step
+
+### Implementation Guidelines
+
+- Create `RoleSelection.component.tsx` in `/components/features/onboarding/`
+- Keep component under 200 lines of code
+- Use Card component from shadcn UI for role cards
+- Use Phosphor icons exclusively
+- Implement proper loading and error states
+- Add appropriate animations for selection
+- Ensure dark mode support
+
+## 7.3 User Onboarding Flow
+
+After selecting the "I'm a Customer" role, users must complete a customer-specific onboarding flow that captures essential information to connect them with relevant CAs and generate quality lead data.
+
+### Objective
+
+Collect additional details from users that will:
+
+- Help match them with the most relevant Chartered Accountants
+- Enable regional targeting and personalized recommendations
+- Provide context for CAs reviewing potential client needs
+- Generate actionable lead data for the platform
+
+### Design Requirements
+
+- **Layout:**
+
+  - Mobile-first design with responsive behavior
+  - Multi-step form with clear progress indication
+  - Soft glassmorphism panels with subtle transparency
+  - Decorative background elements consistent with the role selection screen
+  - Generous whitespace and clear visual hierarchy
+
+- **Visual Style:**
+
+  - Maintain the premium, playful aesthetic inspired by Hubble's Pluto gifting platform
+  - Use Xpertly's brand color palette with bold gradients
+  - Incorporate smooth rounded cards and elegant shadow layers
+  - Large, clear form elements with ample touch targets
+  - Animated transitions between form sections
+  - Vivid CTA buttons with hover/active states
+
+- **Form Elements:**
+
+  - Profile picture upload with preview
+  - Phone number input with optional flag
+  - WhatsApp toggle switch
+  - City & State dropdown with search functionality
+  - Multi-select component for services needed
+  - Single-select dropdown for urgency/timeline
+  - Textarea for additional notes
+  - Clear, prominent action buttons
+
+- **Accessibility:**
+  - High contrast text and form elements
+  - Proper labeling for screen readers
+  - Keyboard navigation support
+  - Error states with clear messaging
+  - Focus indicators for keyboard users
+
+### Field Specifications
+
+1. **Profile Picture:**
+
+   - Optional image upload
+   - Preview functionality
+   - Default avatar placeholder
+   - Support for cropping/resizing
+
+2. **Phone Number:**
+
+   - Optional field
+   - Input with validation
+   - Format guidance
+
+3. **WhatsApp Availability:**
+
+   - Toggle switch (Yes/No)
+   - Only enabled if phone number is provided
+
+4. **City & State:**
+
+   - Required field
+   - Single-select dropdown with search
+   - Prioritize major cities
+
+5. **Type of Services Needed:**
+
+   - Required field
+   - Multi-select component
+   - Use the same services list defined in CA onboarding
+   - Grouped by category for easier selection
+
+6. **Urgency / Timeline:**
+
+   - Required field
+   - Single-select dropdown with options:
+     - Immediately
+     - Within a week
+     - This month
+     - Just exploring
+
+7. **Additional Notes:**
+   - Optional textarea
+   - Character limit with counter
+   - Placeholder text suggesting useful information to share
+
+### Functionality Requirements
+
+- **User Flow:**
+
+  - Form appears after role selection (if "I'm a Customer" is chosen)
+  - Progress indication shows completion status
+  - Form can be partially completed and resumed later
+  - Skip option available for non-essential fields
+  - Submission confirmation with next steps
+
+- **Data Persistence:**
+
+  - All fields must be persisted to the user's profile in Supabase
+  - Data must be queryable for CA-side filtering
+  - Form state must be saved during completion to prevent data loss
+
+- **Validation:**
+
+  - Client-side validation for all fields
+  - Proper error handling and messaging
+  - Prevent submission of invalid data
+
+- **Analytics:**
+  - Track form starts, completions, and abandonments
+  - Measure time spent on each field
+  - Track skip rates for optional fields
+  - Monitor conversion funnel through the onboarding process
+
+### Implementation Guidelines
+
+- Create `UserOnboardingForm.component.tsx` in `/components/features/onboarding/`
+- Keep component under 200 lines of code by extracting field components as needed
+- Use shadcn UI components for consistent styling
+- Implement form state management with Jotai
+- Use Phosphor icons exclusively
+- Add appropriate animations for transitions and feedback
+- Ensure dark mode support
+- Implement responsive design for all screen sizes
+- Add comprehensive form validation
+- Include loading and error states
+
 ## 8. State Management Guidelines
 
 ### 8.1 Jotai Implementation
@@ -428,6 +644,103 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
     - Add Google auth setup guide
     - Document component usage
     - Add troubleshooting guide
+
+- **Task 3:** Implement Role Selection Screen
+
+  - **Component Development:**
+
+    - Create `RoleSelection.component.tsx` (under 200 lines)
+      - Implement mobile-first design with TailwindCSS
+      - Add welcome heading and supportive subtext
+      - Create two visually distinct role selection cards
+      - Use Phosphor icons (Briefcase for CA, Handshake for Customer)
+      - Add gradient headers and decorative elements
+      - Implement hover/tap states and animations
+      - Ensure proper accessibility
+      - Support dark mode
+      - Add decorative background elements
+
+  - **State Management:**
+
+    - Update `user.store.ts` to include role information
+    - Create necessary types in `/types/user.type.ts`
+    - Implement role persistence in localStorage
+
+  - **Routing Logic:**
+
+    - Update Auth provider to redirect to role selection after signup
+    - Implement conditional routing based on role selection
+    - Create route guards for role-specific pages
+
+  - **Analytics Integration:**
+
+    - Track role selection events
+    - Measure conversion rates through the selection process
+
+  - **Testing Implementation:**
+    - Test component rendering and responsiveness
+    - Test role selection functionality
+    - Test routing logic
+    - Test persistence of role selection
+    - Test accessibility compliance
+
+- **Task 4:** Implement User Onboarding Flow
+
+  - **Component Development:**
+
+    - Create `UserOnboardingForm.component.tsx` (under 200 lines)
+      - Implement mobile-first design with TailwindCSS
+      - Add form fields with proper validation:
+        - Profile picture upload
+        - Phone number input (optional)
+        - WhatsApp availability toggle
+        - City & State dropdown
+        - Services needed multi-select
+        - Urgency/timeline dropdown
+        - Additional notes textarea
+      - Create progress indicator
+      - Add form navigation controls
+      - Implement skip options for optional fields
+      - Ensure proper accessibility
+      - Support dark mode
+      - Add decorative elements matching design spec
+
+  - **State Management:**
+
+    - Update `user.store.ts` to include customer profile information
+    - Create necessary types in `/types/user.type.ts`
+    - Implement form state persistence during completion
+    - Connect form submission to Supabase user profile
+
+  - **Field Components:**
+
+    - Create reusable field components as needed:
+      - `ProfilePictureUpload.component.tsx`
+      - `PhoneNumberInput.component.tsx`
+      - `LocationSelect.component.tsx`
+      - `ServicesMultiSelect.component.tsx`
+      - `UrgencySelect.component.tsx`
+
+  - **Validation Logic:**
+
+    - Implement client-side validation for all fields
+    - Add proper error handling and messaging
+    - Create validation helper functions
+
+  - **Analytics Integration:**
+
+    - Track form starts, completions, and abandonments
+    - Measure time spent on each field
+    - Track skip rates for optional fields
+    - Monitor conversion funnel
+
+  - **Testing Implementation:**
+    - Test component rendering and responsiveness
+    - Test form validation logic
+    - Test data persistence
+    - Test skip functionality
+    - Test form submission
+    - Test accessibility compliance
 
 #### Home Page
 
