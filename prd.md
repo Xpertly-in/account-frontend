@@ -973,6 +973,175 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
     - Add comprehensive accessibility features
     - Implement proper data caching for performance
 
+#### CA Dashboard
+
+- **Task 11:** Design and Implement the CA Dashboard.
+
+  - **Objective:**
+
+    - Provide CAs with a centralized hub to manage leads and interactions
+    - Enable easy tracking of customer inquiries and contact requests
+    - Streamline forum post creation from within the dashboard
+    - Increase CA engagement and value derived from the platform
+
+  - **User Flow:**
+
+    - CAs are redirected to the dashboard upon completing their onboarding
+    - Dashboard serves as the primary interface for CAs to manage their platform presence
+    - Navigation provides quick access to all key dashboard features
+    - Real-time updates for new leads and contact requests
+
+  - **Feature Breakdown (with TDD Focus):**
+
+    | Feature          | Description                                       | Key Component(s)                 |
+    | ---------------- | ------------------------------------------------- | -------------------------------- |
+    | New Leads        | Display filtered list of customer-submitted leads | LeadCard.component.tsx           |
+    | Contact Requests | Show direct contact messages with metadata        | ContactRequestCard.component.tsx |
+    | Create New Post  | Compose and submit forum posts                    | PostComposer.component.tsx       |
+
+  - **Component Requirements:**
+
+    - **Dashboard Layout Component:**
+
+      - Responsive, mobile-first design
+      - Navigation between dashboard sections
+      - Summary metrics display (e.g., new leads count, unread requests)
+      - Profile completion reminder (if applicable)
+      - Notification system for new activity
+      - Persistent access to key actions
+
+    - **LeadCard Component:**
+
+      - Display customer information (anonymized as needed)
+      - Show requested services with visual indicators
+      - Display urgency/timeline with appropriate styling
+      - Show city/state for geographic context
+      - Indicate contact preference (phone/WhatsApp/email)
+      - Include action buttons (contact, dismiss, save)
+      - Support sorting by urgency, date, or service type
+      - Support filtering by multiple criteria
+
+    - **ContactRequestCard Component:**
+
+      - Display user message with proper formatting
+      - Show timestamp with relative formatting
+      - Indicate contact method preference
+      - Include status indicators (new, replied, ignored)
+      - Provide quick-reply functionality
+      - Support bulk actions for multiple requests
+      - Implement read/unread state tracking
+
+    - **PostComposer Component:**
+      - Title input with character limit
+      - Rich text editor for post content
+      - Image upload with preview functionality
+      - Hashtag input with autocomplete from popular tags
+      - Draft saving functionality
+      - Preview option before posting
+      - Post visibility options (public/CA-only)
+      - Success/error feedback after submission
+
+  - **TDD Enforcement:**
+
+    - All components must follow Test-Driven Development methodology:
+
+      - Write failing tests first (Red phase)
+      - Implement minimal code to pass tests (Green phase)
+      - Refactor while maintaining passing tests
+
+    - Test coverage requirements:
+
+      - 100% test coverage for all UI components
+      - Unit tests for all utility functions
+      - Integration tests for component interactions
+      - Snapshot tests for UI consistency
+
+    - Testing focus areas:
+      - Component rendering in various states
+      - Input validation and error handling
+      - State changes from user interactions
+      - API interaction mocking (Supabase)
+      - Accessibility compliance
+      - Responsive behavior
+      - Dark mode support
+
+  - **Data Requirements:**
+
+    - **Leads Data:**
+
+      - Customer ID (for internal reference)
+      - Services requested (array of service types)
+      - Urgency/timeline selection
+      - City/state location
+      - Contact preference (phone/email/WhatsApp)
+      - Additional notes (if provided)
+      - Submission timestamp
+      - Status (new, contacted, closed)
+
+    - **Contact Requests Data:**
+
+      - Request ID
+      - User name (if provided)
+      - User contact information
+      - Message content
+      - Submission timestamp
+      - Status (new, replied, ignored)
+      - CA notes (private)
+
+    - **Forum Post Data:**
+      - Inherits the same structure as the Forum Feature
+      - Additional "created_from" field to track dashboard-originated posts
+      - CA-specific fields for professional advice marking
+
+  - **UI/UX Design Goals:**
+
+    - **Layout:**
+
+      - Mobile-first, responsive design
+      - Card-based interface for each item
+      - Clear visual hierarchy for information
+      - Sticky navigation for easy section switching
+      - Pull-to-refresh functionality on mobile
+
+    - **Visual Style:**
+
+      - Consistent with overall platform aesthetic
+      - Bold gradients for section headers
+      - Glassmorphism panels for cards and forms
+      - Smooth rounded corners (min 12px radius)
+      - Elegant shadow layering for depth
+      - Animated transitions between states
+      - Appropriate color coding for urgency/status
+
+    - **User Experience:**
+      - Quick-action buttons for common tasks
+      - Swipe actions on mobile for lead/request management
+      - Infinite scroll for long lists with lazy loading
+      - Real-time updates when possible
+      - Optimistic UI updates for action feedback
+      - Comprehensive empty states and loading indicators
+
+  - **Analytics & Metrics:**
+
+    - Track lead response rates and time-to-response
+    - Measure contact request handling efficiency
+    - Monitor forum post creation frequency and engagement
+    - Analyze dashboard feature usage patterns
+    - Track conversion of leads to clients (future feature)
+
+  - **Implementation Guidelines:**
+    - Create all components under `/components/features/dashboard/`
+    - Keep each component under 200 lines of code
+    - Use Card component from shadcn UI for consistency
+    - Use Phosphor icons exclusively
+    - Implement proper loading and error states
+    - Add appropriate animations for interactions
+    - Ensure full dark mode support
+    - Implement responsive design for all screen sizes
+    - Add comprehensive accessibility features
+    - Follow TDD methodology rigorously
+    - Configure Jest + Testing Library for thorough testing
+
 #### CA Listings & Profile Pages
 
 - **Task 14:** Develop the CA Listings Page.

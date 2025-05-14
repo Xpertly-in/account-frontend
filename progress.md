@@ -149,10 +149,30 @@
     - [ ] Monitor content creation metrics
     - [ ] Analyze user interaction patterns
   - [ ] Styling
+
     - [ ] Apply premium visual design to all components
     - [ ] Implement animations and transitions
     - [ ] Ensure dark mode support
     - [ ] Test responsive behavior across devices
+
+  - [ ] **Forum Components**
+
+    - [ ] Track post views and engagement metrics
+    - [ ] Monitor reaction usage patterns
+    - [ ] Track comment creation and threading
+    - [ ] Measure search and filter usage
+    - [ ] Analyze content creation patterns
+    - [ ] Track post sharing and virality
+    - [ ] Monitor hashtag popularity and growth
+
+  - [ ] **CA Dashboard Components**
+    - [ ] Track lead interaction metrics
+    - [ ] Measure contact request response times
+    - [ ] Monitor forum post creation from dashboard
+    - [ ] Track dashboard section usage patterns
+    - [ ] Analyze lead-to-client conversion rates
+    - [ ] Measure time spent on different dashboard areas
+    - [ ] Track bulk actions and efficiency metrics
 
 - [x] Authentication
 
@@ -297,23 +317,134 @@
     - [ ] Test form submission
     - [ ] Test accessibility compliance
 
-- [ ] Contact Form
-- [ ] CA Dashboard
-- [ ] Admin Dashboard
-- [ ] SEO Optimization
+- [ ] Forum Feature
 
-  - [ ] Meta tags configuration
-  - [ ] Open Graph tags
-  - [ ] Dynamic meta descriptions
-  - [ ] Structured data (JSON-LD)
-  - [ ] Heading hierarchy
-  - [ ] Sitemap generation
-  - [ ] robots.txt configuration
-  - [ ] Canonical URLs
-  - [ ] Image alt text
-  - [ ] Performance optimization
-  - [ ] URL structure and slugs
-  - [ ] Breadcrumb navigation
+  - [ ] Core Components
+    - [ ] ForumFeed component
+      - [ ] Implement virtual scrolling
+      - [ ] Add sort controls (trending, recent, relevant)
+      - [ ] Add filter controls
+      - [ ] Create empty and loading states
+      - [ ] Implement infinite scroll
+    - [ ] PostCard component
+      - [ ] Create author header with avatar
+      - [ ] Implement content display
+      - [ ] Add image carousel for multiple images
+      - [ ] Add hashtag display with links
+      - [ ] Add timestamp with relative formatting
+      - [ ] Implement responsive layout
+    - [ ] ReactionSystem component
+      - [ ] Create multiple reaction types
+      - [ ] Add animated reaction selection
+      - [ ] Implement reaction count display
+      - [ ] Add user's current reaction highlighting
+    - [ ] CommentThread component
+      - [ ] Create nested replies with proper hierarchy
+      - [ ] Add collapsible thread sections
+      - [ ] Implement "Load more" for long threads
+      - [ ] Add reply form with @mention support
+    - [ ] CreatePost component
+      - [ ] Implement rich text editor
+      - [ ] Add image upload with preview
+      - [ ] Create hashtag input with autocomplete
+      - [ ] Add character limit indicator
+      - [ ] Implement draft saving
+    - [ ] SearchAndFilter component
+      - [ ] Create keyword search with highlighting
+      - [ ] Implement tag filtering with multi-select
+      - [ ] Add user type filtering
+      - [ ] Implement sort order controls
+  - [ ] Integration
+    - [ ] Connect components into cohesive forum experience
+    - [ ] Implement data fetching and state management
+    - [ ] Add authentication integration
+    - [ ] Create permissions system
+  - [ ] Analytics
+    - [ ] Track post views and engagement
+    - [ ] Monitor content creation metrics
+    - [ ] Analyze user interaction patterns
+  - [ ] Styling
+    - [ ] Apply premium visual design to all components
+    - [ ] Implement animations and transitions
+    - [ ] Ensure dark mode support
+    - [ ] Test responsive behavior across devices
+
+- [ ] CA Dashboard
+
+  - [ ] TDD Setup
+
+    - [ ] Configure Jest tests for dashboard components
+    - [ ] Create test utilities for CA-specific mocks
+    - [ ] Setup testing patterns for all dashboard components
+    - [ ] Create fixture data for leads and contact requests
+
+  - [ ] Dashboard Layout
+
+    - [ ] Write tests for Dashboard layout component (Red)
+    - [ ] Build dashboard landing layout (Green)
+    - [ ] Implement responsive navigation between sections
+    - [ ] Create summary metrics display
+    - [ ] Add notification system
+    - [ ] Optimize for mobile (Refactor)
+    - [ ] Test dark mode support
+
+  - [ ] New Leads Section
+
+    - [ ] Write tests for LeadCard component (Red)
+    - [ ] Implement LeadCard UI (Green)
+    - [ ] Create leads list view
+    - [ ] Add sorting functionality by urgency, date, service
+    - [ ] Implement filtering functionality
+    - [ ] Create lead action buttons (contact, dismiss, save)
+    - [ ] Test responsiveness and accessibility (Refactor)
+    - [ ] Ensure dark mode support
+
+  - [ ] Contact Requests Section
+
+    - [ ] Write tests for ContactRequestCard component (Red)
+    - [ ] Implement ContactRequestCard UI (Green)
+    - [ ] Create contact request list view
+    - [ ] Add status indicators and management
+    - [ ] Implement quick-reply functionality
+    - [ ] Create bulk action system
+    - [ ] Test responsiveness and accessibility (Refactor)
+    - [ ] Ensure dark mode support
+
+  - [ ] Forum Post Creation
+
+    - [ ] Write tests for PostComposer component (Red)
+    - [ ] Implement PostComposer UI reusing forum logic (Green)
+    - [ ] Add title and content inputs
+    - [ ] Create image upload with preview
+    - [ ] Add hashtag input with autocomplete
+    - [ ] Implement draft saving
+    - [ ] Add visibility options
+    - [ ] Test responsiveness and accessibility (Refactor)
+    - [ ] Ensure dark mode support
+
+  - [ ] Data Integration
+
+    - [ ] Connect to Supabase for lead data
+    - [ ] Implement contact request fetching
+    - [ ] Create post submission to forum system
+    - [ ] Implement real-time updates where possible
+    - [ ] Add error handling and recovery
+    - [ ] Test data flows and state management
+
+  - [ ] Analytics
+
+    - [ ] Track lead interaction metrics
+    - [ ] Measure contact request response times
+    - [ ] Monitor forum post creation from dashboard
+    - [ ] Track dashboard feature usage patterns
+    - [ ] Analyze task completion rates
+
+  - [ ] Styling and Polish
+    - [ ] Apply premium visual design to all components
+    - [ ] Implement animations and transitions
+    - [ ] Create cohesive visual language across sections
+    - [ ] Ensure accessibility compliance
+    - [ ] Test responsive behavior across devices
 
 - [ ] Dark Theme Implementation
   - [x] Install and configure next-themes
@@ -555,6 +686,10 @@
 - [ ] CommentThread (`src/components/features/forum/CommentThread.component.tsx`)
 - [ ] CreatePost (`src/components/features/forum/CreatePost.component.tsx`)
 - [ ] SearchAndFilter (`src/components/features/forum/SearchAndFilter.component.tsx`)
+- [ ] DashboardLayout (`src/components/features/dashboard/DashboardLayout.component.tsx`)
+- [ ] LeadCard (`src/components/features/dashboard/LeadCard.component.tsx`)
+- [ ] ContactRequestCard (`src/components/features/dashboard/ContactRequestCard.component.tsx`)
+- [ ] PostComposer (`src/components/features/dashboard/PostComposer.component.tsx`)
 
 ## Analytics Integration
 
@@ -752,3 +887,19 @@
 
 - [ ] Integrate analytics with other components like SignUpForm
 - [ ] Consider implementing a cookie consent banner
+
+- [ ] Admin Dashboard
+- [ ] SEO Optimization
+
+  - [ ] Meta tags configuration
+  - [ ] Open Graph tags
+  - [ ] Dynamic meta descriptions
+  - [ ] Structured data (JSON-LD)
+  - [ ] Heading hierarchy
+  - [ ] Sitemap generation
+  - [ ] robots.txt configuration
+  - [ ] Canonical URLs
+  - [ ] Image alt text
+  - [ ] Performance optimization
+  - [ ] URL structure and slugs
+  - [ ] Breadcrumb navigation
