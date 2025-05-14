@@ -90,6 +90,70 @@
   - [x] Improved typography and spacing
   - [x] Interactive hover states and feedback
 
+- [ ] Homepage Redesign
+
+  - [x] Move "Why Choose Xpertly?" section to About page
+  - [x] Move "Are You a Chartered Accountant?" section to About page
+  - [ ] Update hero section with search
+  - [ ] Integrate Forum feed section
+  - [ ] Redesign featured CA listings
+  - [ ] Ensure mobile-first responsive design
+  - [ ] Support dark mode
+  - [ ] Apply premium visual styling
+  - [ ] Test responsive behavior
+
+- [ ] Forum Feature
+
+  - [ ] Core Components
+    - [ ] ForumFeed component
+      - [ ] Implement virtual scrolling
+      - [ ] Add sort controls (trending, recent, relevant)
+      - [ ] Add filter controls
+      - [ ] Create empty and loading states
+      - [ ] Implement infinite scroll
+    - [ ] PostCard component
+      - [ ] Create author header with avatar
+      - [ ] Implement content display
+      - [ ] Add image carousel for multiple images
+      - [ ] Add hashtag display with links
+      - [ ] Add timestamp with relative formatting
+      - [ ] Implement responsive layout
+    - [ ] ReactionSystem component
+      - [ ] Create multiple reaction types
+      - [ ] Add animated reaction selection
+      - [ ] Implement reaction count display
+      - [ ] Add user's current reaction highlighting
+    - [ ] CommentThread component
+      - [ ] Create nested replies with proper hierarchy
+      - [ ] Add collapsible thread sections
+      - [ ] Implement "Load more" for long threads
+      - [ ] Add reply form with @mention support
+    - [ ] CreatePost component
+      - [ ] Implement rich text editor
+      - [ ] Add image upload with preview
+      - [ ] Create hashtag input with autocomplete
+      - [ ] Add character limit indicator
+      - [ ] Implement draft saving
+    - [ ] SearchAndFilter component
+      - [ ] Create keyword search with highlighting
+      - [ ] Implement tag filtering with multi-select
+      - [ ] Add user type filtering
+      - [ ] Implement sort order controls
+  - [ ] Integration
+    - [ ] Connect components into cohesive forum experience
+    - [ ] Implement data fetching and state management
+    - [ ] Add authentication integration
+    - [ ] Create permissions system
+  - [ ] Analytics
+    - [ ] Track post views and engagement
+    - [ ] Monitor content creation metrics
+    - [ ] Analyze user interaction patterns
+  - [ ] Styling
+    - [ ] Apply premium visual design to all components
+    - [ ] Implement animations and transitions
+    - [ ] Ensure dark mode support
+    - [ ] Test responsive behavior across devices
+
 - [x] Authentication
 
   - [x] Set up Supabase client
@@ -485,6 +549,12 @@
 - [x] CACard (`src/components/features/common/CACard.component.tsx`)
 - [ ] RoleSelection (`src/components/features/onboarding/RoleSelection.component.tsx`)
 - [ ] UserOnboardingForm (`src/components/features/onboarding/UserOnboardingForm.component.tsx`)
+- [ ] ForumFeed (`src/components/features/forum/ForumFeed.component.tsx`)
+- [ ] PostCard (`src/components/features/forum/PostCard.component.tsx`)
+- [ ] ReactionSystem (`src/components/features/forum/ReactionSystem.component.tsx`)
+- [ ] CommentThread (`src/components/features/forum/CommentThread.component.tsx`)
+- [ ] CreatePost (`src/components/features/forum/CreatePost.component.tsx`)
+- [ ] SearchAndFilter (`src/components/features/forum/SearchAndFilter.component.tsx`)
 
 ## Analytics Integration
 
@@ -573,11 +643,21 @@
     - [ ] Track abandonment at this step
 
   - [ ] `UserOnboardingForm.component.tsx`
+
     - [ ] Track form starts and completions
     - [ ] Track field completion rates
     - [ ] Track time spent on each field
     - [ ] Track skip rates for optional fields
     - [ ] Monitor form submission success/failure
+
+  - [ ] **Forum Components**
+    - [ ] Track post views and engagement metrics
+    - [ ] Monitor reaction usage patterns
+    - [ ] Track comment creation and threading
+    - [ ] Measure search and filter usage
+    - [ ] Analyze content creation patterns
+    - [ ] Track post sharing and virality
+    - [ ] Monitor hashtag popularity and growth
 
 - [ ] **Profile Engagement Tracking**
 
