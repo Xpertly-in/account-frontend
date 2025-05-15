@@ -747,6 +747,11 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
 - **Task 8:** Design and Build the Home Page.
 
   - Develop a mobile-first Home Page with a search bar (location, services, verified checkbox), featured CA listings, and the placeholder logo.
+  - Redesign the homepage to feature:
+    - Hero section with search functionality
+    - Interactive Forum section with activity feed
+    - Featured CA listings
+  - Move "Why Choose Xpertly?" and "Are You a Chartered Accountant?" sections to the About page.
   - Use shadcn UI components such as Button, Input, and Card.
   - Implement vibrant design elements including gradients, decorative blurs, and subtle patterns.
   - Ensure all icons are from the Phosphor Icons library.
@@ -757,6 +762,385 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
   - Confirm each component meets the 200-line limit and context guidelines.
   - Ensure the design maintains visual appeal across all device sizes.
   - Test hover and interactive effects on both touch and pointer devices.
+
+#### Forum Feature
+
+- **Task 10:** Design and Implement the Forum Feature.
+
+  - **Objective:**
+
+    - Create an engaging, interactive community space for users to share questions, insights, and experiences
+    - Facilitate connections between CAs and customers through topical discussions
+    - Increase user retention and platform engagement through community features
+    - Generate valuable user-generated content for the platform
+
+  - **User Roles & Permissions:**
+
+    - **All Users:**
+      - View public forum posts and comments
+      - Search and filter posts by various criteria
+      - Follow topics via hashtags
+    - **Logged-in Customers:**
+      - Create new posts with text, images, and hashtags
+      - React to posts with various reactions
+      - Comment on posts and reply to comments
+      - Edit and delete their own content
+    - **Logged-in CAs:**
+      - All customer permissions
+      - Special "CA" badge displayed on their posts/comments
+      - Option to mark answers as professional advice
+      - Access to CA-specific topics and discussions
+    - **Administrators:**
+      - Moderate content (hide, remove, flag)
+      - Pin important posts
+      - Create and manage featured topics
+      - Ban users who violate platform policies
+
+  - **Data Model:**
+
+    - **Post:**
+      - Unique ID
+      - Author (User reference)
+      - Content (text, supports rich formatting)
+      - Images (optional, maximum 5)
+      - Hashtags (optional, maximum 5)
+      - Created timestamp
+      - Modified timestamp
+      - Reaction counts (by reaction type)
+      - Comment count
+      - View count
+      - Status (active, hidden, deleted)
+    - **Comment:**
+      - Unique ID
+      - Post reference
+      - Parent comment reference (for replies)
+      - Author (User reference)
+      - Content (text)
+      - Created timestamp
+      - Modified timestamp
+      - Reaction counts
+      - Status (active, hidden, deleted)
+    - **Reaction:**
+      - Unique ID
+      - User reference
+      - Target reference (post or comment)
+      - Reaction type (like, love, insightful, etc.)
+      - Created timestamp
+    - **Hashtag:**
+      - Name
+      - Post count
+      - Follower count
+
+  - **UI/UX Design Goals:**
+
+    - **Layout:**
+      - Mobile-first, responsive design
+      - Fast-loading post feed with infinite scroll
+      - Clean, distraction-free reading experience
+      - Intuitive navigation between posts, comments, and threads
+      - Prominent UI elements for creating new content
+    - **Visual Style:**
+      - Consistent with Hubble's Pluto gifting platform aesthetic
+      - Bold gradients for section headers and CTAs
+      - Glassmorphism panels for post cards
+      - Smooth rounded corners (min 12px radius)
+      - Elegant shadow layering for depth
+      - Animated transitions for interactions
+      - Large, touch-friendly interactive elements
+    - **User Experience:**
+      - One-tap reactions for quick engagement
+      - Seamless transition between browsing and creating content
+      - Clear visual hierarchy for comments and replies
+      - Intuitive search and filter controls
+      - Prominent call-to-action for creating first post
+
+  - **Component Requirements:**
+
+    - **ForumFeed Component:**
+
+      - Virtual scrolling for performance
+      - Lazy loading of images
+      - Sort controls (trending, recent, relevant)
+      - Filter controls (by tags, by user type)
+      - Empty state with prompt to create content
+      - Loading and error states
+      - Pagination or infinite scroll
+
+    - **PostCard Component:**
+
+      - Author information with avatar
+      - Content display with proper text wrapping
+      - Image carousel for multiple images
+      - Reaction buttons with counts
+      - Comment count and preview
+      - Hashtag display with links
+      - Timestamp with relative formatting
+      - Options menu for post owner
+      - Share functionality
+      - Responsive layout for all screen sizes
+
+    - **ReactionSystem Component:**
+
+      - Multiple reaction types (thumbs up, heart, insightful, etc.)
+      - Animated reaction selection
+      - Count display for each reaction type
+      - User's current reaction highlighted
+      - One-tap to add/remove common reaction
+      - Press-and-hold for reaction selection menu
+
+    - **CommentThread Component:**
+
+      - Nested replies with proper visual hierarchy
+      - Collapsible thread sections
+      - "Load more" functionality for long threads
+      - Reply form with @mention support
+      - Comment sorting options
+      - Owner controls for editing/deleting
+      - Reaction support for individual comments
+
+    - **CreatePost Component:**
+
+      - Rich text editor with basic formatting
+      - Image upload with preview
+      - Hashtag input with autocomplete
+      - Character limit indicator
+      - Draft saving functionality
+      - Preview option before posting
+      - Submit button with loading state
+      - Error handling with user feedback
+
+    - **SearchAndFilter Component:**
+      - Keyword search with highlighting
+      - Tag filtering with multi-select
+      - User type filtering (CA/Customer)
+      - Date range selection
+      - Sort order controls
+      - Filter combination logic
+      - Save filter preferences option
+      - Clear all filters button
+
+  - **Interaction Guidelines:**
+
+    - **Post Creation:**
+
+      - Single-click "Create Post" button on feed
+      - Expandable editor with rich formatting options
+      - Image attachment via drag-drop or file picker
+      - Hashtag creation with # prefix in content or dedicated field
+      - Preview capability before submission
+      - Draft auto-save every 30 seconds
+
+    - **Reactions:**
+
+      - One-tap on primary reaction button for quick like
+      - Press-and-hold for reaction selection menu
+      - Animated feedback when reaction is recorded
+      - Tapping active reaction removes it
+
+    - **Comments:**
+
+      - Expandable comment section on post card
+      - Reply button on each comment for threading
+      - Nested replies with visual indentation
+      - Collapse/expand for long threads
+      - @mention support with username autocomplete
+
+    - **Search & Discovery:**
+      - Persistent search bar at top of feed
+      - Tag cloud for popular/trending topics
+      - Filter sidebar/modal accessible via button
+      - "Followed Tags" section for personalized content
+      - "Recommended" feed based on user interests
+
+  - **Analytics & Metrics:**
+
+    - Track post views, creation rates, and completion
+    - Measure comment-to-view ratio for engagement
+    - Monitor reaction distribution across post types
+    - Track search queries and filter combinations
+    - Measure content creation funnel (draft → publish)
+    - Analyze hashtag popularity and growth trends
+
+  - **Implementation Guidelines:**
+    - Create all components under `/components/features/forum/`
+    - Keep each component under 200 lines of code
+    - Use Card component from shadcn UI for post cards
+    - Use Phosphor icons exclusively
+    - Implement proper loading and error states
+    - Add appropriate animations for interactions
+    - Ensure full dark mode support
+    - Implement responsive design for all screen sizes
+    - Add comprehensive accessibility features
+    - Implement proper data caching for performance
+
+#### CA Dashboard
+
+- **Task 11:** Design and Implement the CA Dashboard.
+
+  - **Objective:**
+
+    - Provide CAs with a centralized hub to manage leads and interactions
+    - Enable easy tracking of customer inquiries and contact requests
+    - Streamline forum post creation from within the dashboard
+    - Increase CA engagement and value derived from the platform
+
+  - **User Flow:**
+
+    - CAs are redirected to the dashboard upon completing their onboarding
+    - Dashboard serves as the primary interface for CAs to manage their platform presence
+    - Navigation provides quick access to all key dashboard features
+    - Real-time updates for new leads and contact requests
+
+  - **Feature Breakdown (with TDD Focus):**
+
+    | Feature          | Description                                       | Key Component(s)                 |
+    | ---------------- | ------------------------------------------------- | -------------------------------- |
+    | New Leads        | Display filtered list of customer-submitted leads | LeadCard.component.tsx           |
+    | Contact Requests | Show direct contact messages with metadata        | ContactRequestCard.component.tsx |
+    | Create New Post  | Compose and submit forum posts                    | PostComposer.component.tsx       |
+
+  - **Component Requirements:**
+
+    - **Dashboard Layout Component:**
+
+      - Responsive, mobile-first design
+      - Navigation between dashboard sections
+      - Summary metrics display (e.g., new leads count, unread requests)
+      - Profile completion reminder (if applicable)
+      - Notification system for new activity
+      - Persistent access to key actions
+
+    - **LeadCard Component:**
+
+      - Display customer information (anonymized as needed)
+      - Show requested services with visual indicators
+      - Display urgency/timeline with appropriate styling
+      - Show city/state for geographic context
+      - Indicate contact preference (phone/WhatsApp/email)
+      - Include action buttons (contact, dismiss, save)
+      - Support sorting by urgency, date, or service type
+      - Support filtering by multiple criteria
+
+    - **ContactRequestCard Component:**
+
+      - Display user message with proper formatting
+      - Show timestamp with relative formatting
+      - Indicate contact method preference
+      - Include status indicators (new, replied, ignored)
+      - Provide quick-reply functionality
+      - Support bulk actions for multiple requests
+      - Implement read/unread state tracking
+
+    - **PostComposer Component:**
+      - Title input with character limit
+      - Rich text editor for post content
+      - Image upload with preview functionality
+      - Hashtag input with autocomplete from popular tags
+      - Draft saving functionality
+      - Preview option before posting
+      - Post visibility options (public/CA-only)
+      - Success/error feedback after submission
+
+  - **TDD Enforcement:**
+
+    - All components must follow Test-Driven Development methodology:
+
+      - Write failing tests first (Red phase)
+      - Implement minimal code to pass tests (Green phase)
+      - Refactor while maintaining passing tests
+
+    - Test coverage requirements:
+
+      - 100% test coverage for all UI components
+      - Unit tests for all utility functions
+      - Integration tests for component interactions
+      - Snapshot tests for UI consistency
+
+    - Testing focus areas:
+      - Component rendering in various states
+      - Input validation and error handling
+      - State changes from user interactions
+      - API interaction mocking (Supabase)
+      - Accessibility compliance
+      - Responsive behavior
+      - Dark mode support
+
+  - **Data Requirements:**
+
+    - **Leads Data:**
+
+      - Customer ID (for internal reference)
+      - Services requested (array of service types)
+      - Urgency/timeline selection
+      - City/state location
+      - Contact preference (phone/email/WhatsApp)
+      - Additional notes (if provided)
+      - Submission timestamp
+      - Status (new, contacted, closed)
+
+    - **Contact Requests Data:**
+
+      - Request ID
+      - User name (if provided)
+      - User contact information
+      - Message content
+      - Submission timestamp
+      - Status (new, replied, ignored)
+      - CA notes (private)
+
+    - **Forum Post Data:**
+      - Inherits the same structure as the Forum Feature
+      - Additional "created_from" field to track dashboard-originated posts
+      - CA-specific fields for professional advice marking
+
+  - **UI/UX Design Goals:**
+
+    - **Layout:**
+
+      - Mobile-first, responsive design
+      - Card-based interface for each item
+      - Clear visual hierarchy for information
+      - Sticky navigation for easy section switching
+      - Pull-to-refresh functionality on mobile
+
+    - **Visual Style:**
+
+      - Consistent with overall platform aesthetic
+      - Bold gradients for section headers
+      - Glassmorphism panels for cards and forms
+      - Smooth rounded corners (min 12px radius)
+      - Elegant shadow layering for depth
+      - Animated transitions between states
+      - Appropriate color coding for urgency/status
+
+    - **User Experience:**
+      - Quick-action buttons for common tasks
+      - Swipe actions on mobile for lead/request management
+      - Infinite scroll for long lists with lazy loading
+      - Real-time updates when possible
+      - Optimistic UI updates for action feedback
+      - Comprehensive empty states and loading indicators
+
+  - **Analytics & Metrics:**
+
+    - Track lead response rates and time-to-response
+    - Measure contact request handling efficiency
+    - Monitor forum post creation frequency and engagement
+    - Analyze dashboard feature usage patterns
+    - Track conversion of leads to clients (future feature)
+
+  - **Implementation Guidelines:**
+    - Create all components under `/components/features/dashboard/`
+    - Keep each component under 200 lines of code
+    - Use Card component from shadcn UI for consistency
+    - Use Phosphor icons exclusively
+    - Implement proper loading and error states
+    - Add appropriate animations for interactions
+    - Ensure full dark mode support
+    - Implement responsive design for all screen sizes
+    - Add comprehensive accessibility features
+    - Follow TDD methodology rigorously
+    - Configure Jest + Testing Library for thorough testing
 
 #### CA Listings & Profile Pages
 
