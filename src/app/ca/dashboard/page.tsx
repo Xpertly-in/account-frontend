@@ -6,42 +6,33 @@ import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
 import { User, Calendar, FileText } from "@phosphor-icons/react";
 import { Button } from "@/ui/Button.ui";
+import { supabase } from "@/helper/supabase.helper";
+import { useCAProfile } from "@/hooks/useCAProfile";
+
 
 export default function CADashboardPage() {
   const router = useRouter();
   const { auth, signOut } = useAuth();
-  const [userName, setUserName] = useState<string>("");
-  const [userEmail, setUserEmail] = useState<string>("");
-
-  useEffect(() => {
-    // Set user information if available
-    if (auth.user) {
-      setUserName(auth.user.user_metadata?.name || "User");
-      setUserEmail(auth.user.email || "");
-    }
-  }, [auth.user]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    // Also remove from localStorage as a fallback
-
-    router.push("/ca/login");
-  };
+  const { profile, loading } = useCAProfile();
 
   return (
     <div className="container mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold sm:text-4xl">Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">Welcome, {userName}</p>
+          <p className="mt-2 text-muted-foreground">Welcome, {loading ? "..." : profile?.name}</p>
         </div>
-        <Button onClick={handleSignOut} variant="outline" size="sm" className="mt-4 sm:mt-0">
-          Sign Out
-        </Button>
+      
       </div>
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95">
+        <div
+          className="rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95 cursor-pointer hover:ring-2 hover:ring-primary"
+          onClick={() => router.push('/ca/profile')}
+          tabIndex={0}
+          role="button"
+          onKeyPress={e => { if (e.key === 'Enter') router.push('/ca/profile'); }}
+        >
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/30 dark:from-primary/30 dark:to-primary/40">
             <User className="h-6 w-6 text-primary dark:text-blue-400" />
           </div>

@@ -20,24 +20,16 @@ export interface FieldDependency {
 // Base FormField compatible with helper functions AND JSON structure
 export interface FormField {
   id: string;
-  type: 'text' | 'email' | 'tel' | 'number' | 'url' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'file' | 'service' | 'experience' | 'education';
+  type: 'text' | 'email' | 'tel' | 'number' | 'url' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'file';
   label: string;
   placeholder?: string;
   required?: boolean;
   description?: string;
   options?: Array<{ label: string; value: string }>;
   multiple?: boolean;
-  accept?: string;
   min?: number;
   max?: number;
-  validation?: {
-    pattern?: string;
-    minLength?: number;
-    maxLength?: number;
-    min?: number;
-    max?: number;
-    message?: string;
-  };
+  accept?: string;
 }
 
 // Remove specific CheckboxGroupFieldDef if FormField covers it
@@ -63,7 +55,22 @@ export interface FormStep {
 
 // FormData compatible with helper functions
 export interface FormValues {
-  [key: string]: string | string[] | boolean | File | null;
+  name?: string;
+  phone?: string;
+  about?: string;
+  yearsOfExperience?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  linkedin?: string;
+  website?: string;
+  icaiNumber?: string;
+  licenseNumber?: string;
+  professionalEmail?: string;
+  professionalPhone?: string;
+  expertise?: string;
+  [key: string]: string | string[] | boolean | File | undefined;
 }
 
 // FormDefinition compatible with helper functions AND JSON structure
@@ -75,10 +82,8 @@ export interface FormDefinition {
 }
 
 export interface FormSection {
-  id: string;
   title: string;
-  subtitle: string;
-  order: number;
+  description?: string;
   fields: FormField[];
 }
 
@@ -151,4 +156,35 @@ export interface SectionValidation {
 
 export interface FormValidationConfig {
   [sectionId: string]: SectionValidation;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+}
+
+export interface Experience {
+  id: string;
+  title: string;
+  employmentType: string;
+  companyName: string;
+  location: string;
+  isCurrent: boolean;
+  startDate: string;
+  endDate: string;
+  industry: string;
+  description: string;
+  recentService: string;
+}
+
+export interface Education {
+  id: string;
+  instituteName: string;
+  degree: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate: string;
+  grade: string;
+  description: string;
+  isCurrent: boolean;
 }
