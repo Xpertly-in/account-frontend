@@ -76,14 +76,16 @@
 
 ### Directory Structure
 
-The project follows a structured approach to file organization:
+The project follows a domain-based approach to file organization:
 
 ```
 src/
   ├── app/           # Next.js App Router pages
   ├── components/    # React components
-  │   ├── layout/    # Layout components
-  │   └── features/  # Feature-specific components
+  │   ├── layout/    # Layout components (Header, Footer, etc.)
+  │   ├── leads/     # Lead management components
+  │   ├── features/  # Feature-specific components
+  │   └── [domain]/  # Domain-specific components grouped by business functionality
   ├── ui/            # Base UI components (buttons, inputs, etc.)
   ├── store/         # State management
   │   ├── context/   # Context-based state providers
@@ -1262,3 +1264,156 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
     - [x] Implement `FormNavigation` component (sticky footer, hides Previous on first step).
     - [x] Use appropriate UI components (`Select`, `CheckboxGroup`, `FileUpload`) directly within `DynamicForm`.
     - [x] Ensure `DynamicForm`
+
+## Code Organization
+
+### TypeScript Type System Standards
+
+The project follows these type system standards:
+
+1. **Type Definitions**:
+
+   - All component props must have explicit type definitions
+   - All data models must have interface definitions
+   - All functions must have explicit return types and parameter types
+
+2. **Enum Pattern**:
+
+   - Enums MUST be defined in type files (e.g., `*.type.ts`)
+   - Enums should be used for all string-based type values like status, categories, or actions
+   - Example: `enum LeadStatus { NEW = "new", CONTACTED = "contacted" }`
+
+3. **Constants Pattern**:
+
+   - String constants for UI labels, messages, and other display text MUST be in constants files (e.g., `*.constants.ts`)
+   - Constants should use UPPER_SNAKE_CASE naming convention
+   - Example: `export const VALIDATION_MESSAGES = { REQUIRED: "This field is required" }`
+
+4. **File Naming Conventions**:
+   - React component files must be named: `ComponentName.component.tsx` (PascalCase)
+   - Interface/type files must be named: `entityName.type.ts` (camelCase)
+   - Constants files must be named: `entityName.constants.ts` (camelCase)
+   - Utility files must be named: `entityName.utils.ts` (camelCase)
+
+These standards ensure code consistency, reduce typos in string values, and improve maintainability.
+
+## Testing Infrastructure
+
+### Modular Testing Structure
+
+The project follows a modular approach to testing that separates concerns and improves maintainability:
+
+#### Test Mock Organization
+
+- **Core Mocks (`/tests/mocks/core/`):**
+
+  - `navigation.mock.tsx` - Next.js navigation (usePathname, useRouter, etc.)
+  - `next.mock.tsx` - Next.js components (Link, Image, Script)
+  - `storage.mock.ts` - Web storage (localStorage, sessionStorage)
+  - `window.mock.ts` - Window globals (matchMedia, ResizeObserver, etc.)
+  - `analytics.mock.ts` - Analytics functions and hooks
+  - `supabase.mock.ts` - Supabase client, auth, and database
+
+- **State Management Mocks (`/tests/mocks/state/`):**
+
+  - `jotai.mock.ts` - Jotai atoms and state management
+  - `context.mock.tsx` - React context providers (Auth, Theme, etc.)
+
+- **UI Component Mocks (`/tests/mocks/ui/`):**
+
+  - `shadcn.mock.tsx` - shadcn UI components
+  - `phosphor.mock.tsx` - Phosphor icon library
+
+- **Feature-specific Mocks (`/tests/mocks/features/`):**
+  - `dashboard.mock.tsx` - Dashboard-specific test helpers
+
+#### Import Patterns
+
+Tests should import mocks from the most specific location possible:
+
+```typescript
+// Good: Targeted imports
+import { createNavigationMocks } from "@/tests/mocks/core/navigation.mock";
+import { createJotaiMocks } from "@/tests/mocks/state/jotai.mock";
+
+// Less ideal: Using the compatibility layer
+import { createNavigationMocks, createJotaiMocks } from "@/tests/mocks/jestMock.helper";
+```
+
+For backward compatibility, all mock functions are re-exported from `jestMock.helper.tsx`.
+
+### Testing Best Practices
+
+1. **Component Testing:**
+
+   - Each component should have a dedicated test file
+   - Tests should verify both appearance and behavior
+   - Follow the AAA pattern (Arrange, Act, Assert)
+   - Mock external dependencies
+
+2. **Test Coverage Requirements:**
+
+   - UI components: 100% coverage (statements, branches, functions)
+   - Utility functions: 100% coverage (statements, branches, functions)
+   - Pages and containers: Min. 80% coverage
+
+3. **Accessibility Testing:**
+
+   - All components should include accessibility tests
+   - Use jest-axe for automated accessibility checks
+   - Test keyboard navigation where applicable
+
+4. **Test File Organization:**
+   - Mirror the source code directory structure
+   - Group tests by feature/functionality
+   - Use descriptive test names
+
+## UI Components
+
+### Layout Components
+
+- [x] Container (`src/components/layout/Container.component.tsx`)
+
+### UI Components
+
+- [x] Button (`src/ui/Button.ui.tsx`)
+- [x] Input (`src/ui/Input.ui.tsx`)
+- [x] Card (`src/ui/Card.ui.tsx`)
+- [x] Avatar (`src/ui/Avatar.ui.tsx`)
+- [x] Checkbox (`src/ui/Checkbox.ui.tsx`)
+- [x] Logo (`src/ui/Logo.ui.tsx`)
+- [x] ThemeToggle (`src/ui/ThemeToggle.ui.tsx`)
+- [x] DecorativeElements (`src/ui/DecorativeElements.ui.tsx`)
+- [x] CheckboxGroup (`src/ui/CheckboxGroup.ui.tsx`)
+- [x] FileUpload (`src/ui/FileUpload.ui.tsx`) (with Phosphor icons)
+- [x] Switch (`src/ui/Switch.ui.tsx`)
+- [x] Textarea (`src/ui/Textarea.ui.tsx`)
+- [x] Select (`src/ui/Select.ui.tsx`)
+- [x] AuthDivider (`src/ui/AuthDivider.ui.tsx`)
+- [x] GoogleButton (`src/ui/GoogleButton.ui.tsx`)
+- [x] BackButton (`src/ui/BackButton.ui.tsx`) (reusable navigation component)
+
+### Feature Components
+
+- [x] LoginForm (`src/components/features/auth/LoginForm.component.tsx`) - 137 lines
+- [x] LoginFormFields (`src/components/features/auth/LoginFormFields.component.tsx`) - 73 lines
+- [x] LoginFormSecurity (`src/components/features/auth/LoginFormSecurity.component.tsx`) - 27 lines
+- [x] SignUpForm (`src/components/features/auth/SignUpForm.component.tsx`) - 113 lines
+- [x] SignUpFormContent (`src/components/features/auth/SignUpFormContent.component.tsx`) - **232 lines**
+- [x] CAAuthTabs (`src/components/features/auth/CAAuthTabs.component.tsx`) - 84 lines
+- [x] SearchBar (`src/components/features/search/SearchBar.component.tsx`)
+- [x] CACard (`src/components/features/common/CACard.component.tsx`)
+- [x] Leads (`src/components/dashboard/Leads.component.tsx`) - 85 lines
+- [x] LeadCard (`src/components/dashboard/LeadCard.component.tsx`) - 119 lines
+- [x] LeadFilter (`src/components/dashboard/LeadFilter.component.tsx`) - 89 lines
+- [x] LeadSkeleton (`src/components/dashboard/LeadSkeleton.component.tsx`) - 45 lines
+- [x] LeadEmptyState (`src/components/dashboard/LeadEmptyState.component.tsx`) - 20 lines
+- [ ] RoleSelection (`src/components/features/onboarding/RoleSelection.component.tsx`)
+- [ ] UserOnboardingForm (`src/components/features/onboarding/UserOnboardingForm.component.tsx`)
+- [ ] ForumFeed (`src/components/features/forum/ForumFeed.component.tsx`)
+- [ ] PostCard (`src/components/features/forum/PostCard.component.tsx`)
+- [ ] ReactionSystem (`src/components/features/forum/ReactionSystem.component.tsx`)
+- [ ] CommentThread (`src/components/features/forum/CommentThread.component.tsx`)
+- [ ] CreatePost (`src/components/features/forum/CreatePost.component.tsx`)
+- [ ] SearchAndFilter (`src/components/features/forum/SearchAndFilter.component.tsx`)
+- [ ] DashboardLayout (`src/components/features/dashboard/DashboardLayout.component.tsx`)

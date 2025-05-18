@@ -49,6 +49,11 @@
   - [x] Helper functions use `.helper.ts` extension
 - [x] Update imports across the codebase for new directory structure
 - [x] Update PRD with new file naming conventions and directory structure
+- [x] Implement domain-based organization approach
+  - [x] Move dashboard lead components to domain-specific `/components/leads/` directory
+  - [x] Update all import paths across the codebase
+  - [x] Update test files to reference new component locations
+  - [x] Verify all test suites pass with new structure
 
 ## Phase 2: UI/UX Design & Component Layout
 
@@ -390,14 +395,28 @@
 
   - [ ] New Leads Section
 
-    - [ ] Write tests for LeadCard component (Red)
-    - [ ] Implement LeadCard UI (Green)
-    - [ ] Create leads list view
-    - [ ] Add sorting functionality by urgency, date, service
-    - [ ] Implement filtering functionality
-    - [ ] Create lead action buttons (contact, dismiss, save)
-    - [ ] Test responsiveness and accessibility (Refactor)
-    - [ ] Ensure dark mode support
+    - [x] Write tests for LeadCard component (Red)
+    - [x] Implement LeadCard UI (Green)
+    - [x] Create leads list view with responsive grid layout
+    - [x] Add search functionality with clear button
+    - [x] Implement filtering functionality for status and urgency
+    - [x] Create lead action buttons (contact, dismiss)
+    - [x] Implement loading states with skeleton UI
+    - [x] Create empty state with helpful messages
+    - [x] Add proper formatting for dates and urgency labels
+    - [x] Test responsiveness and accessibility (Refactor)
+    - [x] Ensure dark mode support
+    - [x] Enhance design consistency with fixed card heights and sticky footer
+    - [x] Fix authentication on page refresh
+    - [x] Remove duplicate sign-out button from dashboard
+    - [x] Refactor LeadsComponent to follow 200-line constraint
+      - [x] Extract LeadCard component for individual lead display
+      - [x] Extract LeadFilter component for filtering UI
+      - [x] Extract LeadSkeleton component for loading states
+      - [x] Extract LeadEmptyState component for empty state
+      - [x] Ensure all tests pass after refactoring
+      - [x] Write dedicated tests for LeadCard component
+    - [ ] Integrate with actual Supabase data
 
   - [ ] Contact Requests Section
 
@@ -587,6 +606,15 @@
     - [x] Added dark mode testing
     - [x] Achieved good coverage for form rendering and validation
     - [x] Identified test limitations for complex form submission flows
+  - [x] Create example LeadsComponent for CA dashboard test
+    - [x] Created test suite with 5 test cases for the Leads dashboard component
+    - [x] Enhanced jestMock.helper.tsx with specialized dashboard test helpers
+    - [x] Added helper function for injecting test lead data directly in the DOM
+    - [x] Added centralized mock setup functions for all UI components and icons
+    - [x] Enhanced component with proper null checking for robustness
+    - [x] Implemented tests for search, loading states, and empty states
+    - [x] Kept test file under 200 lines (170 lines total)
+    - [x] Achieved over 50% code coverage for the Leads component
   - [x] Achieved 100% overall UI components test coverage (15/15 components tested)
   - [ ] Create example Auth provider test
   - [ ] Create example SearchBar component test
@@ -748,12 +776,15 @@
   - [x] Implemented mocks for UI components
   - [x] Updated test files to use centralized mocks
   - [x] Documented proper mock usage in helper file
+  - [x] Refactored mock helpers into a modular structure with clear categories:
+    - [x] `/core` for foundational mocks (navigation, next, storage, window, analytics, supabase)
+    - [x] `/state` for state management mocks (jotai, context)
+    - [x] `/ui` for component mocks (shadcn, phosphor)
+    - [x] `/features` for feature-specific mocks (dashboard)
+    - [x] Maintained backward compatibility with a re-export pattern
+    - [x] Improved documentation with examples of targeted imports
+    - [x] Ensured tests continued to work after refactoring
 - [x] Create consolidated analytics documentation
-  - [x] Combined analytics_events.md and google_analytics_setup.md into a single source of truth
-  - [x] Created comprehensive inventory of components requiring analytics tracking
-  - [x] Developed a phased implementation plan for remaining components
-  - [x] Added detailed documentation for existing and planned analytics events
-  - [x] Improved implementation examples for developers
 
 ### Analytics Implementation Todo
 
@@ -853,53 +884,7 @@
 
 - [ ] **Detailed Form Interactions**
 
-  - [ ] `SignUpFormFields.component.tsx` / `LoginFormFields.component.tsx`
-    - [ ] Track field validation errors
-    - [ ] Track field completion rates
-    - [ ] Track field focus time
-  - [ ] `SignUpFormButton.component.tsx`
-    - [ ] Track button state changes
-    - [ ] Track time to clickability
+  - [ ] `SignUpFormFields.component.tsx`
 
-- [ ] **Edge Case Handling**
-
-  - [ ] Track error states throughout the application
-  - [ ] Track browser-specific behaviors
-  - [ ] Track performance issues encountered
-
-- [ ] **Additional App Pages**
-  - [ ] `app/ca/dashboard/page.tsx` (Standardized dashboard location)
-    - [ ] Track dashboard widget interactions
-    - [ ] Track notification handling
-    - [ ] Track settings changes
-  - [ ] `app/auth/page.tsx`
-    - [ ] Track auth entry points
-    - [ ] Track authentication method preferences
-
-#### Phase 4: Optimization
-
-- [ ] Review analytics data quality
-- [ ] Optimize event parameters for better reporting
-- [ ] Add custom dimensions for enhanced segmentation
-- [ ] Implement enhanced e-commerce tracking if applicable
-
-### Next Steps
-
-- [ ] Integrate analytics with other components like SignUpForm
-- [ ] Consider implementing a cookie consent banner
-
-- [ ] Admin Dashboard
-- [ ] SEO Optimization
-
-  - [ ] Meta tags configuration
-  - [ ] Open Graph tags
-  - [ ] Dynamic meta descriptions
-  - [ ] Structured data (JSON-LD)
-  - [ ] Heading hierarchy
-  - [ ] Sitemap generation
-  - [ ] robots.txt configuration
-  - [ ] Canonical URLs
-  - [ ] Image alt text
-  - [ ] Performance optimization
-  - [ ] URL structure and slugs
-  - [ ] Breadcrumb navigation
+- [ ] Common UI Component Improvements
+  - [x] Create reusable BackButton component for consistent navigation

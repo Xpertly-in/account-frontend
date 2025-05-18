@@ -20,7 +20,20 @@ export interface FieldDependency {
 // Base FormField compatible with helper functions AND JSON structure
 export interface FormField {
   id: string;
-  type: 'text' | 'email' | 'tel' | 'number' | 'url' | 'textarea' | 'select' | 'checkbox' | 'switch' | 'file' | 'service' | 'experience' | 'education';
+  type:
+    | "text"
+    | "email"
+    | "tel"
+    | "number"
+    | "url"
+    | "textarea"
+    | "select"
+    | "checkbox"
+    | "switch"
+    | "file"
+    | "service"
+    | "experience"
+    | "education";
   label: string;
   placeholder?: string;
   required?: boolean;
@@ -92,7 +105,7 @@ export interface ValidationErrors {
 
 export interface ServiceField {
   id: string;
-  type: 'service';
+  type: "service";
   label: string;
   placeholder?: string;
   required?: boolean;
@@ -106,7 +119,7 @@ export interface ServiceField {
 
 export interface ExperienceField {
   id: string;
-  type: 'experience';
+  type: "experience";
   label: string;
   placeholder?: string;
   required?: boolean;
@@ -121,7 +134,7 @@ export interface ExperienceField {
 
 export interface EducationField {
   id: string;
-  type: 'education';
+  type: "education";
   label: string;
   placeholder?: string;
   required?: boolean;
@@ -151,4 +164,51 @@ export interface SectionValidation {
 
 export interface FormValidationConfig {
   [sectionId: string]: SectionValidation;
+}
+
+/**
+ * User role enum for role selection screen
+ */
+export enum UserRole {
+  CA = "ca",
+  CUSTOMER = "customer",
+}
+
+/**
+ * CA Services enum - these represent services that CAs can offer
+ */
+export enum CAService {
+  TAX_FILING = "Tax Filing",
+  GST_REGISTRATION = "GST Registration",
+  COMPANY_REGISTRATION = "Company Registration",
+  ACCOUNTING = "Accounting",
+  AUDIT = "Audit",
+  BUSINESS_ADVISORY = "Business Advisory",
+  COMPLIANCE = "Compliance",
+  PAYROLL = "Payroll",
+  TAX_PLANNING = "Tax Planning",
+  FINANCIAL_PLANNING = "Financial Planning",
+}
+
+/**
+ * Service categories for grouping related services
+ */
+export enum ServiceCategory {
+  TAX = "Tax",
+  REGISTRATION = "Registration",
+  ACCOUNTING = "Accounting",
+  ADVISORY = "Advisory",
+  COMPLIANCE = "Compliance",
+}
+
+/**
+ * Onboarding step enum for multi-step forms
+ */
+export enum OnboardingStep {
+  ROLE_SELECTION = "role-selection",
+  PERSONAL_INFO = "personal-info",
+  CONTACT_INFO = "contact-info",
+  SERVICE_SELECTION = "service-selection",
+  VERIFICATION = "verification",
+  COMPLETION = "completion",
 }
