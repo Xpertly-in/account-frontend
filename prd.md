@@ -456,7 +456,52 @@ The project uses Jotai for state management, following these strict guidelines:
 
 These guidelines must be strictly followed to maintain code quality and prevent state management issues.
 
----
+### 8.2 Domain-Based Component Organization
+
+The project follows a domain-based approach to component organization to ensure modularity and maintainability:
+
+#### Organization Philosophy
+
+The codebase is organized by business domain rather than technical function, which offers several advantages:
+
+1. **Domain Cohesion:** Components related to the same business domain are grouped together, making the codebase more intuitive to navigate.
+2. **Reduced Coupling:** Each domain has clear boundaries, reducing dependencies between unrelated features.
+3. **Team Ownership:** Enables teams to take ownership of entire domains without stepping on each other's work.
+4. **Scalability:** As the application grows, new domains can be added without reorganizing existing code.
+
+#### Implementation
+
+- Components are grouped by their business domain rather than their technical purpose
+- Major domains have dedicated directories under `/src/components/`
+- Example domains include:
+  - `/components/leads/` - Components related to lead management
+  - `/components/auth/` - Authentication-related components
+  - `/components/forum/` - Forum and community components
+
+#### Migration Example
+
+The project recently migrated from a technical organization (`/components/dashboard/LeadCard.component.tsx`) to a domain-based organization (`/components/leads/LeadCard.component.tsx`). This reorganization:
+
+1. Improved code discoverability by placing all lead-related components in one location
+2. Enhanced maintainability by grouping related components
+3. Established a pattern for future feature development
+4. Clarified component ownership and purpose
+
+#### Component Directory Structure
+
+- **Layout Components:**
+  - `Container.component.tsx`
+- **UI Components:**
+  - `Button.ui.tsx`, `Input.ui.tsx`, `Card.ui.tsx`, `Avatar.ui.tsx`, `Checkbox.ui.tsx`, `Logo.ui.tsx`, `ThemeToggle.ui.tsx`, `DecorativeElements.ui.tsx`, `CheckboxGroup.ui.tsx`, `FileUpload.ui.tsx`, `Switch.ui.tsx`, `Textarea.ui.tsx`, `Select.ui.tsx`, `AuthDivider.ui.tsx`, `GoogleButton.ui.tsx`, `BackButton.ui.tsx`
+- **Feature Components:**
+  - `LoginForm.component.tsx`, `LoginFormFields.component.tsx`, `LoginFormSecurity.component.tsx`, `SignUpForm.component.tsx`, `SignUpFormContent.component.tsx`, `CAAuthTabs.component.tsx`, `SearchBar.component.tsx`, `CACard.component.tsx`, `Leads.component.tsx`, `LeadCard.component.tsx`, `LeadFilter.component.tsx`, `LeadSkeleton.component.tsx`, `LeadEmptyState.component.tsx`, `RoleSelection.component.tsx`, `UserOnboardingForm.component.tsx`, `ForumFeed.component.tsx`, `PostCard.component.tsx`, `ReactionSystem.component.tsx`, `CommentThread.component.tsx`, `CreatePost.component.tsx`, `SearchAndFilter.component.tsx`, `DashboardLayout.component.tsx`
+
+#### Best Practices
+
+- When adding new components, identify the business domain first, then place in the appropriate directory
+- If a component is used across multiple domains, consider if it belongs in a shared directory
+- Keep all tests aligned with the domain structure to maintain consistency
+- Update documentation whenever domain organization changes
 
 ## 9. Development Environment & Contextual Awareness
 
@@ -1403,11 +1448,11 @@ For backward compatibility, all mock functions are re-exported from `jestMock.he
 - [x] CAAuthTabs (`src/components/features/auth/CAAuthTabs.component.tsx`) - 84 lines
 - [x] SearchBar (`src/components/features/search/SearchBar.component.tsx`)
 - [x] CACard (`src/components/features/common/CACard.component.tsx`)
-- [x] Leads (`src/components/dashboard/Leads.component.tsx`) - 85 lines
-- [x] LeadCard (`src/components/dashboard/LeadCard.component.tsx`) - 119 lines
-- [x] LeadFilter (`src/components/dashboard/LeadFilter.component.tsx`) - 89 lines
-- [x] LeadSkeleton (`src/components/dashboard/LeadSkeleton.component.tsx`) - 45 lines
-- [x] LeadEmptyState (`src/components/dashboard/LeadEmptyState.component.tsx`) - 20 lines
+- [x] Leads (`src/components/leads/Leads.component.tsx`) - 85 lines
+- [x] LeadCard (`src/components/leads/LeadCard.component.tsx`) - 119 lines
+- [x] LeadFilter (`src/components/leads/LeadFilter.component.tsx`) - 89 lines
+- [x] LeadSkeleton (`src/components/leads/LeadSkeleton.component.tsx`) - 45 lines
+- [x] LeadEmptyState (`src/components/leads/LeadEmptyState.component.tsx`) - 20 lines
 - [ ] RoleSelection (`src/components/features/onboarding/RoleSelection.component.tsx`)
 - [ ] UserOnboardingForm (`src/components/features/onboarding/UserOnboardingForm.component.tsx`)
 - [ ] ForumFeed (`src/components/features/forum/ForumFeed.component.tsx`)
