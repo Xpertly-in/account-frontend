@@ -3,6 +3,7 @@
 import React from "react";
 import { FixedSizeList, ListChildComponentProps } from "react-window";
 import { Card, CardHeader, CardTitle, CardContent } from "@/ui/Card.ui";
+import { PostCard } from "@/components/features/forum/PostCard.components";
 import { Button } from "@/ui/Button.ui";
 import { useState, useMemo, useEffect } from "react";
 
@@ -12,6 +13,11 @@ interface ForumPost {
   title: string;
   content: string;
   category: "News" | "Question" | "Discussion";
+  authorName: string;
+  authorAvatarUrl?: string;
+  images?: string[];
+  hashtags?: string[];
+  timestamp: string;
 }
 const categories: ForumPost["category"][] = ["News", "Question", "Discussion"];
 const dummyPosts: ForumPost[] = Array.from({ length: 1000 }, (_, i) => ({
@@ -19,6 +25,15 @@ const dummyPosts: ForumPost[] = Array.from({ length: 1000 }, (_, i) => ({
   title: `Post #${i + 1}`,
   content: `This is the content for post #${i + 1}.`,
   category: categories[i % categories.length],
+  authorName: `User ${i % 10}`,
+  authorAvatarUrl: i % 3 === 0 ? `https://i.pravatar.cc/150?u=user${i}` : undefined,
+  images: [
+    `https://picsum.photos/seed/${i}/400/200`,
+    `https://picsum.photos/seed/${i + 1}/400/200`,
+    `https://picsum.photos/seed/${i + 2}/400/200`,
+  ],
+  hashtags: [`topic${i % 5}`, categories[i % categories.length].toLowerCase()],
+  timestamp: new Date(Date.now() - (1000 - i) * 60 * 1000).toISOString(), // i minutes ago
 }));
 
 export const ForumFeed: React.FC = () => {
@@ -41,11 +56,11 @@ export const ForumFeed: React.FC = () => {
   const [filterType, setFilterType] = useState<"All" | ForumPost["category"]>("All");
 
   const viewportHeight = 600; // you can tweak this
-  const itemHeight = 160; // bumped to account for new spacing
+  const itemHeight = 800; // bumped to account for new spacing
   // derive a filtered & sorted array based on selected filter & sort
   const filteredSortedPosts = useMemo(() => {
     if (isLoading) return [];
-    const base = filterType === "All" ? posts : posts.filter((p) => p.category === filterType);
+    const base = filterType === "All" ? posts : posts.filter(p => p.category === filterType);
     switch (sortType) {
       case "recent":
         return [...base].sort((a, b) => b.id - a.id);
@@ -65,7 +80,7 @@ export const ForumFeed: React.FC = () => {
     if (isFetchingMore || loadedCount >= filteredSortedPosts.length) return;
     setIsFetchingMore(true);
     setTimeout(() => {
-      setLoadedCount((prev) => Math.min(prev + pageSize, filteredSortedPosts.length));
+      setLoadedCount(prev => Math.min(prev + pageSize, filteredSortedPosts.length));
       setIsFetchingMore(false);
     }, 500);
   };
@@ -74,21 +89,15 @@ export const ForumFeed: React.FC = () => {
     const post = displayedPosts[index];
     return (
       <div style={style} className="px-4">
-        <Card className="relative group overflow-hidden hover:shadow-lg transition-all duration-200">
-          {/* gradient accent stripe */}
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-secondary to-accent" />
-
-          <div className="pt-2">
-            <CardHeader className="border-b dark:border-gray-700 pb-2">
-              <CardTitle className="text-lg text-primary dark:text-primary-foreground">
-                {post.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <p className="text-gray-700 dark:text-gray-400 text-sm">{post.content}</p>
-            </CardContent>
-          </div>
-        </Card>
+        <PostCard
+          authorName={post.authorName}
+          authorAvatarUrl={post.authorAvatarUrl}
+          title={post.title}
+          content={post.content}
+          hashtags={post.hashtags}
+          images={post.images}
+          timestamp={post.timestamp}
+        />
       </div>
     );
   };
@@ -96,54 +105,64 @@ export const ForumFeed: React.FC = () => {
   // 3) Combine filter & sort controls in header
   return (
     <>
-      {/* Filter & Sort Controls */}
-      <div className="px-4 flex justify-between items-center mb-4">
-        {/* Filter Controls */}
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant={filterType === "All" ? "default" : "outline"}
-            onClick={() => setFilterType("All")}
-          >
-            All
-          </Button>
-          {categories.map(cat => (
+      <div className="px-4 md:px-8 lg:px-16 max-w-4xl mx-auto">
+        {/* Filter & Sort Controls */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          {/* Filter Controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Filter by:</span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className={filterType === "All" ? "border-accent text-accent" : ""}
+                onClick={() => setFilterType("All")}
+              >
+                All
+              </Button>
+              {categories.map(cat => (
+                <Button
+                  key={cat}
+                  size="sm"
+                  variant="outline"
+                  className={filterType === cat ? "border-accent text-accent" : ""}
+                  onClick={() => setFilterType(cat)}
+                >
+                  {cat}
+                </Button>
+              ))}
+            </div>
+          </div>
+          {/* Sort Controls */}
+          <div className="flex items-center gap-2"></div>
+          <span className="text-sm font-medium">Sort by:</span>
+          <div className="flex gap-2">
             <Button
-              key={cat}
               size="sm"
-              variant={filterType === cat ? "default" : "outline"}
-              onClick={() => setFilterType(cat)}
+              variant={sortType === "trending" ? "default" : "outline"}
+              onClick={() => setSortType("trending")}
             >
-              {cat}
+              Trending
             </Button>
-          ))}
-        </div>
-        {/* Sort Controls */}
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant={sortType === "trending" ? "default" : "outline"}
-            onClick={() => setSortType("trending")}
-          >
-            Trending
-          </Button>
-          <Button
-            size="sm"
-            variant={sortType === "recent" ? "default" : "outline"}
-            onClick={() => setSortType("recent")}
-          >
-            Recent
-          </Button>
-          <Button
-            size="sm"
-            variant={sortType === "relevant" ? "default" : "outline"}
-            onClick={() => setSortType("relevant")}
-          >
-            Relevant
-          </Button>
+            <Button
+              size="sm"
+              variant={sortType === "recent" ? "default" : "outline"}
+              onClick={() => setSortType("recent")}
+            >
+              Recent
+            </Button>
+            <Button
+              size="sm"
+              variant={sortType === "relevant" ? "default" : "outline"}
+              onClick={() => setSortType("relevant")}
+            >
+              Relevant
+            </Button>
+          </div>
         </div>
       </div>
 
+      {/* Loading / Empty / List */}
       {isLoading ? (
         <div className="w-full h-[600px] flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
@@ -153,28 +172,28 @@ export const ForumFeed: React.FC = () => {
           <p className="text-muted-foreground dark:text-muted-foreground">No posts to display.</p>
         </div>
       ) : (
-        <div className="relative w-full h-[600px]">
-      <FixedSizeList
-        height={viewportHeight}
-        width="100%"
-        itemCount={displayedPosts.length}
-        itemSize={itemHeight}
-        overscanCount={5}
-        onItemsRendered={({ visibleStopIndex }) => {
-          if (visibleStopIndex >= displayedPosts.length - 1) {
-            loadMore();
-          }
-        }}
-      >
-        {Row}
-      </FixedSizeList>
+        <div className="relative w-full h-[400px] md:h-[600px]">
+          <FixedSizeList
+            height={viewportHeight}
+            width="100%"
+            itemCount={displayedPosts.length}
+            itemSize={itemHeight}
+            overscanCount={5}
+            onItemsRendered={({ visibleStopIndex }) => {
+              if (visibleStopIndex >= displayedPosts.length - 1) {
+                loadMore();
+              }
+            }}
+          >
+            {Row}
+          </FixedSizeList>
 
-      {isFetchingMore && (
-        <div className="absolute bottom-4 w-full flex justify-center">
-          <div className="animate-spin h-6 w-6 border-t-2 border-primary rounded-full" />
+          {isFetchingMore && (
+            <div className="absolute bottom-4 w-full flex justify-center">
+              <div className="animate-spin h-6 w-6 border-t-2 border-primary rounded-full" />
+            </div>
+          )}
         </div>
-      )}
-    </div>
       )}
     </>
   );
