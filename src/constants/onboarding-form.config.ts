@@ -16,6 +16,17 @@ export const onboardingFormConfig: FormConfig = {
           required: true,
         },
         {
+          id: 'gender',
+          type: 'select',
+          label: 'Gender',
+          placeholder: 'Select your gender',
+          required: true,
+          options: [
+            { label: 'Male', value: 'MALE' },
+            { label: 'Female', value: 'FEMALE' }
+          ]
+        },
+        {
           id: 'phone',
           type: 'tel',
           label: 'Phone Number',

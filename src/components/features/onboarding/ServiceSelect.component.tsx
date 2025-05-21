@@ -37,7 +37,7 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
       setIsLoading(true);
       try {
         const { data } = await supabase
-          .from("ca_services")
+          .from("services")
           .select("service_name")
           .eq("is_active", true);
         let all = [...DEFAULT_SERVICES];
@@ -62,7 +62,7 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
       setIsLoading(true);
       try {
         const { data } = await supabase
-          .from("ca_services")
+          .from("services")
           .select("service_name")
           .eq("ca_id", auth.user.id)
           .eq("is_active", true);
@@ -92,7 +92,7 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
     if (selectedServices.includes(service)) {
       // Remove from DB
       const { error } = await supabase
-        .from("ca_services")
+        .from("services")
         .update({ is_active: false })
         .eq("ca_id", auth.user.id)
         .eq("service_name", service);
@@ -102,7 +102,7 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
     } else {
       // Insert into DB
       const { error } = await supabase
-        .from("ca_services")
+        .from("services")
         .insert({
           ca_id: auth.user.id,
           service_name: service,
@@ -122,7 +122,7 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
     const service = customService.trim();
     // Insert into DB
     const { error } = await supabase
-      .from("ca_services")
+      .from("services")
       .insert({
         ca_id: auth.user.id,
         service_name: service,

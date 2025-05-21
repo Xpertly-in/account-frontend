@@ -355,7 +355,7 @@ export function ExperienceForm({ experiences, onExperiencesChange, experiencesLo
 
   return (
     <Card className="mb-8 p-6">
-      <div className="mb-6">
+      <div className="">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold">Work Experience</h2>
@@ -386,7 +386,7 @@ export function ExperienceForm({ experiences, onExperiencesChange, experiencesLo
           {experiences.map((experience, index) => (
             <div
               key={experience.id}
-              className="border rounded-lg p-4 space-y-4"
+              className="space-y-4"
             >
               {editingExperienceId === experience.id ? (
                 <>
@@ -410,7 +410,7 @@ export function ExperienceForm({ experiences, onExperiencesChange, experiencesLo
                   </div>
                 </>
               ) : (
-                <>
+                <div className="bg-muted border p-4 rounded-lg">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium">{experience.title}</h3>
@@ -449,7 +449,7 @@ export function ExperienceForm({ experiences, onExperiencesChange, experiencesLo
                       {experience.description}
                     </p>
                   )}
-                </>
+                </div>
               )}
             </div>
           ))}

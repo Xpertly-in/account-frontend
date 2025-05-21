@@ -76,11 +76,11 @@ export const handlers = [
   }),
 
   // CA Profile handlers
-  http.get("*/rest/v1/ca_profiles", () => {
+  http.get("*/rest/v1/profiles", () => {
     return HttpResponse.json(mockCAs);
   }),
 
-  http.get("*/rest/v1/ca_profiles/:id", ({ params }) => {
+  http.get("*/rest/v1/profiles/:id", ({ params }) => {
     const { id } = params;
     const ca = mockCAs.find((profile: CA) => profile.id === id);
 

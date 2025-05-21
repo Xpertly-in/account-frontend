@@ -13,11 +13,11 @@ interface DatabaseProfile {
   profile_picture: string;
   about: string;
   years_of_experience: number;
-  ca_address: {
+  address: {
     city: string;
     state: string;
   } | null;
-  ca_social_profile: {
+  social_profile: {
     areas_of_expertise: string;
   } | null;
 }
@@ -35,25 +35,25 @@ export default function Search() {
     setLoading(true);
     try {
       let query = supabase
-        .from('ca_profiles')
+        .from('profiles')
         .select(`
           id,
           name,
           profile_picture,
           about,
           years_of_experience,
-          ca_address (
+          address (
             city,
             state
           ),
-          ca_social_profile (
+          social_profile (
             areas_of_expertise
           )
         `)
         .eq('onboarding_completed', true);
 
       if (location) {
-        query = query.or(`ca_address.city.ilike.%${location}%,ca_address.state.ilike.%${location}%`);
+        query = query.or(`address.city.ilike.%${location}%,address.state.ilike.%${location}%`);
       }
 
       const { data, error } = await query;
@@ -65,11 +65,11 @@ export default function Search() {
         id: ca.id,
         name: ca.name,
         imageUrl: ca.profile_picture,
-        location: `${ca.ca_address?.city || ''}, ${ca.ca_address?.state || ''}`.trim(),
+        location: `${ca.address?.city || ''}, ${ca.address?.state || ''}`.trim(),
         rating: 0, // Default rating
         reviews: 0, // Default reviews
         verified: true, // Assuming all completed profiles are verified
-        specialization: ca.ca_social_profile?.areas_of_expertise?.split(',').map(s => s.trim()) || [],
+        specialization: ca.social_profile?.areas_of_expertise?.split(',').map(s => s.trim()) || [],
         experience: ca.years_of_experience
       }));
 

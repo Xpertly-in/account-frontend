@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Create CA profile record
       if (data.user) {
-        const { error: profileError } = await supabase.from("ca_profiles").insert([
+        const { error: profileError } = await supabase.from("profiles").insert([
           {
             user_id: data.user.id,
             email: data.user.email,
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ]);
 
         if (profileError) {
-          console.error("Error creating CA profile:", profileError);
+          console.error("Error creating profile:", profileError);
           // Don't return error here as the user is already created
         }
       }

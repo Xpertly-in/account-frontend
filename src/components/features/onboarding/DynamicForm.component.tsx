@@ -133,7 +133,7 @@ export default function DynamicForm() {
       if (!auth.user) return;
       setServicesLoading(true);
       const { data, error } = await supabase
-        .from("ca_services")
+        .from("services")
         .select("service_id, service_name, is_active")
         .eq("ca_id", auth.user.id)
         .eq("is_active", true);
@@ -211,7 +211,7 @@ export default function DynamicForm() {
     const fetchProfileImage = async () => {
       if (!auth.user) return;
       const { data, error } = await supabase
-        .from('ca_profiles')
+        .from('profiles')
         .select('profile_picture')
         .eq('user_id', auth.user.id)
         .single();
@@ -230,7 +230,7 @@ export default function DynamicForm() {
       try {
         // Fetch basic profile information
         const { data: profileData, error: profileError } = await supabase
-          .from('ca_profiles')
+          .from('profiles')
           .select('*')
           .eq('user_id', auth.user.id)
           .single();
@@ -239,7 +239,7 @@ export default function DynamicForm() {
 
         // Fetch address information
         const { data: addressData, error: addressError } = await supabase
-          .from('ca_address')
+          .from('address')
           .select('*')
           .eq('ca_id', auth.user.id)
           .single();
@@ -248,7 +248,7 @@ export default function DynamicForm() {
 
         // Fetch social profile information
         const { data: socialData, error: socialError } = await supabase
-          .from('ca_social_profile')
+          .from('social_profile')
           .select('*')
           .eq('ca_id', auth.user.id)
           .single();
@@ -266,6 +266,7 @@ export default function DynamicForm() {
           phone: profileData.phone || '',
           about: profileData.about || '',
           yearsOfExperience: profileData.years_of_experience || '',
+          gender: profileData.gender || '',
 
           // Address & Location
           address: addressData?.address || '',
@@ -317,7 +318,7 @@ export default function DynamicForm() {
       if (id.startsWith('temp-')) {
         // Insert new service
         const { data, error } = await supabase
-          .from("ca_services")
+          .from("services")
           .insert([{
             ca_id: auth.user.id,
             service_name: service.name,
@@ -335,7 +336,7 @@ export default function DynamicForm() {
       } else {
         // Update existing service
         const { error } = await supabase
-          .from("ca_services")
+          .from("services")
           .update({
             service_name: service.name,
           })
@@ -367,7 +368,7 @@ export default function DynamicForm() {
       } else {
         // Soft delete existing service
         const { error } = await supabase
-          .from("ca_services")
+          .from("services")
           .update({ is_active: false })
           .eq("service_id", id);
 
@@ -796,7 +797,7 @@ export default function DynamicForm() {
 
       // Update profile in database
       const { error: updateError } = await supabase
-        .from('ca_profiles')
+        .from('profiles')
         .update({
           profile_picture: publicUrl
         })
@@ -805,7 +806,7 @@ export default function DynamicForm() {
       if (updateError) {
         // If update fails, try insert
         const { error: insertError } = await supabase
-          .from('ca_profiles')
+          .from('profiles')
           .insert({
             user_id: auth.user.id,
             profile_picture: publicUrl
@@ -892,14 +893,15 @@ export default function DynamicForm() {
     setIsSubmitting(true);
 
     try {
-      // First, update the main ca_profiles table
+      // First, update the main profiles table
       const { error: profileError } = await supabase
-        .from('ca_profiles')
+        .from('profiles')
         .update({
           name: formData.name,
           phone: formData.phone,
           about: formData.about,
           years_of_experience: formData.yearsOfExperience,
+          gender: formData.gender,
           onboarding_completed: true,
           updated_at: new Date().toISOString()
         })
@@ -908,13 +910,14 @@ export default function DynamicForm() {
       if (profileError) {
         // If update fails, try insert
         const { error: insertError } = await supabase
-          .from('ca_profiles')
+          .from('profiles')
           .insert({
             user_id: auth.user?.id,
             name: formData.name,
             phone: formData.phone,
             about: formData.about,
             years_of_experience: formData.yearsOfExperience,
+            gender: formData.gender,
             onboarding_completed: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -926,7 +929,7 @@ export default function DynamicForm() {
       // Update or insert address
       try {
         const { data: addressData, error: addressError } = await supabase
-          .from('ca_address')
+          .from('address')
           .select('*')
           .eq('ca_id', auth.user?.id);
 
@@ -939,7 +942,7 @@ export default function DynamicForm() {
           // No existing record, perform insert
           console.log('No existing address found, performing insert');
           const { data: insertData, error: insertError } = await supabase
-            .from('ca_address')
+            .from('address')
             .insert({
               ca_id: auth.user?.id,
               address: formData.address || null,
@@ -960,7 +963,7 @@ export default function DynamicForm() {
           // Existing record found, perform update
           console.log('Existing address found, performing update');
           const { error: updateError } = await supabase
-            .from('ca_address')
+            .from('address')
             .update({
               address: formData.address || null,
               city: formData.city || null,
@@ -984,7 +987,7 @@ export default function DynamicForm() {
       // Update or insert social profile
       try {
         const { data: socialData, error: socialError } = await supabase
-          .from('ca_social_profile')
+          .from('social_profile')
           .select('*')
           .eq('ca_id', auth.user?.id);
 
@@ -997,7 +1000,7 @@ export default function DynamicForm() {
           // No existing record, perform insert
           console.log('No existing social profile found, performing insert');
           const { data: insertData, error: insertError } = await supabase
-            .from('ca_social_profile')
+            .from('social_profile')
             .insert({
               ca_id: auth.user?.id,
               linkedin_profile: formData.linkedin || null,
@@ -1021,7 +1024,7 @@ export default function DynamicForm() {
           // Existing record found, perform update
           console.log('Existing social profile found, performing update');
           const { error: updateError } = await supabase
-            .from('ca_social_profile')
+            .from('social_profile')
             .update({
               linkedin_profile: formData.linkedin || null,
               professional_website: formData.website || null,

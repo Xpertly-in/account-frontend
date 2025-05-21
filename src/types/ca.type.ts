@@ -8,6 +8,16 @@ export interface CA {
   verified: boolean;
   specialization: string[];
   experience: number;
+  // Additional fields from Supabase
+  email?: string;
+  phone?: string;
+  website?: string;
+  qualification?: string;
+  firm_name?: string;
+  member_since?: string;
+  clients?: string;
+  about?: string;
+  services?: string[];
 }
 
 export interface ContactDetails {
@@ -58,5 +68,37 @@ export interface CAServicesSectionProps {
 export interface CAReviewsSectionProps {
   rating: number;
   reviews: number;
+  isLoaded: boolean;
+}
+
+export interface CAExperienceSectionProps {
+  experiences: Array<{
+    id: string;
+    title: string;
+    employmentType: string;
+    companyName: string;
+    location: string;
+    isCurrent: boolean;
+    startDate: string;
+    endDate: string;
+    industry: string;
+    description: string;
+    recentService: string;
+  }>;
+  isLoaded: boolean;
+}
+
+export interface CAEducationSectionProps {
+  educations: Array<{
+    id: string;
+    instituteName: string;
+    degree: string;
+    fieldOfStudy: string;
+    startDate: string;
+    endDate: string;
+    grade: string;
+    description: string;
+    isCurrent: boolean;
+  }>;
   isLoaded: boolean;
 }
