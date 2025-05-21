@@ -3,57 +3,75 @@
 import React from "react";
 import { FixedSizeList, ListChildComponentProps } from "react-window";
 import { Card, CardHeader, CardTitle, CardContent } from "@/ui/Card.ui";
-import { PostCard } from "@/components/features/forum/PostCard.components";
+import { PostCard, PostCardProps } from "@/components/features/forum/PostCard.components";
 import { Button } from "@/ui/Button.ui";
 import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/helper/supabase.helper";
 
 // Dummy data for prototyping—swap out for real API data later
-interface ForumPost {
-  id: number;
-  title: string;
-  content: string;
-  category: "News" | "Question" | "Discussion";
-  authorName: string;
-  authorAvatarUrl?: string;
-  images?: string[];
-  hashtags?: string[];
-  timestamp: string;
-}
-const categories: ForumPost["category"][] = ["News", "Question", "Discussion"];
-const dummyPosts: ForumPost[] = Array.from({ length: 1000 }, (_, i) => ({
-  id: i,
-  title: `Post #${i + 1}`,
-  content: `This is the content for post #${i + 1}.`,
-  category: categories[i % categories.length],
-  authorName: `User ${i % 10}`,
-  authorAvatarUrl: i % 3 === 0 ? `https://i.pravatar.cc/150?u=user${i}` : undefined,
-  images: [
-    `https://picsum.photos/seed/${i}/400/200`,
-    `https://picsum.photos/seed/${i + 1}/400/200`,
-    `https://picsum.photos/seed/${i + 2}/400/200`,
-  ],
-  hashtags: [`topic${i % 5}`, categories[i % categories.length].toLowerCase()],
-  timestamp: new Date(Date.now() - (1000 - i) * 60 * 1000).toISOString(), // i minutes ago
-}));
+const categories = ["News", "Question", "Discussion"];
+// const dummyPosts: PostCardProps[] = Array.from({ length: 1000 }, (_, i) => {
+//   const ts = new Date(Date.now() - i * 60 * 60 * 1000).toISOString();
+//   return {
+//     id: i + 1,
+//     created_at: ts,
+//     updated_at: ts,
+//     title: `Post #${i + 1}`,
+//     content: `This is the content for post #${i + 1}.`,
+//     authorName: `user ${i % 10}`,
+//     authorAvatarUrl: i % 3 === 0 ? `https://i.pravatar.cc/150?u=user${i}` : undefined,
+//     category: categories[i % categories.length],
+//     tags: [`tag${i % 5}`, categories[i % categories.length].toLowerCase()],
+//     images: [`https://picsum.photos/seed/${i}/400/200`],
+//     likes_count: Math.floor(Math.random() * 100),
+//     comment_count: Math.floor(Math.random() * 20),
+//     is_deleted: false,
+//   };
+// });
 
 export const ForumFeed: React.FC = () => {
   // simulate data fetching
-  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const pageSize = 20;
   const [loadedCount, setLoadedCount] = useState(pageSize);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setPosts(dummyPosts);
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+     const fetchPosts = async () => {
+       const { data, error } = await supabase
+         .from("posts")
+         .select(`
+           *
+         `);
+  
+       if (error) {
+         console.error("Error fetching posts:", error);
+       } else if (data) {
+         const formatted: PostCardProps[] = data.map(post => ({
+           id: post.id,
+           created_at: post.created_at,
+           updated_at: post.updated_at,
+           title: post.title,
+           content: post.content,
+           author_id: post.author_id,
+           authorAvatarUrl: post.author_avatar_url,
+           category: post.category,
+           tags: post.tags,
+           images: post.images,
+           likes_count: post.likes_count,
+           comment_count: post.comment_count,
+           is_deleted: post.is_deleted,
+         }));
+         setPosts(formatted);
+       }
+       setIsLoading(false);
+     };
+     fetchPosts();
+   }, []);
 
   // sort & filter state
   const [sortType, setSortType] = useState<"trending" | "recent" | "relevant">("recent");
-  const [filterType, setFilterType] = useState<"All" | ForumPost["category"]>("All");
+  const [filterType, setFilterType] = useState<"All" | PostCardProps["category"]>("All");
 
   const viewportHeight = 600; // you can tweak this
   const itemHeight = 800; // bumped to account for new spacing
@@ -90,13 +108,14 @@ export const ForumFeed: React.FC = () => {
     return (
       <div style={style} className="px-4">
         <PostCard
-          authorName={post.authorName}
-          authorAvatarUrl={post.authorAvatarUrl}
+          id={post.id}
+          author_id={post.author_id}
           title={post.title}
           content={post.content}
-          hashtags={post.hashtags}
+          tags={post.tags}
           images={post.images}
-          timestamp={post.timestamp}
+          created_at={post.created_at}
+          updated_at={post.updated_at}
         />
       </div>
     );

@@ -9,47 +9,45 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 
 export interface PostCardProps {
-  authorName: string;
-  authorAvatarUrl?: string;
+  id: number;
+  created_at: string;
+  updated_at: string;
   title: string;
   content: string;
-  /** Optional array of image URLs for carousel */
-  images?: string[];
-  /** Optional list of hashtags */
-  hashtags?: string[];
-  timestamp: string;
+  author_id: string;
+  category?: string;
+  tags: string[];
+  images: string[];
+  likes_count?: number;
+  comment_count?: number;
+  is_deleted?: boolean;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
-  authorName,
-  authorAvatarUrl,
+  author_id,
   title,
   content,
   images,
-  hashtags,
-  timestamp,
+  tags,
+  updated_at,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   // compute initials if no avatar image
-  const initials = authorName
+  const initials = author_id
     .split(" ")
     .map(n => n[0])
     .join("")
     .toUpperCase();
-  const relativeTime = useMemo(() => formatRelativeTime(new Date(timestamp)), [timestamp]);
+  const relativeTime = useMemo(() => formatRelativeTime(new Date(updated_at)), [updated_at]);
 
   return (
     <Card className="overflow-hidden">
       {/* Author Header */}
       <div className="flex items-center gap-3 p-4">
         <Avatar className="size-10">
-          {authorAvatarUrl ? (
-            <AvatarImage src={authorAvatarUrl} alt={authorName} />
-          ) : (
             <AvatarFallback>{initials}</AvatarFallback>
-          )}
         </Avatar>
-        <span className="font-semibold text-gray-900 dark:text-white">{authorName}</span>
+        <span className="font-semibold text-gray-900 dark:text-white">{author_id}</span>
       </div>
 
       {/* Title, Content & Carousel */}
@@ -106,9 +104,9 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {/* Hashtag Links */}
-      {hashtags && hashtags.length > 0 && (
+      {tags && tags.length > 0 && (
         <div className="px-4 pb-4 flex flex-wrap gap-2">
-          {hashtags.map(tag => (
+          {tags.map(tag => (
             <Link
               key={tag}
               href={`/forum?tag=${encodeURIComponent(tag)}`}
