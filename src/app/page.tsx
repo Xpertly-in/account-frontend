@@ -54,7 +54,7 @@ export default function Home() {
       <Container className="py-16 md:py-24">
         <section>
           <h2 className="text-3xl font-bold text-center mb-12 md:text-4xl dark:text-white">
-            From the Forum
+            Check out the latest posts
           </h2>
           <ForumFeed />
         </section>
