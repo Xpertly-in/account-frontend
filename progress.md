@@ -107,10 +107,10 @@
   - [ ] Core Components
     - [ ] ForumFeed component
       - [x] Implement virtual scrolling
-      - [ ] Add sort controls (trending, recent, relevant)
-      - [ ] Add filter controls
-      - [ ] Create empty and loading states
-      - [ ] Implement infinite scroll
+      - [x] Add sort controls (trending, recent, relevant)
+      - [x] Add filter controls
+      - [x] Create empty and loading states
+      - [x] Implement infinite scroll
     - [ ] PostCard component
       - [ ] Create author header with avatar
       - [ ] Implement content display
