@@ -37,6 +37,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   images,
   tags,
   updated_at,
+  likes_count = 0,
+  comment_count = 0,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const initials = useMemo(
@@ -129,13 +131,13 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Actions */}
       <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex justify-around text-gray-600 dark:text-gray-400">
-        <button className="flex items-center gap-2 hover:text-primary">
+        <button className="flex items-center gap-1 hover:text-primary">
           <ThumbsUp size={18} />
-          <span className="hidden sm:inline">Like</span>
+          <span className="text-sm">{likes_count}</span>
         </button>
-        <button className="flex items-center gap-2 hover:text-primary">
+        <button className="flex items-center gap-1 hover:text-primary">
           <ChatCircle size={18} />
-          <span className="hidden sm:inline">Comment</span>
+          <span className="text-sm">{comment_count}</span>
         </button>
         <button className="flex items-center gap-2 hover:text-primary">
           <ShareNetwork size={18} />

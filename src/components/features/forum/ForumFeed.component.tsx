@@ -6,6 +6,7 @@ import { Card } from "@/ui/Card.ui";
 import { MagnifyingGlass, Funnel, Sliders } from "@phosphor-icons/react";
 import { PostCard, PostCardProps } from "./PostCard.component";
 import { Input } from "@/ui/Input.ui";
+import { Container } from "@/components/layout/Container.component";
 import Link from "next/link";
 import { Plus } from "@phosphor-icons/react";
 
@@ -17,6 +18,8 @@ export const ForumFeed: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [sortOption, setSortOption] = useState<"recent" | "trending">("recent");
 
   // ↓ lift out fetch logic so we can re-use it
   const fetchPosts = useCallback(async () => {
@@ -71,15 +74,36 @@ export const ForumFeed: React.FC = () => {
     .filter(p => !filterCategory || p.category === filterCategory)
     .filter(p => !filterTags.length || filterTags.every(t => p.tags.includes(t)));
 
+  // apply sorting
+  const sortedPosts = useMemo(() => {
+    const arr = [...filteredPosts];
+    if (sortOption === "trending") {
+      return arr.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+    }
+    if (sortOption === "recent") {
+      return arr.sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+    }
+    return arr; // “relevant” is default order
+  }, [filteredPosts, sortOption]);
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-6 px-4 sm:px-6 md:px-8 lg:px-16">
-      <div className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
+      <Container className="space-y-12">
+        {/* Section Header */}
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
+            Community Forum
+          </h2>
+          <div className="mt-2 h-1 w-20 bg-primary mx-auto rounded-full" />
+        </div>
         {/* Search + Filter/Sort Icons */}
-        <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col sm:flex-row items-center gap-2 relative">
+        <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col sm:flex-row items-center gap-4">
           <MagnifyingGlass size={20} className="text-gray-500 dark:text-gray-400" />
           <Input
             placeholder="Search posts…"
-            className="flex-1"
+            className="flex-1 border-primary/50 shadow-sm"
             value={searchTerm}
             onChange={e => setSearchTerm(e.currentTarget.value)}
           />
@@ -141,26 +165,60 @@ export const ForumFeed: React.FC = () => {
               </div>
             )}
           </div>
-          <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Sliders size={20} className="text-gray-500 dark:text-gray-400" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setSortOpen(o => !o)}
+              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Sliders size={20} className="text-gray-500 dark:text-gray-400" />
+            </button>
+            {sortOpen && (
+              <div className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-700 rounded-lg shadow-lg p-2 z-10">
+                {["recent", "trending"].map(opt => (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      setSortOption(opt as any);
+                      setSortOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-1 text-sm rounded ${
+                      sortOption === opt
+                        ? "bg-primary text-white"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {opt[0].toUpperCase() + opt.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </Card>
-        {/* Floating “new post” button */}
+        {/* Floating “new post” */}
         <Link
           href="/forum/new"
           title="Create New Post"
-          className="fixed bottom-12 right-6 z-50 bg-primary text-white p-4 rounded-full shadow-lg transition-transform duration-200 ease-out hover:bg-primary/90 hover:scale-110 hover:shadow-xl"
+          className="fixed bottom-10 right-6 z-50 bg-primary text-white p-4 rounded-full shadow-lg transition-transform duration-200 ease-out hover:bg-primary/90 hover:scale-110 hover:shadow-xl"
           aria-label="Create new post"
         >
           <Plus size={24} weight="fill" />
         </Link>
-        {/* Feed */}
-        <div className="space-y-6">
-          {isLoading
-            ? "Loading..."
-            : filteredPosts.map(post => <PostCard key={post.id} {...post} />)}
+        {/* Posts Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {isLoading ? (
+            <div className="col-span-full text-center py-20 text-gray-500">Loading…</div>
+          ) : (
+            sortedPosts.map(post => (
+              <div
+                key={post.id}
+                className="transition-transform transform hover:-translate-y-1 hover:shadow-xl"
+              >
+                <PostCard {...post} />
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      </Container>
     </div>
   );
 };
