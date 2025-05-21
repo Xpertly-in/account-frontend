@@ -1,15 +1,30 @@
 // src/app/forum/new/page.tsx
 "use client";
- 
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/store/context/Auth.provider";
 import { CaretLeft } from "@phosphor-icons/react";
 import { Container } from "@/components/layout/Container.component";
 import { CreatePost } from "@/components/features/forum/CreatePost.component";
- 
+
 export default function NewPostPage() {
   const router = useRouter();
+  const { auth } = useAuth();
+
+  // Redirect to login if unauthenticated
+  useEffect(() => {
+    if (!auth.isLoading && !auth.user) {
+      // remember where to go after login
+      localStorage.setItem("postLoginRedirect", window.location.pathname);
+      router.push("/login/ca");
+    }
+  }, [auth.user, auth.isLoading, router]);
+
+  if (auth.isLoading || !auth.user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/30 dark:from-primary-dark/10 dark:to-primary-dark/30 py-12">
       <Container className="py-16">
