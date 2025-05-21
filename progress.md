@@ -149,7 +149,7 @@
       - [ ] Add reply form with @mention support
     - [ ] CreatePost component
       - [ ] Implement rich text editor
-      - [ ] Add image upload with preview
+      - [x] Add image upload with preview
       - [ ] Create hashtag input with autocomplete
       - [ ] Add character limit indicator
       - [ ] Implement draft saving
