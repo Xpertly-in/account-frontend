@@ -105,19 +105,19 @@
 - [ ] Forum Feature
 
   - [ ] Core Components
-    - [ ] ForumFeed component
+    - [x] ForumFeed component
       - [x] Implement virtual scrolling
       - [x] Add sort controls (trending, recent, relevant)
       - [x] Add filter controls
       - [x] Create empty and loading states
       - [x] Implement infinite scroll
-    - [ ] PostCard component
-      - [ ] Create author header with avatar
-      - [ ] Implement content display
-      - [ ] Add image carousel for multiple images
-      - [ ] Add hashtag display with links
-      - [ ] Add timestamp with relative formatting
-      - [ ] Implement responsive layout
+    - [x] PostCard component
+      - [x] Create author header with avatar
+      - [x] Implement content display
+      - [x] Add image carousel for multiple images
+      - [x] Add hashtag display with links
+      - [x] Add timestamp with relative formatting
+      - [x] Implement responsive layout
     - [ ] ReactionSystem component
       - [ ] Create multiple reaction types
       - [ ] Add animated reaction selection
