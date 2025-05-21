@@ -94,8 +94,8 @@
 
   - [x] Move "Why Choose Xpertly?" section to About page
   - [x] Move "Are You a Chartered Accountant?" section to About page
-  - [ ] Update hero section with search
-  - [ ] Integrate Forum feed section
+  - [x] Update hero section with search
+  - [x] Integrate Forum feed section
   - [ ] Redesign featured CA listings
   - [ ] Ensure mobile-first responsive design
   - [ ] Support dark mode
@@ -106,7 +106,7 @@
 
   - [ ] Core Components
     - [ ] ForumFeed component
-      - [ ] Implement virtual scrolling
+      - [x] Implement virtual scrolling
       - [ ] Add sort controls (trending, recent, relevant)
       - [ ] Add filter controls
       - [ ] Create empty and loading states
@@ -150,9 +150,9 @@
     - [ ] Analyze user interaction patterns
   - [ ] Styling
 
-    - [ ] Apply premium visual design to all components
-    - [ ] Implement animations and transitions
-    - [ ] Ensure dark mode support
+    - [x] Apply premium visual design to all components
+    - [x] Implement animations and transitions
+    - [x] Ensure dark mode support
     - [ ] Test responsive behavior across devices
 
   - [ ] **Forum Components**
