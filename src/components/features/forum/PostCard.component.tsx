@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Card } from "@/ui/Card.ui";
 import { Avatar, AvatarFallback } from "@/ui/Avatar.ui";
@@ -13,6 +14,7 @@ import {
   DotsThree,
   CaretLeft,
   CaretRight,
+  X,
 } from "@phosphor-icons/react";
 
 export interface PostCardProps {
@@ -41,6 +43,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   comment_count = 0,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
   const initials = useMemo(
     () =>
       author_id
@@ -77,7 +81,13 @@ export const PostCard: React.FC<PostCardProps> = ({
           <p className="text-sm text-gray-700 dark:text-gray-300">{content}</p>
         </div>
         {images?.length > 0 && (
-          <div className="relative w-full aspect-video bg-muted overflow-hidden rounded-lg">
+          <div
+            className="relative w-full aspect-video bg-muted overflow-hidden rounded-lg cursor-zoom-in"
+            onClick={() => {
+              setPreviewIndex(currentIndex);
+              setIsPreviewOpen(true);
+            }}
+          >
             <Image
               src={images[currentIndex]}
               alt={`Slide ${currentIndex + 1}`}
@@ -87,8 +97,11 @@ export const PostCard: React.FC<PostCardProps> = ({
             {/* Prev */}
             {currentIndex > 0 && (
               <button
-                onClick={() => setCurrentIndex(i => i - 1)}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-background/50 p-1 rounded-full"
+                onClick={e => {
+                  e.stopPropagation();
+                  setCurrentIndex(i => i - 1);
+                }}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-background/50 p-3 rounded-full"
               >
                 <CaretLeft size={24} className="text-primary" />
               </button>
@@ -96,8 +109,11 @@ export const PostCard: React.FC<PostCardProps> = ({
             {/* Next */}
             {currentIndex < images.length - 1 && (
               <button
-                onClick={() => setCurrentIndex(i => i + 1)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-background/50 p-1 rounded-full"
+                onClick={e => {
+                  e.stopPropagation();
+                  setCurrentIndex(i => i + 1);
+                }}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-background/50 p-3 rounded-full"
               >
                 <CaretRight size={24} className="text-primary" />
               </button>
@@ -148,6 +164,27 @@ export const PostCard: React.FC<PostCardProps> = ({
           <span className="hidden sm:inline">Send</span>
         </button>
       </div>
+      {/* Image preview modal */}
+      {isPreviewOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+            onClick={() => setIsPreviewOpen(false)}
+          >
+            <button
+              className="absolute top-4 right-4 text-white"
+              onClick={() => setIsPreviewOpen(false)}
+            >
+              <X size={32} weight="bold" />
+            </button>
+            <img
+              src={images[previewIndex]}
+              alt={`Preview ${previewIndex + 1}`}
+              className="max-h-[90vh] max-w-[90vw] object-contain"
+            />
+          </div>,
+          document.body
+        )}
     </Card>
   );
 };
