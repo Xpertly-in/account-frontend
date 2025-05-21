@@ -1,4 +1,5 @@
-import { FormField, FormDefinition, FormValues } from "@/types/onboarding.type";
+import { FormField, FormDefinition, FormValues, ValidationErrors } from "@/types/onboarding.type";
+import { FormField as FormFieldConfig } from "@/constants/form-sections.config";
 
 /**
  * Validates a field value based on specified validation rules
@@ -227,4 +228,176 @@ export const getFormProgress = (
     totalRequiredFields > 0 ? Math.round((completedFields / totalRequiredFields) * 100) : 0;
 
   return { completedFields, totalRequiredFields, percentComplete };
+};
+
+export const validateForm = (formData: FormValues): ValidationErrors => {
+  const errors: ValidationErrors = {};
+
+  // Required fields validation
+  const requiredFields = {
+    name: "Full Name",
+    phone: "Phone Number",
+    about: "About",
+    yearsOfExperience: "Years of Experience",
+    address: "Address",
+    city: "City",
+    state: "State",
+    pincode: "Pincode",
+    icaiNumber: "ICAI Membership Number",
+    licenseNumber: "Practice License Number",
+    professionalEmail: "Professional Email",
+  };
+
+  for (const [field, label] of Object.entries(requiredFields)) {
+    if (!formData[field] || (typeof formData[field] === "string" && !formData[field].trim())) {
+      errors[field] = `${label} is required`;
+    }
+  }
+
+  // Email validation
+  if (formData.professionalEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.professionalEmail)) {
+    errors.professionalEmail = "Please enter a valid email address";
+  }
+
+  // Phone number validation (Indian format)
+  if (formData.phone && !/^\+?[1-9]\d{9,14}$/.test(formData.phone.replace(/[\s-]/g, ""))) {
+    errors.phone = "Please enter a valid phone number";
+  }
+
+  // Pincode validation (6 digits)
+  if (formData.pincode && !/^\d{6}$/.test(formData.pincode)) {
+    errors.pincode = "Pincode must be 6 digits";
+  }
+
+  // URL validation for LinkedIn and website
+  if (formData.linkedin && !isValidUrl(formData.linkedin)) {
+    errors.linkedin = "Please enter a valid LinkedIn URL";
+  }
+
+  if (formData.website && !isValidUrl(formData.website)) {
+    errors.website = "Please enter a valid website URL";
+  }
+
+  // Years of experience validation
+  if (formData.yearsOfExperience) {
+    const years = Number(formData.yearsOfExperience);
+    if (isNaN(years) || years < 0 || years > 50) {
+      errors.yearsOfExperience = "Years of experience must be between 0 and 50";
+    }
+  }
+
+  return errors;
+};
+
+export const formatPhoneNumber = (phone: string): string => {
+  const cleaned = phone.replace(/\D/g, "");
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+  if (match) {
+    return `${match[1]}-${match[2]}-${match[3]}`;
+  }
+  return phone;
+};
+
+export const validateExperience = (exp: any) => {
+  const errors: Record<string, string> = {};
+
+  if (!exp.title?.trim()) {
+    errors.title = "Job title is required";
+  }
+
+  if (!exp.companyName?.trim()) {
+    errors.companyName = "Company name is required";
+  }
+
+  if (!exp.location?.trim()) {
+    errors.location = "Location is required";
+  }
+
+  if (!exp.employmentType) {
+    errors.employmentType = "Employment type is required";
+  }
+
+  if (!exp.startDate) {
+    errors.startDate = "Start date is required";
+  }
+
+  if (!exp.isCurrent && !exp.endDate) {
+    errors.endDate = "End date is required";
+  }
+
+  if (exp.startDate && exp.endDate && !exp.isCurrent && exp.endDate < exp.startDate) {
+    errors.endDate = "End date cannot be before start date";
+  }
+
+  if (!exp.industry) {
+    errors.industry = "Industry is required";
+  }
+
+  if (!exp.recentService?.trim()) {
+    errors.recentService = "Recent service is required";
+  }
+
+  return errors;
+};
+
+export const validateEducation = (edu: any) => {
+  const errors: Record<string, string> = {};
+
+  if (!edu.degree?.trim()) {
+    errors.degree = "Degree is required";
+  }
+
+  if (!edu.instituteName?.trim()) {
+    errors.instituteName = "Institute name is required";
+  }
+
+  if (!edu.fieldOfStudy?.trim()) {
+    errors.fieldOfStudy = "Field of study is required";
+  }
+
+  if (!edu.startDate) {
+    errors.startDate = "Start date is required";
+  }
+
+  if (!edu.isCurrent && !edu.endDate) {
+    errors.endDate = "End date is required";
+  }
+
+  if (edu.startDate && edu.endDate && !edu.isCurrent && edu.endDate < edu.startDate) {
+    errors.endDate = "End date cannot be before start date";
+  }
+
+  return errors;
+};
+
+export const validateService = (service: any) => {
+  const errors: Record<string, string> = {};
+
+  if (!service.name?.trim()) {
+    errors.name = "Service name is required";
+  }
+
+  if (!service.description?.trim()) {
+    errors.description = "Service description is required";
+  }
+
+  if (!service.price?.trim()) {
+    errors.price = "Service price is required";
+  }
+
+  if (!service.duration?.trim()) {
+    errors.duration = "Service duration is required";
+  }
+
+  return errors;
+};
+
+// Helper function to validate URLs
+const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 };

@@ -40,17 +40,9 @@ export interface FormField {
   description?: string;
   options?: Array<{ label: string; value: string }>;
   multiple?: boolean;
-  accept?: string;
   min?: number;
   max?: number;
-  validation?: {
-    pattern?: string;
-    minLength?: number;
-    maxLength?: number;
-    min?: number;
-    max?: number;
-    message?: string;
-  };
+  accept?: string;
 }
 
 // Remove specific CheckboxGroupFieldDef if FormField covers it
@@ -76,7 +68,22 @@ export interface FormStep {
 
 // FormData compatible with helper functions
 export interface FormValues {
-  [key: string]: string | string[] | boolean | File | null;
+  name?: string;
+  phone?: string;
+  about?: string;
+  yearsOfExperience?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  linkedin?: string;
+  website?: string;
+  icaiNumber?: string;
+  licenseNumber?: string;
+  professionalEmail?: string;
+  professionalPhone?: string;
+  expertise?: string;
+  [key: string]: string | string[] | boolean | File | undefined;
 }
 
 // FormDefinition compatible with helper functions AND JSON structure
@@ -88,10 +95,8 @@ export interface FormDefinition {
 }
 
 export interface FormSection {
-  id: string;
   title: string;
-  subtitle: string;
-  order: number;
+  description?: string;
   fields: FormField[];
 }
 
