@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
-import {
-  MagnifyingGlass,
-  Funnel,
-  Sliders,
-} from "@phosphor-icons/react";
+import { MagnifyingGlass, Funnel, Sliders } from "@phosphor-icons/react";
 import { PostCard, PostCardProps } from "./PostCard.component";
 import { Input } from "@/ui/Input.ui";
+import Link from "next/link";
+import { Plus } from "@phosphor-icons/react";
 
 export const ForumFeed: React.FC = () => {
   // example data fetch
@@ -20,41 +18,40 @@ export const ForumFeed: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
 
-  useEffect(() => {
-    let mounted = true;
-    const fetchPosts = async () => {
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("is_deleted", false)
-        .order("updated_at", { ascending: false });
-      if (error) {
-        console.error("Error fetching posts:", error);
-      } else if (data && mounted) {
-        setPosts(
-          data.map(p => ({
-            id: p.id,
-            created_at: p.created_at,
-            updated_at: p.updated_at,
-            title: p.title,
-            content: p.content,
-            author_id: p.author_id,
-            category: p.category,
-            tags: p.tags,
-            images: p.images,
-            likes_count: p.likes_count,
-            comment_count: p.comment_count,
-            is_deleted: p.is_deleted,
-          }))
-        );
-      }
-      if (mounted) setIsLoading(false);
-    };
-    fetchPosts();
-    return () => {
-      mounted = false;
-    };
+  // ↓ lift out fetch logic so we can re-use it
+  const fetchPosts = useCallback(async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("is_deleted", false)
+      .order("updated_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching posts:", error);
+    } else if (data) {
+      setPosts(
+        data.map(p => ({
+          id: p.id,
+          created_at: p.created_at,
+          updated_at: p.updated_at,
+          title: p.title,
+          content: p.content,
+          author_id: p.author_id,
+          category: p.category,
+          tags: p.tags,
+          images: p.images,
+          likes_count: p.likes_count,
+          comment_count: p.comment_count,
+          is_deleted: p.is_deleted,
+        }))
+      );
+    }
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   // derive available categories & tags
   const categoriesList = useMemo(
@@ -148,7 +145,15 @@ export const ForumFeed: React.FC = () => {
             <Sliders size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
         </Card>
-
+        {/* Floating “new post” button */}
+        <Link
+          href="/forum/new"
+          title="Create New Post"
+          className="fixed bottom-12 right-6 z-50 bg-primary text-white p-4 rounded-full shadow-lg transition-transform duration-200 ease-out hover:bg-primary/90 hover:scale-110 hover:shadow-xl"
+          aria-label="Create new post"
+        >
+          <Plus size={24} weight="fill" />
+        </Link>
         {/* Feed */}
         <div className="space-y-6">
           {isLoading
