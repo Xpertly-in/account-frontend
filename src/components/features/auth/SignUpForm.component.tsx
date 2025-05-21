@@ -13,6 +13,7 @@ import SignUpFormFields from "./SignUpFormFields.component";
 import SignUpFormTerms from "./SignUpFormTerms.component";
 import { ExtendedSignUpFormData } from "@/types/auth.type";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 interface SignUpFormProps {
   hideContainer?: boolean;
@@ -21,7 +22,7 @@ interface SignUpFormProps {
 export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { signUp } = useAuth();
+  const { signUp, signIn } = useAuth();
   const { signIn: signInWithGoogle } = useGoogleAuth();
   const [formData, setFormData] = useState<ExtendedSignUpFormData>({
     name: "",
@@ -32,6 +33,7 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const { auth } = useAuth();
 
   // Check if we're in the CA context
   const isCAContext = pathname?.includes("/ca") || pathname?.includes("/signup/ca");
@@ -59,43 +61,32 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isFormValid) {
-      return;
-    }
-
-    console.log("formData", formData);
-
     setIsLoading(true);
 
     try {
       const { error, user } = await signUp(formData.email, formData.password, formData.name);
 
-      if (error) {
-        if (error.code === "user_already_exists") {
-          toast.error("Account already exists", {
-            description: "Please sign in instead or use a different email address.",
-            action: {
-              label: "Sign in",
-              onClick: () => router.push("/login/ca"),
-            },
-          });
-        } else {
-          toast.error("Sign up failed", {
-            description: error.message || "Please check your information and try again.",
-          });
-        }
+      if (error || !user) {
+        toast.error("Sign up failed", {
+          description: error?.message || "Please check your information and try again.",
+        });
         return;
       }
 
-      toast.success("Sign up successful", {
-        description: "Your account has been created.",
-      });
+      // Fetch profile after signup
+      const { data: profile } = await supabase
+        .from("ca_profiles")
+        .select("role, completed_onboarding")
+        .eq("user_id", user.id)
+        .single();
 
-      // Short timeout to ensure toast is visible before redirect
-      setTimeout(() => {
-        router.push("/ca/onboarding");
-      }, 500);
+      if (!profile?.role) {
+        router.push("/role-select");
+      } else if (!profile.completed_onboarding) {
+        router.push(profile.role === "ca" ? "/ca/onboarding" : "/user/onboarding");
+      } else {
+        router.push("/ca/dashboard");
+      }
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error("Signup error:", error);
@@ -107,11 +98,34 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
+      // After Google sign-in, the user will be redirected back and authenticated.
+      // The following useEffect will handle the redirect.
     } catch (error) {
       toast.error("Failed to sign in with Google");
       console.error("Google sign-in error:", error);
     }
   };
+
+  // Add a useEffect to handle post-auth redirect after Google sign-in
+  useEffect(() => {
+    const checkAndRedirect = async () => {
+      if (!auth.user) return;
+      const { data: profile } = await supabase
+        .from("ca_profiles")
+        .select("role, completed_onboarding")
+        .eq("user_id", auth.user.id)
+        .single();
+
+      if (!profile?.role) {
+        router.push("/role-select");
+      } else if (!profile.completed_onboarding) {
+        router.push(profile.role === "ca" ? "/ca/onboarding" : "/user/onboarding");
+      } else {
+        router.push("/ca/dashboard");
+      }
+    };
+    checkAndRedirect();
+  }, [auth.user]);
 
   const formContent = (
     <>
