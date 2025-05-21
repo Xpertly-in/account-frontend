@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/Container.component";
 import { Button } from "@/ui/Button.ui";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
 import Link from "next/link";
+import { ForumFeed } from "@/components/features/forum/ForumFeed.component";
 
 export default function Home() {
   return (
@@ -48,6 +49,16 @@ export default function Home() {
           </section>
         </Container>
       </div>
+
+      {/* Forum Feed Section */}
+      <Container className="py-16 md:py-24">
+        <section>
+          <h2 className="text-3xl font-bold text-center mb-12 md:text-4xl dark:text-white">
+            Check out the latest posts
+          </h2>
+          <ForumFeed />
+        </section>
+      </Container>
 
       {/* Features Section */}
       <Container className="py-16 md:py-24">
