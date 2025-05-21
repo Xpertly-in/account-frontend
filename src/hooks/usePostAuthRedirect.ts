@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { supabase } from "@/helper/supabase.helper";
+import { UserRole } from "@/types/onboarding.type";
 
 export function usePostAuthRedirect() {
   const { auth } = useAuth();
@@ -15,7 +16,7 @@ export function usePostAuthRedirect() {
       if (!pathname) return;
       if (["/role-select", "/ca/onboarding", "/user/onboarding"].includes(pathname)) return;
       const { data } = await supabase
-        .from("ca_profiles")
+        .from("profiles")
         .select("role, onboarding_completed")
         .eq("user_id", auth.user.id)
         .single();
@@ -25,7 +26,7 @@ export function usePostAuthRedirect() {
         return;
       }
       if (!data.onboarding_completed) {
-        if (data.role === "ca") {
+        if (data.role === UserRole.ACCOUNTANT) {
           router.push("/ca/onboarding");
         } else {
           router.push("/user/onboarding");

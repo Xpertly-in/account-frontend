@@ -175,8 +175,8 @@ export interface FormValidationConfig {
  * User role enum for role selection screen
  */
 export enum UserRole {
-  CA = "ca",
-  CUSTOMER = "customer",
+  ACCOUNTANT = "ACCOUNTANT",
+  CUSTOMER = "CUSTOMER",
 }
 
 /**

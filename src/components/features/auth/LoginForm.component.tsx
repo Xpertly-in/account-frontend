@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { EventCategory } from "@/helper/googleAnalytics.helper";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
+import { UserRole } from "@/types/onboarding.type";
 
 interface LoginFormProps {
   hideContainer?: boolean;
@@ -104,20 +105,33 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         return;
       }
 
-      // Fetch profile after login
-      const { data: profile } = await supabase
-        .from("ca_profiles")
-        .select("role, completed_onboarding")
+      // After successful login, first check role
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role, onboarding_completed")
         .eq("user_id", user.id)
         .single();
 
+      if (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("An error occurred while checking your profile");
+        return;
+      }
+
+      // If no role is set, redirect to role selection
       if (!profile?.role) {
         router.push("/role-select");
-      } else if (!profile.completed_onboarding) {
-        router.push(profile.role === "ca" ? "/ca/onboarding" : "/user/onboarding");
-      } else {
-        router.push("/ca/dashboard");
+        return;
       }
+
+      // If role exists, then check onboarding status
+      if (!profile.onboarding_completed) {
+        router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+        return;
+      }
+
+      // If both role exists and onboarding is completed, go to dashboard
+      router.push("/ca/dashboard");
     } catch (error) {
       // Track login error
       trackFormSubmission("login_form", false, {
@@ -147,18 +161,37 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   useEffect(() => {
     const checkAndRedirect = async () => {
       if (!auth.user) return;
-      const { data: profile } = await supabase
-        .from("ca_profiles")
-        .select("role, completed_onboarding")
-        .eq("user_id", auth.user.id)
-        .single();
+      
+      try {
+        // First check if user has a role set
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role, onboarding_completed")
+          .eq("user_id", auth.user.id)
+          .single();
 
-      if (!profile?.role) {
-        router.push("/role-select");
-      } else if (!profile.completed_onboarding) {
-        router.push(profile.role === "ca" ? "/ca/onboarding" : "/user/onboarding");
-      } else {
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+
+        // If no role is set, redirect to role selection
+        if (!profile?.role) {
+          router.push("/role-select");
+          return;
+        }
+
+        // If role exists, then check onboarding status
+        if (!profile.onboarding_completed) {
+          router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+          return;
+        }
+
+        // If both role exists and onboarding is completed, go to dashboard
         router.push("/ca/dashboard");
+      } catch (error) {
+        console.error("Error in checkAndRedirect:", error);
+        toast.error("An error occurred while checking your profile");
       }
     };
     checkAndRedirect();

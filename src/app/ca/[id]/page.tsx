@@ -6,7 +6,7 @@ import CAProfileWrapper from "@/components/features/profile/CAProfileWrapper";
 export async function generateStaticParams() {
   // Fetch all CA IDs from Supabase
   const { data: cas } = await supabase
-    .from("ca_profiles")
+    .from("profiles")
     .select("id");
 
   // Return array of params for static generation
@@ -19,7 +19,7 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
   try {
     // Fetch CA profile data
     const { data: caProfile, error: caError } = await supabase
-      .from("ca_profiles")
+      .from("profiles")
       .select("*")
       .eq("id", params.id)
       .single();

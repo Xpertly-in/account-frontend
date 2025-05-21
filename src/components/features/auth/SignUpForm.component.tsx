@@ -14,6 +14,7 @@ import SignUpFormTerms from "./SignUpFormTerms.component";
 import { ExtendedSignUpFormData } from "@/types/auth.type";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { UserRole } from "@/types/onboarding.type";
 
 interface SignUpFormProps {
   hideContainer?: boolean;
@@ -51,6 +52,12 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
     setIsFormValid(isValid);
   }, [formData]);
 
+  useEffect(() => {
+    if (auth.user) {
+      checkUserProfileAndRedirect(auth.user.id);
+    }
+  }, [auth.user]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -64,28 +71,13 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
     setIsLoading(true);
 
     try {
-      const { error, user } = await signUp(formData.email, formData.password, formData.name);
+      const { error } = await signUp(formData.email, formData.password, formData.name);
 
-      if (error || !user) {
+      if (error) {
         toast.error("Sign up failed", {
-          description: error?.message || "Please check your information and try again.",
+          description: error.message || "Please check your information and try again.",
         });
         return;
-      }
-
-      // Fetch profile after signup
-      const { data: profile } = await supabase
-        .from("ca_profiles")
-        .select("role, completed_onboarding")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!profile?.role) {
-        router.push("/role-select");
-      } else if (!profile.completed_onboarding) {
-        router.push(profile.role === "ca" ? "/ca/onboarding" : "/user/onboarding");
-      } else {
-        router.push("/ca/dashboard");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -98,34 +90,42 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      // After Google sign-in, the user will be redirected back and authenticated.
-      // The following useEffect will handle the redirect.
     } catch (error) {
       toast.error("Failed to sign in with Google");
       console.error("Google sign-in error:", error);
     }
   };
 
-  // Add a useEffect to handle post-auth redirect after Google sign-in
-  useEffect(() => {
-    const checkAndRedirect = async () => {
-      if (!auth.user) return;
-      const { data: profile } = await supabase
-        .from("ca_profiles")
-        .select("role, completed_onboarding")
-        .eq("user_id", auth.user.id)
+  // Common function to check profile and redirect
+  const checkUserProfileAndRedirect = async (userId: string) => {
+    try {
+      // Check if user has a role
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", userId)
         .single();
 
-      if (!profile?.role) {
-        router.push("/role-select");
-      } else if (!profile.completed_onboarding) {
-        router.push(profile.role === "ca" ? "/ca/onboarding" : "/user/onboarding");
-      } else {
-        router.push("/ca/dashboard");
+      if (profileError && profileError.code !== "PGRST116") {
+        console.error("Error checking profile:", profileError);
+        return;
       }
-    };
-    checkAndRedirect();
-  }, [auth.user]);
+
+      // If no profile exists, redirect to role selection
+      if (!profile) {
+        router.push("/role-select");
+        return;
+      }
+
+      // If role exists, redirect to appropriate onboarding
+      if (profile.role) {
+        router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+      }
+    } catch (error) {
+      console.error("Error in checkUserProfileAndRedirect:", error);
+      toast.error("An error occurred while checking your profile");
+    }
+  };
 
   const formContent = (
     <>

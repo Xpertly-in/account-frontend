@@ -65,7 +65,7 @@ export const ensureCaProfile = async (user: any) => {
   try {
     // Check if profile exists
     const { data: profile, error: selectError } = await supabase
-      .from("ca_profiles")
+      .from("profiles")
       .select("id, onboarding_completed")
       .eq("user_id", user.id)
       .single();
@@ -81,7 +81,7 @@ export const ensureCaProfile = async (user: any) => {
     }
 
     // If not found, upsert new profile (prevents duplicates)
-    const { error: upsertError } = await supabase.from("ca_profiles").upsert(
+    const { error: upsertError } = await supabase.from("profiles").upsert(
       [
         {
           user_id: user.id,

@@ -26,14 +26,32 @@ export default function AuthCallback() {
         }
 
         if (session?.user) {
-          // Ensure ca_profile exists and get onboarding_completed status
-          const onboardingCompleted = await ensureCaProfile(session.user);
+          // Check if user has a role and onboarding status
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("role, onboarding_completed")
+            .eq("user_id", session.user.id)
+            .single();
 
-          if (onboardingCompleted) {
-            router.push("/ca/dashboard");
-          } else {
-            router.push("/ca/onboarding");
+          if (profileError && profileError.code !== "PGRST116") {
+            console.error("Error checking profile:", profileError);
+            throw profileError;
           }
+
+          // If no profile exists, redirect to role selection
+          if (!profile) {
+            router.push("/role-select");
+            return;
+          }
+
+          // If role exists but onboarding is not completed
+          if (!profile.onboarding_completed) {
+            router.push(profile.role === "ACCOUNTANT" ? "/ca/onboarding" : "/user/onboarding");
+            return;
+          }
+
+          // If both role exists and onboarding is completed, go to dashboard
+          router.push("/ca/dashboard");
         } else {
           console.log("[AuthCallback] No user in session");
           throw new Error("No user in session");

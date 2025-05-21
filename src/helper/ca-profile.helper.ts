@@ -1,10 +1,10 @@
-import { supabase } from "./supabase.helper";
-import { FormValues } from "@/types/onboarding.type";
+import { supabase } from "@/helper/supabase.helper";
+import { FormValues, UserRole } from "@/types/onboarding.type";
 import { CAProfile } from "@/types/ca-profile.type";
 import { transformFormValuesToProfile } from "./form.helper";
 
 // Table name for CA profiles
-const CA_PROFILES_TABLE = "ca_profiles";
+const PROFILES_TABLE = "profiles";
 const DOCUMENTS_TABLE = "ca_documents";
 
 /**
@@ -32,7 +32,7 @@ export const createCAProfile = async (
 
     // Insert profile into Supabase
     const { data, error } = await supabase
-      .from(CA_PROFILES_TABLE)
+      .from(PROFILES_TABLE)
       .insert(profile)
       .select()
       .single();
@@ -65,7 +65,7 @@ export const updateCAProfile = async (
     };
 
     const { data, error } = await supabase
-      .from(CA_PROFILES_TABLE)
+      .from(PROFILES_TABLE)
       .update(profile)
       .eq("id", profileId)
       .select()
@@ -90,7 +90,7 @@ export const getCAProfileByUserId = async (
 ): Promise<{ data: CAProfile | null; error: any }> => {
   try {
     const { data, error } = await supabase
-      .from(CA_PROFILES_TABLE)
+      .from(PROFILES_TABLE)
       .select("*")
       .eq("userId", userId)
       .single();

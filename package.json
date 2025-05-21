@@ -22,6 +22,7 @@
     "@radix-ui/react-switch": "^1.2.2",
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.73.3",
+    "@types/uuid": "^10.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.9.2",
@@ -35,7 +36,8 @@
     "react-window": "^1.8.11",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
-    "tw-animate-css": "^1.2.5"
+    "tw-animate-css": "^1.2.5",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",

@@ -13,7 +13,7 @@ export function useRequireRole() {
       if (!auth.user) return;
       if (pathname === "/role-select") return;
       const { data } = await supabase
-        .from("ca_profiles")
+        .from("profiles")
         .select("role")
         .eq("user_id", auth.user.id)
         .single();
