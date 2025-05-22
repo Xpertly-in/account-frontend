@@ -50,6 +50,8 @@ export default function Home() {
         </Container>
       </div>
 
+      {/* Features and CTA moved to About page */}
+      {/* See /about for these sections */}
       {/* Forum Feed Section */}
       <ForumFeed />
 
