@@ -2,52 +2,81 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import "react-quill/dist/quill.snow.css";
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
-import { Textarea } from "@/ui/Textarea.ui";
 import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
-import { Tag } from "@phosphor-icons/react";
+import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 
 interface CreatePostProps {
   onPostCreated?: () => void;
+  initialContent?: string;
 }
 
-export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
+// ↓ hoist this out of the component
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+
+export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialContent = "" }) => {
   const { auth } = useAuth();
   // don’t render form until we know who’s logged in
   if (auth.isLoading || !auth.user) return null;
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  // initialize editor with initialContent if provided
+  const [content, setContent] = useState(initialContent);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load draft from localStorage
+  // load enums
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
+  const [tagsOptions, setTagsOptions] = useState<string[]>([]);
+  const [category, setCategory] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  
+
+  // only load draft if no initialContent from feed
   useEffect(() => {
-    const draft = localStorage.getItem("create-post-draft");
-    if (draft) {
-      const data = JSON.parse(draft);
-      setTitle(data.title || "");
-      setContent(data.content || "");
-      setTags(data.tags || []);
+    if (!initialContent) {
+      const draft = localStorage.getItem("create-post-draft");
+      if (draft) {
+        const data = JSON.parse(draft);
+        setContent(data.content || "");
+        setTags(data.tags || []);
+      }
     }
+  }, [initialContent]);
+
+  // fetch existing categories & tags
+  useEffect(() => {
+    (async () => {
+      const { data: catData } = await supabase.from("categories").select("name");
+      setCategoriesList(catData?.map(c => c.name) || []);
+      const { data: tagData } = await supabase.from("tags").select("name");
+      setTagsOptions(tagData?.map(t => t.name) || []);
+    })();
   }, []);
 
   // Save draft on change
   useEffect(() => {
-    const data = { title, content, tags };
+    const data = { content, category, tags, images };
     localStorage.setItem("create-post-draft", JSON.stringify(data));
-  }, [title, content, tags]);
+  }, [content, category, tags, images]);
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
       const newTag = tagInput.trim();
       if (!tags.includes(newTag)) {
+        // upsert tag
+        if (!tagsOptions.includes(newTag)) {
+          await supabase.from("tags").insert({ name: newTag });
+          setTagsOptions(prev => [...prev, newTag]);
+        }
         setTags([...tags, newTag]);
       }
       setTagInput("");
@@ -68,7 +97,15 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // TODO: implement actual image uploads and populate `images` field
+    // upsert new category
+    let finalCategory = category;
+    if (creatingCategory && newCategory.trim()) {
+      const name = newCategory.trim();
+      await supabase.from("categories").insert({ name });
+      setCategoriesList(prev => [...prev, name]);
+      finalCategory = name;
+    }
+
     // 1) upload each File, collect its public URL
     const imageUrls = await Promise.all(
       images.map(async file => {
@@ -88,17 +125,23 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     const authorName = auth.user?.user_metadata?.name ?? auth.user?.email ?? auth.user?.id;
 
     // 2) insert post record with the image URLs
-    const { error } = await supabase
-      .from("posts")
-      .insert([
-        { title, content, tags, images: imageUrls, author_id: authorName, is_deleted: false },
-      ]);
+    const { error } = await supabase.from("posts").insert([
+      {
+        content,
+        category: finalCategory,
+        tags,
+        images: imageUrls,
+        author_id: authorName,
+        is_deleted: false,
+        likes_count: 0,
+        comment_count: 0,
+      },
+    ]);
 
     if (error) {
       console.error("Error creating post:", error.message);
     } else {
       // clear form & draft
-      setTitle("");
       setContent("");
       setTags([]);
       setImages([]);
@@ -111,48 +154,87 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
 
   return (
     <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          placeholder="Post title"
-          value={title}
-          onChange={e => setTitle(e.currentTarget.value)}
-          required
-        />
-
-        <div>
-          <Textarea
-            placeholder="What's on your mind?"
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            required
-          />
-          <p className="text-right text-xs text-gray-500 dark:text-gray-400">
-            {content.length}/280
-          </p>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Rich text editor for content */}
+        <div className="space-y-1">
+        <label className="text-sm font-medium">Content</label>
+        <div className="prose dark:prose-invert max-w-none">
+          <ReactQuill value={content} onChange={setContent} placeholder="Write your post…" />
+        </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-1 block">Tags</label>
+        {/* Category (live-search + create) */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Category</label>
+          <Input
+            placeholder="Type to search or add…"
+            list="categories-list"
+            value={creatingCategory ? newCategory : category}
+            onChange={e => {
+              const v = e.currentTarget.value;
+              if (categoriesList.includes(v)) {
+                setCategory(v);
+                setCreatingCategory(false);
+              } else {
+                setNewCategory(v);
+                setCreatingCategory(true);
+              }
+            }}
+            onKeyDown={async e => {
+              if (e.key === "Enter" && creatingCategory && newCategory.trim()) {
+                e.preventDefault();
+                const name = newCategory.trim();
+                await supabase.from("categories").upsert({ name });
+                setCategoriesList(prev => Array.from(new Set([...prev, name])));
+                setCategory(name);
+                setNewCategory("");
+                setCreatingCategory(false);
+              }
+            }}
+            className="w-full rounded border px-2 py-1"
+          />
+          <datalist id="categories-list">
+            <option value="__new">+ Add new category</option>
+            {categoriesList.map(c => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </div>
+
+        {/* Tags */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Tags</label>
           <div className="flex flex-wrap gap-2 mb-2">
             {tags.map(tag => (
-              <span
+              <div
                 key={tag}
-                className="bg-primary text-white px-2 py-1 rounded-full flex items-center gap-1 text-xs"
+                className="flex items-center gap-1 bg-primary text-white px-2 py-1 rounded-full text-xs"
               >
-                <Tag size={12} weight="fill" />
-                {tag}
-                <button type="button" onClick={() => handleRemoveTag(tag)} className="text-xs ml-1">
-                  &times;
+                <Tag size={12} weight="bold" />
+                <span>{tag}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove tag ${tag}`}
+                  className="p-0.5 hover:bg-primary/80 rounded-full"
+                  onClick={() => handleRemoveTag(tag)}
+                >
+                  <X size={12} weight="bold" />
                 </button>
-              </span>
+              </div>
             ))}
           </div>
           <Input
-            placeholder="Add a tag and press Enter"
+            list="tags-list"
+            placeholder="Type a tag and press Enter"
             value={tagInput}
             onChange={e => setTagInput(e.currentTarget.value)}
             onKeyDown={handleAddTag}
           />
+          <datalist id="tags-list">
+            {tagsOptions.map(t => (
+              <option key={t} value={t} />
+            ))}
+          </datalist>
         </div>
 
         <FileUpload

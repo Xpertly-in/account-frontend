@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Card } from "@/ui/Card.ui";
@@ -21,7 +21,6 @@ export interface PostCardProps {
   id: number;
   created_at: string;
   updated_at: string;
-  title: string;
   content: string;
   author_id: string;
   category?: string;
@@ -30,19 +29,26 @@ export interface PostCardProps {
   likes_count?: number;
   comment_count?: number;
   is_deleted?: boolean;
+  onCategoryClick?: (category: string) => void;
+  onTagClick?: (tag: string) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
+  category,
   author_id,
-  title,
   content,
   images,
   tags,
   updated_at,
   likes_count = 0,
   comment_count = 0,
+  onCategoryClick,
+  onTagClick,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
   const initials = useMemo(
@@ -56,18 +62,60 @@ export const PostCard: React.FC<PostCardProps> = ({
   );
   const relativeTime = useMemo(() => formatRelativeTime(new Date(updated_at)), [updated_at]);
 
+
+  const touchStartX = useRef(0);
+
+  // swipe handlers for carousel
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const SWIPE_THRESHOLD = 50;
+    if (deltaX > SWIPE_THRESHOLD && currentIndex > 0) {
+      setCurrentIndex(i => i - 1);
+    } else if (deltaX < -SWIPE_THRESHOLD && currentIndex < images.length - 1) {
+      setCurrentIndex(i => i + 1);
+    }
+  };
+
+  // measure overflow once when content changes (when collapsed)
+  useEffect(() => {
+    if (!expanded && contentRef.current) {
+      const el = contentRef.current;
+      if (el.scrollHeight > el.clientHeight) {
+        setHasOverflow(true);
+      }
+    }
+  }, [content, expanded]);
+
   return (
-    <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+    <div className="rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{author_id}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
+      <div className="flex items-start justify-between p-3">
+        <div>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{author_id}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
+            </div>
           </div>
+        </div>
+        <div>
+          {/* Category badge (clickable) */}
+          {category && (
+            <div className="px-4 -mt-2 mb-2">
+              <span
+                onClick={() => onCategoryClick?.(category)}
+                className="mt-4 inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
+              >
+                {category}
+              </span>
+            </div>
+          )}
         </div>
         <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
           <DotsThree size={20} />
@@ -75,11 +123,20 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {/* Body & Image Carousel */}
-      <div className="px-4 pb-4 space-y-4">
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{content}</p>
-        </div>
+      <div className="px-3 pb-3 space-y-2">
+        <div
+          ref={contentRef}
+          className={`prose text-sm text-gray-700 dark:prose-invert dark:text-gray-300 max-w-none ${
+            expanded ? "" : "line-clamp-3 overflow-hidden"
+          }`}
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+        {/* only show toggle if content overflows */}
+        {hasOverflow && (
+          <button onClick={() => setExpanded(prev => !prev)} className="text-primary text-sm mt-1">
+            {expanded ? "Show less" : "Read more"}
+          </button>
+        )}
         {images?.length > 0 && (
           <div
             className="relative w-full aspect-video bg-muted overflow-hidden rounded-lg cursor-zoom-in"
@@ -87,12 +144,13 @@ export const PostCard: React.FC<PostCardProps> = ({
               setPreviewIndex(currentIndex);
               setIsPreviewOpen(true);
             }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
-            <Image
+            <img
               src={images[currentIndex]}
               alt={`Slide ${currentIndex + 1}`}
-              fill
-              className="object-cover"
+              className="w-full h-full object-contain object-center"
             />
             {/* Prev */}
             {currentIndex > 0 && (
@@ -134,11 +192,15 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/* Tags */}
+      {/* Tags (clickable) */}
       {tags?.length > 0 && (
-        <div className="px-4 py-2 flex flex-wrap gap-2">
+        <div className="px-3 py-1 flex flex-wrap gap-1">
           {tags.map(tag => (
-            <span key={tag} className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
+            <span
+              key={tag}
+              onClick={() => onTagClick?.(tag)}
+              className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
+            >
               #{tag}
             </span>
           ))}
@@ -146,22 +208,18 @@ export const PostCard: React.FC<PostCardProps> = ({
       )}
 
       {/* Actions */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex justify-around text-gray-600 dark:text-gray-400">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 flex justify-between text-gray-600 dark:text-gray-400">
         <button className="flex items-center gap-1 hover:text-primary">
           <ThumbsUp size={18} />
-          <span className="text-sm">{likes_count}</span>
+          <span className="text-sm"> {likes_count} Likes</span>
         </button>
         <button className="flex items-center gap-1 hover:text-primary">
           <ChatCircle size={18} />
-          <span className="text-sm">{comment_count}</span>
+          <span className="text-sm"> {comment_count} Comments</span>
         </button>
-        <button className="flex items-center gap-2 hover:text-primary">
+        <button className="flex items-center gap-1 hover:text-primary">
           <ShareNetwork size={18} />
-          <span className="hidden sm:inline">Share</span>
-        </button>
-        <button className="flex items-center gap-2 hover:text-primary">
-          <PaperPlaneRight size={18} />
-          <span className="hidden sm:inline">Send</span>
+          <span className="text-sm">Share</span>
         </button>
       </div>
       {/* Image preview modal */}
@@ -185,6 +243,6 @@ export const PostCard: React.FC<PostCardProps> = ({
           </div>,
           document.body
         )}
-    </Card>
+    </div>
   );
 };
