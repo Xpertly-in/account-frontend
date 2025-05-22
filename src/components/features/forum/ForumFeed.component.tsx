@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
-import { MagnifyingGlass, Funnel, Sliders } from "@phosphor-icons/react";
+import { MagnifyingGlass, Funnel, Sliders, X } from "@phosphor-icons/react";
 import { PostCard, PostCardProps } from "./PostCard.component";
 import { Input } from "@/ui/Input.ui";
 import { Container } from "@/components/layout/Container.component";
@@ -21,17 +21,62 @@ export const ForumFeed: React.FC = () => {
   const [sortOpen, setSortOpen] = useState(false);
   const [sortOption, setSortOption] = useState<"recent" | "trending">("recent");
 
+// refs for dropdowns
+const filterRef = useRef<HTMLDivElement>(null);
+const sortRef   = useRef<HTMLDivElement>(null);
+
+// close filter if clicked outside
+useEffect(() => {
+  const onClick = (e: MouseEvent) => {
+    if (filterOpen && filterRef.current && !filterRef.current.contains(e.target as Node)) {
+      setFilterOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", onClick);
+  return () => document.removeEventListener("mousedown", onClick);
+}, [filterOpen]);
+
+// close sort if clicked outside
+useEffect(() => {
+  const onClick = (e: MouseEvent) => {
+    if (sortOpen && sortRef.current && !sortRef.current.contains(e.target as Node)) {
+      setSortOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", onClick);
+  return () => document.removeEventListener("mousedown", onClick);
+}, [sortOpen]);
+
   // ↓ lift out fetch logic so we can re-use it
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("is_deleted", false)
-      .order("updated_at", { ascending: false });
+
+    // Base query (excluding deleted)
+    let query = supabase.from("posts").select("*").eq("is_deleted", false);
+
+    // Search
+    if (searchTerm) {
+      query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`);
+    }
+
+    // Category filter
+    if (filterCategory) {
+      query = query.eq("category", filterCategory);
+    }
+
+    // Tags filter (array contains)
+    if (filterTags.length) {
+      query = query.contains("tags", filterTags);
+    }
+
+    // Sort: trending=likes_count, recent=updated_at
+    const sortCol = sortOption === "trending" ? "likes_count" : "updated_at";
+    query = query.order(sortCol, { ascending: false });
+
+    const { data, error } = await query;
     if (error) {
       console.error("Error fetching posts:", error);
-    } else if (data) {
+    } else {
       setPosts(
         data.map(p => ({
           id: p.id,
@@ -50,43 +95,24 @@ export const ForumFeed: React.FC = () => {
       );
     }
     setIsLoading(false);
-  }, []);
+  }, [searchTerm, filterCategory, filterTags, sortOption]);
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // derive available categories & tags
-  const categoriesList = useMemo(
-    () => Array.from(new Set(posts.map(p => p.category || ""))).filter(Boolean),
-    [posts]
-  );
-  const tagsList = useMemo(() => Array.from(new Set(posts.flatMap(p => p.tags))), [posts]);
-
-  // combined search + category + tags filter
-  const filteredPosts = posts
-    .filter(
-      p =>
-        !searchTerm ||
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.content.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter(p => !filterCategory || p.category === filterCategory)
-    .filter(p => !filterTags.length || filterTags.every(t => p.tags.includes(t)));
-
-  // apply sorting
-  const sortedPosts = useMemo(() => {
-    const arr = [...filteredPosts];
-    if (sortOption === "trending") {
-      return arr.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
-    }
-    if (sortOption === "recent") {
-      return arr.sort(
-        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
-    }
-    return arr; // “relevant” is default order
-  }, [filteredPosts, sortOption]);
+  // fetch category & tag enums from Supabase
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
+  const [tagsList, setTagsList] = useState<string[]>([]);
+  useEffect(() => {
+    const loadEnums = async () => {
+      const { data: cData } = await supabase.from("categories").select("name");
+      setCategoriesList(cData?.map(c => c.name) ?? []);
+      const { data: tData } = await supabase.from("tags").select("name");
+      setTagsList(tData?.map(t => t.name) ?? []);
+    };
+    loadEnums();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
@@ -107,7 +133,7 @@ export const ForumFeed: React.FC = () => {
             value={searchTerm}
             onChange={e => setSearchTerm(e.currentTarget.value)}
           />
-          <div className="relative">
+          <div ref={filterRef} className="relative">
             <button
               onClick={() => setFilterOpen(o => !o)}
               className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -123,7 +149,7 @@ export const ForumFeed: React.FC = () => {
                     onChange={e => setFilterCategory(e.target.value)}
                     className="w-full rounded border bg-transparent px-2 py-1 text-sm"
                   >
-                    <option value="">All</option>
+                    <option value="">All Categories</option>
                     {categoriesList.map(cat => (
                       <option key={cat} value={cat}>
                         {cat}
@@ -165,7 +191,7 @@ export const ForumFeed: React.FC = () => {
               </div>
             )}
           </div>
-          <div className="relative">
+          <div ref={sortRef} className="relative">
             <button
               onClick={() => setSortOpen(o => !o)}
               className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -194,6 +220,54 @@ export const ForumFeed: React.FC = () => {
             )}
           </div>
         </Card>
+
+        {/* Active Filters */}
+        <div className="flex flex-wrap gap-2">
+          {searchTerm && (
+            <span className="flex items-center gap-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-sm">
+              Search: "{searchTerm}"
+              <X size={14} className="cursor-pointer" onClick={() => setSearchTerm("")} />
+            </span>
+          )}
+          {filterCategory && (
+            <span className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full text-sm">
+              Category: {filterCategory}
+              <X size={14} className="cursor-pointer" onClick={() => setFilterCategory("")} />
+            </span>
+          )}
+          {filterTags.map(tag => (
+            <span
+              key={tag}
+              className="flex items-center gap-1 bg-secondary/10 text-secondary px-2 py-1 rounded-full text-sm"
+            >
+              #{tag}
+              <X
+                size={14}
+                className="cursor-pointer"
+                onClick={() => setFilterTags(ts => ts.filter(t => t !== tag))}
+              />
+            </span>
+          ))}
+          {sortOption !== "recent" && (
+            <span className="flex items-center gap-1 bg-secondary/10 text-secondary px-2 py-1 rounded-full text-sm">
+              Sort: {sortOption[0].toUpperCase() + sortOption.slice(1)}
+              <X size={14} className="cursor-pointer" onClick={() => setSortOption("recent")} />
+            </span>
+          )}
+          {(searchTerm || filterCategory || filterTags.length > 0 || sortOption !== "recent") && (
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setFilterCategory("");
+                setFilterTags([]);
+                setSortOption("recent");
+              }}
+              className="text-sm text-red-500 hover:underline"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
         {/* Floating “new post” */}
         <Link
           href="/forum/new"
@@ -208,12 +282,16 @@ export const ForumFeed: React.FC = () => {
           {isLoading ? (
             <div className="col-span-full text-center py-20 text-gray-500">Loading…</div>
           ) : (
-            sortedPosts.map(post => (
+            posts.map(post => (
               <div
                 key={post.id}
                 className="transition-transform transform hover:-translate-y-1 hover:shadow-xl"
               >
-                <PostCard {...post} />
+                <PostCard
+                  {...post}
+                  onCategoryClick={cat => setFilterCategory(cat)}
+                  onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
+                />
               </div>
             ))
           )}

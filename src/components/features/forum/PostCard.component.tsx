@@ -30,6 +30,8 @@ export interface PostCardProps {
   likes_count?: number;
   comment_count?: number;
   is_deleted?: boolean;
+  onCategoryClick?: (category: string) => void;
+  onTagClick?: (tag: string) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -42,6 +44,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   updated_at,
   likes_count = 0,
   comment_count = 0,
+  onCategoryClick,
+  onTagClick,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -71,10 +75,18 @@ export const PostCard: React.FC<PostCardProps> = ({
               <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
             </div>
           </div>
+        </div>
+        <div>
+          {/* Category badge (clickable) */}
           {category && (
-            <span className="mt-2 inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full">
-              {category}
-            </span>
+            <div className="px-4 -mt-2 mb-2">
+              <span
+                onClick={() => onCategoryClick?.(category)}
+                className="mt-4 inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
+              >
+                {category}
+              </span>
+            </div>
           )}
         </div>
         <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
@@ -142,13 +154,14 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/* Tags */}
+      {/* Tags (clickable) */}
       {tags?.length > 0 && (
         <div className="px-4 py-2 flex flex-wrap gap-2">
           {tags.map(tag => (
             <span
               key={tag}
-              className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full"
+              onClick={() => onTagClick?.(tag)}
+              className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
             >
               #{tag}
             </span>

@@ -8,7 +8,7 @@ import { Input } from "@/ui/Input.ui";
 import { Textarea } from "@/ui/Textarea.ui";
 import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
-import { Tag } from "@phosphor-icons/react";
+import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 
 interface CreatePostProps {
@@ -118,19 +118,19 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     const authorName = auth.user?.user_metadata?.name ?? auth.user?.email ?? auth.user?.id;
 
     // 2) insert post record with the image URLs
-    const { error } = await supabase
-      .from("posts")
-      .insert([
-        {
-          title,
-          content,
-          category: finalCategory,
-          tags,
-          images: imageUrls,
-          author_id: authorName,
-          is_deleted: false,
-        },
-      ]);
+    const { error } = await supabase.from("posts").insert([
+      {
+        title,
+        content,
+        category: finalCategory,
+        tags,
+        images: imageUrls,
+        author_id: authorName,
+        is_deleted: false,
+        likes_count: 0,
+        comment_count: 0,
+      },
+    ]);
 
     if (error) {
       console.error("Error creating post:", error.message);
@@ -169,38 +169,42 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
           </p>
         </div>
 
-        {/* Category */}
+        {/* Category (live-search + create) */}
         <div className="space-y-1">
           <label className="text-sm font-medium">Category</label>
-          <select
-            value={creatingCategory ? "__new" : category}
+          <Input
+            placeholder="Type to search or add…"
+            list="categories-list"
+            value={creatingCategory ? newCategory : category}
             onChange={e => {
               const v = e.currentTarget.value;
-              if (v === "__new") {
-                setCreatingCategory(true);
-              } else {
+              if (categoriesList.includes(v)) {
                 setCategory(v);
+                setCreatingCategory(false);
+              } else {
+                setNewCategory(v);
+                setCreatingCategory(true);
+              }
+            }}
+            onKeyDown={async e => {
+              if (e.key === "Enter" && creatingCategory && newCategory.trim()) {
+                e.preventDefault();
+                const name = newCategory.trim();
+                await supabase.from("categories").upsert({ name });
+                setCategoriesList(prev => Array.from(new Set([...prev, name])));
+                setCategory(name);
+                setNewCategory("");
                 setCreatingCategory(false);
               }
             }}
             className="w-full rounded border px-2 py-1"
-          >
-            <option value="">Select category</option>
-            {categoriesList.map(c => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
+          />
+          <datalist id="categories-list">
             <option value="__new">+ Add new category</option>
-          </select>
-          {creatingCategory && (
-            <Input
-              placeholder="New category"
-              value={newCategory}
-              onChange={e => setNewCategory(e.currentTarget.value)}
-              className="mt-2"
-            />
-          )}
+            {categoriesList.map(c => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
         </div>
 
         {/* Tags */}
@@ -208,9 +212,21 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
           <label className="text-sm font-medium">Tags</label>
           <div className="flex flex-wrap gap-2 mb-2">
             {tags.map(tag => (
-              <span key={tag} className="bg-primary text-white px-2 py-1 rounded-full text-xs">
-                {tag}
-              </span>
+              <div
+                key={tag}
+                className="flex items-center gap-1 bg-primary text-white px-2 py-1 rounded-full text-xs"
+              >
+                <Tag size={12} weight="bold" />
+                <span>{tag}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove tag ${tag}`}
+                  className="p-0.5 hover:bg-primary/80 rounded-full"
+                  onClick={() => handleRemoveTag(tag)}
+                >
+                  <X size={12} weight="bold" />
+                </button>
+              </div>
             ))}
           </div>
           <Input
