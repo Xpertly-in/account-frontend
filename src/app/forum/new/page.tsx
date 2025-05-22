@@ -1,7 +1,7 @@
 // src/app/forum/new/page.tsx
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { CaretLeft } from "@phosphor-icons/react";
@@ -9,7 +9,7 @@ import { Container } from "@/components/layout/Container.component";
 import { CreatePost } from "@/components/features/forum/CreatePost.component";
 import { useSearchParams } from "next/navigation";
 
-export default function NewPostPage() {
+function NewPostContent() {
   const router = useRouter();
   const { auth } = useAuth();
   const searchParams = useSearchParams();
@@ -48,5 +48,13 @@ export default function NewPostPage() {
         </div>
       </Container>
     </div>
+  );
+}
+
+export default function NewPostPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewPostContent />
+    </Suspense>
   );
 }
