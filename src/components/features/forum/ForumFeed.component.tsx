@@ -1,43 +1,102 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
-import { MagnifyingGlass, Funnel, Sliders } from "@phosphor-icons/react";
-import { PostCard, PostCardProps } from "./PostCard.component";
 import { Input } from "@/ui/Input.ui";
+import { MagnifyingGlass, Funnel, Sliders, Plus, X, Tag } from "@phosphor-icons/react";
+import { PostCard, PostCardProps } from "./PostCard.component";
 import { Container } from "@/components/layout/Container.component";
-import Link from "next/link";
-import { Plus } from "@phosphor-icons/react";
 
 export const ForumFeed: React.FC = () => {
-  // example data fetch
+  const router = useRouter();
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [tagsOpen, setTagsOpen] = useState(false); // added
+  const [filterCategory, setFilterCategory] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [sortOpen, setSortOpen] = useState(false);
   const [sortOption, setSortOption] = useState<"recent" | "trending">("recent");
 
-  // ↓ lift out fetch logic so we can re-use it
-  const fetchPosts = useCallback(async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("is_deleted", false)
-      .order("updated_at", { ascending: false });
-    if (error) {
-      console.error("Error fetching posts:", error);
-    } else if (data) {
-      setPosts(
-        data.map(p => ({
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
+  const [tagsList, setTagsList] = useState<string[]>([]);
+
+  const [newThread, setNewThread] = useState("");
+  const filterRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+  const tagsRef = useRef<HTMLDivElement>(null);
+  // dynamic placeholder messages for the “Start a new thread” input
+  const threadPlaceholders = [
+    "Start a new thread…",
+    "Ask your accounting question here…",
+    "Share your audit tips…",
+    "Discuss tax strategies…",
+    "Post your bookkeeping challenge…",
+  ];
+  const [threadPlaceholder, setThreadPlaceholder] = useState(
+    threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)]
+  );
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const next = threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)];
+      setThreadPlaceholder(next);
+    }, 3000); // rotate every 8s
+    return () => clearInterval(interval);
+  }, []);
+
+  // Click-outside to close dropdowns
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (filterOpen && filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [filterOpen]);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (sortOpen && sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [sortOpen]);
+
+  // Fetch posts from Supabase
+  const fetchPosts = useCallback(
+    async (pageNumber = 0) => {
+      setIsLoading(true);
+      let query = supabase.from("posts").select("*").eq("is_deleted", false);
+
+      if (searchTerm) query = query.ilike("content", `%${searchTerm}%`);
+      if (filterCategory) query = query.eq("category", filterCategory);
+      if (filterTags.length) query = query.contains("tags", filterTags);
+
+      const sortCol = sortOption === "trending" ? "likes_count" : "updated_at";
+      query = query.order(sortCol, { ascending: false });
+
+      const from = pageNumber * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      query = query.range(from, to);
+
+      const { data, error } = await query;
+      if (!error && data) {
+        const mapped = data.map(p => ({
           id: p.id,
           created_at: p.created_at,
           updated_at: p.updated_at,
-          title: p.title,
           content: p.content,
           author_id: p.author_id,
           category: p.category,
@@ -46,176 +105,225 @@ export const ForumFeed: React.FC = () => {
           likes_count: p.likes_count,
           comment_count: p.comment_count,
           is_deleted: p.is_deleted,
-        }))
-      );
-    }
-    setIsLoading(false);
+        }));
+        setPosts(prev => (pageNumber === 0 ? mapped : [...prev, ...mapped]));
+        setHasMore(mapped.length === PAGE_SIZE);
+      }
+      setIsLoading(false);
+    },
+    [searchTerm, filterCategory, filterTags, sortOption]
+  );
+
+  // Reset when filters change
+  useEffect(() => {
+    setPage(0);
+    setHasMore(true);
+    setPosts([]);
+  }, [searchTerm, filterCategory, filterTags, sortOption]);
+
+  // Initial & paginated fetch
+  useEffect(() => {
+    fetchPosts(page);
+  }, [fetchPosts, page]);
+
+  // Infinite scroll
+  useEffect(() => {
+    const onScroll = () => {
+      if (
+        window.innerHeight + window.scrollY + 100 >= document.documentElement.offsetHeight &&
+        !isLoading &&
+        hasMore
+      ) {
+        setPage(p => p + 1);
+      }
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isLoading, hasMore]);
+
+  // Load category & tag enums
+  useEffect(() => {
+    supabase
+      .from("categories")
+      .select("name")
+      .then(({ data }) => setCategoriesList(data?.map(c => c.name) ?? []));
+    supabase
+      .from("tags")
+      .select("name")
+      .then(({ data }) => setTagsList(data?.map(t => t.name) ?? []));
   }, []);
 
   useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+      const handler = (e: MouseEvent) => {
+        if (tagsOpen && tagsRef.current && !tagsRef.current.contains(e.target as Node)) {
+          setTagsOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handler);
+      return () => document.removeEventListener("mousedown", handler);
+    }, [tagsOpen]);
 
-  // derive available categories & tags
-  const categoriesList = useMemo(
-    () => Array.from(new Set(posts.map(p => p.category || ""))).filter(Boolean),
-    [posts]
-  );
-  const tagsList = useMemo(() => Array.from(new Set(posts.flatMap(p => p.tags))), [posts]);
-
-  // combined search + category + tags filter
-  const filteredPosts = posts
-    .filter(
-      p =>
-        !searchTerm ||
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.content.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter(p => !filterCategory || p.category === filterCategory)
-    .filter(p => !filterTags.length || filterTags.every(t => p.tags.includes(t)));
-
-  // apply sorting
-  const sortedPosts = useMemo(() => {
-    const arr = [...filteredPosts];
-    if (sortOption === "trending") {
-      return arr.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+  const handleAddThread = () => {
+    if (newThread.trim()) {
+      router.push(`/forum/new?initialContent=${encodeURIComponent(newThread.trim())}`);
     }
-    if (sortOption === "recent") {
-      return arr.sort(
-        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
-    }
-    return arr; // “relevant” is default order
-  }, [filteredPosts, sortOption]);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
-      <Container className="space-y-12">
-        {/* Section Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-            Community Forum
-          </h2>
-          <div className="mt-2 h-1 w-20 bg-primary mx-auto rounded-full" />
-        </div>
-        {/* Search + Filter/Sort Icons */}
-        <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col sm:flex-row items-center gap-4">
-          <MagnifyingGlass size={20} className="text-gray-500 dark:text-gray-400" />
-          <Input
-            placeholder="Search posts…"
-            className="flex-1 border-primary/50 shadow-sm"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.currentTarget.value)}
-          />
-          <div className="relative">
-            <button
-              onClick={() => setFilterOpen(o => !o)}
-              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Funnel size={20} className="text-gray-500 dark:text-gray-400" />
-            </button>
-            {filterOpen && (
-              <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-gray-700 rounded-lg shadow-lg p-4 z-10">
-                <div className="mb-4">
-                  <label className="text-sm font-medium block mb-1">Category</label>
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-16">
+      {/* Decorative Blobs */}
+      <div className="pointer-events-none absolute -top-32 -left-32 w-72 h-72 rounded-full bg-gradient-to-tr from-purple-300 to-indigo-300 blur-2xl opacity-30 dark:opacity-20" />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-pink-300 to-yellow-300 blur-2xl opacity-30 dark:opacity-20" />
+
+      <Container className="max-w-3xl space-y-8">
+        {/* Search & Filters Bar */}
+        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-2xl flex flex-wrap items-center gap-3 p-4 shadow-lg">
+          {/* Search Input */}
+          <div className="flex items-center w-full sm:flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-full px-3 py-2">
+            <MagnifyingGlass size={20} className="text-gray-500 dark:text-gray-400" />
+            <Input
+              placeholder="Search posts…"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.currentTarget.value)}
+              className="bg-transparent flex-1 ml-2 placeholder-gray-500 focus:outline-none"
+            />
+            {searchTerm && (
+              <X
+                size={18}
+                className="cursor-pointer text-gray-500 dark:text-gray-400"
+                onClick={() => setSearchTerm("")}
+              />
+            )}
+          </div>
+
+          {/* Filter & Sort Buttons Group */}
+          <div className="w-full flex justify-end gap-2 sm:w-auto">
+            {/* Category Dropdown */}
+            <div ref={filterRef} className="relative">
+              <button
+                onClick={() => setFilterOpen(o => !o)}
+                className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
+              >
+                <Funnel size={20} className="text-gray-600 dark:text-gray-300" />
+              </button>
+              {filterOpen && (
+                <div className="absolute left-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   <select
                     value={filterCategory}
                     onChange={e => setFilterCategory(e.target.value)}
-                    className="w-full rounded border bg-transparent px-2 py-1 text-sm"
+                    className="w-full px-2 py-1 border rounded"
                   >
-                    <option value="">All</option>
-                    {categoriesList.map(cat => (
-                      <option key={cat} value={cat}>
-                        {cat}
+                    <option value="">All Categories</option>
+                    {categoriesList.map(c => (
+                      <option key={c} value={c}>
+                        {c}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="text-sm font-medium block mb-1">Tags</label>
-                  <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
-                    {tagsList.map(tag => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() =>
-                          setFilterTags(ts =>
-                            ts.includes(tag) ? ts.filter(t => t !== tag) : [...ts, tag]
-                          )
-                        }
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          filterTags.includes(tag)
-                            ? "bg-primary text-white"
-                            : "bg-gray-200 dark:bg-gray-600 dark:text-gray-300"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
+              )}
+            </div>
+
+            {/* Tags Dropdown */}
+           <div ref={tagsRef} className="relative">
+             <button
+               onClick={() => setTagsOpen((o) => !o)}
+               className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
+             >
+               <Tag size={20} className="text-gray-600 dark:text-gray-300" />
+             </button>
+             {tagsOpen && (
+               <div className="absolute right-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
+                 {tagsList.map((tag) => (
+                   <button
+                     key={tag}
+                     onClick={() =>
+                       setFilterTags((ts) =>
+                         ts.includes(tag) ? ts.filter((t) => t !== tag) : [...ts, tag]
+                       )
+                     }
+                     className={`w-full text-left px-2 py-1 text-sm rounded ${
+                       filterTags.includes(tag)
+                         ? "bg-primary text-white"
+                         : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                     }`}
+                   >
+                     {tag}
+                   </button>
+                 ))}
+               </div>
+             )}
+           </div>
+
+            {/* Sort Dropdown */}
+            <div ref={sortRef} className="relative">
+              <button
+                onClick={() => setSortOpen(o => !o)}
+                className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
+              >
+                <Sliders size={20} className="text-gray-600 dark:text-gray-300" />
+              </button>
+              {sortOpen && (
+                <div className="absolute right-0 mt-2 w-40 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
+                  {(["recent", "trending"] as const).map(opt => (
+                    <button
+                      key={opt}
+                      onClick={() => {
+                        setSortOption(opt);
+                        setSortOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-1 text-sm rounded ${
+                        sortOption === opt
+                          ? "bg-primary text-white"
+                          : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {opt[0].toUpperCase() + opt.slice(1)}
+                    </button>
+                  ))}
                 </div>
-                <div className="mt-4 text-right">
-                  <button
-                    onClick={() => setFilterOpen(false)}
-                    className="px-3 py-1 bg-primary text-white rounded text-sm"
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="relative">
-            <button
-              onClick={() => setSortOpen(o => !o)}
-              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Sliders size={20} className="text-gray-500 dark:text-gray-400" />
-            </button>
-            {sortOpen && (
-              <div className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-700 rounded-lg shadow-lg p-2 z-10">
-                {["recent", "trending"].map(opt => (
-                  <button
-                    key={opt}
-                    onClick={() => {
-                      setSortOption(opt as any);
-                      setSortOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-1 text-sm rounded ${
-                      sortOption === opt
-                        ? "bg-primary text-white"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    {opt[0].toUpperCase() + opt.slice(1)}
-                  </button>
-                ))}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </Card>
-        {/* Floating “new post” */}
-        <Link
-          href="/forum/new"
-          title="Create New Post"
-          className="fixed bottom-10 right-6 z-50 bg-primary text-white p-4 rounded-full shadow-lg transition-transform duration-200 ease-out hover:bg-primary/90 hover:scale-110 hover:shadow-xl"
-          aria-label="Create new post"
-        >
-          <Plus size={24} weight="fill" />
-        </Link>
-        {/* Posts Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            <div className="col-span-full text-center py-20 text-gray-500">Loading…</div>
-          ) : (
-            sortedPosts.map(post => (
-              <div
-                key={post.id}
-                className="transition-transform transform hover:-translate-y-1 hover:shadow-xl"
-              >
-                <PostCard {...post} />
-              </div>
-            ))
+
+        {/* Hero: Title + New Thread */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">Community Forum</h1> */}
+          <div className="flex items-center flex-1 w-full sm:w-auto">
+            <Input
+              placeholder={threadPlaceholder}
+              value={newThread}
+              onChange={e => setNewThread(e.currentTarget.value)}
+              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-full px-4 py-2 bg-white dark:bg-gray-800 shadow-inner focus:ring-primary/50"
+            />
+            <button
+              onClick={handleAddThread}
+              disabled={!newThread.trim()}
+              className="ml-2 p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full shadow-lg disabled:opacity-50 hover:scale-105 transition"
+            >
+              <Plus size={20} weight="bold" />
+            </button>
+          </div>
+        </div>
+
+        {/* Posts List */}
+        <div className="space-y-6">
+          {posts.map(post => (
+            <Card
+              key={post.id}
+              className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
+            >
+              <PostCard
+                {...post}
+                onCategoryClick={cat => setFilterCategory(cat)}
+                onTagClick={tag => setFilterTags(t => (t.includes(tag) ? t : [...t, tag]))}
+              />
+            </Card>
+          ))}
+          {isLoading && <p className="text-center text-gray-600 dark:text-gray-400">Loading…</p>}
+          {!hasMore && !isLoading && (
+            <p className="text-center text-gray-600 dark:text-gray-400">No more posts</p>
           )}
         </div>
       </Container>
