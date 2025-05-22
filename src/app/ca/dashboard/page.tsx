@@ -5,12 +5,42 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
 import { User, Calendar, FileText, EnvelopeSimple } from "@phosphor-icons/react";
+import { supabase } from "@/helper/supabase.helper";
+import { UserRole } from "@/types/onboarding.type";
 
 export default function CADashboardPage() {
   const router = useRouter();
   const { auth } = useAuth();
   const [userName, setUserName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    const checkRole = async () => {
+      if (!auth.user) return;
+      
+      try {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", auth.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+
+        // Redirect based on role
+        if (profile?.role === UserRole.CUSTOMER) {
+          router.push("/user/profile");
+        }
+      } catch (error) {
+        console.error("Error checking role:", error);
+      }
+    };
+
+    checkRole();
+  }, [auth.user, router]);
 
   useEffect(() => {
     // Set user information if available
@@ -30,7 +60,7 @@ export default function CADashboardPage() {
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <div
           className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"
-          onClick={() => router.push("/ca/dashboard/profile")}
+          onClick={() => router.push("/ca/profile")}
         >
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/30 dark:from-primary/30 dark:to-primary/40">
             <User className="h-6 w-6 text-primary dark:text-blue-400" />

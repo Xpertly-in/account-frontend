@@ -85,6 +85,7 @@ src/
   │   ├── layout/    # Layout components (Header, Footer, etc.)
   │   ├── leads/     # Lead management components
   │   ├── features/  # Feature-specific components
+  │   ├── about/     # Components related to the About page
   │   └── [domain]/  # Domain-specific components grouped by business functionality
   ├── ui/            # Base UI components (buttons, inputs, etc.)
   ├── store/         # State management
@@ -477,6 +478,7 @@ The codebase is organized by business domain rather than technical function, whi
   - `/components/leads/` - Components related to lead management
   - `/components/auth/` - Authentication-related components
   - `/components/forum/` - Forum and community components
+  - `/components/about/` - Components related to the About page
 
 #### Migration Example
 
@@ -494,7 +496,7 @@ The project recently migrated from a technical organization (`/components/dashbo
 - **UI Components:**
   - `Button.ui.tsx`, `Input.ui.tsx`, `Card.ui.tsx`, `Avatar.ui.tsx`, `Checkbox.ui.tsx`, `Logo.ui.tsx`, `ThemeToggle.ui.tsx`, `DecorativeElements.ui.tsx`, `CheckboxGroup.ui.tsx`, `FileUpload.ui.tsx`, `Switch.ui.tsx`, `Textarea.ui.tsx`, `Select.ui.tsx`, `AuthDivider.ui.tsx`, `GoogleButton.ui.tsx`, `BackButton.ui.tsx`
 - **Feature Components:**
-  - `LoginForm.component.tsx`, `LoginFormFields.component.tsx`, `LoginFormSecurity.component.tsx`, `SignUpForm.component.tsx`, `SignUpFormContent.component.tsx`, `CAAuthTabs.component.tsx`, `SearchBar.component.tsx`, `CACard.component.tsx`, `Leads.component.tsx`, `LeadCard.component.tsx`, `LeadFilter.component.tsx`, `LeadSkeleton.component.tsx`, `LeadEmptyState.component.tsx`, `RoleSelection.component.tsx`, `UserOnboardingForm.component.tsx`, `ForumFeed.component.tsx`, `PostCard.component.tsx`, `ReactionSystem.component.tsx`, `CommentThread.component.tsx`, `CreatePost.component.tsx`, `SearchAndFilter.component.tsx`, `DashboardLayout.component.tsx`
+  - `LoginForm.component.tsx`, `LoginFormFields.component.tsx`, `LoginFormSecurity.component.tsx`, `SignUpForm.component.tsx`, `SignUpFormContent.component.tsx`, `CAAuthTabs.component.tsx`, `SearchBar.component.tsx`, `CACard.component.tsx`, `Leads.component.tsx`, `LeadCard.component.tsx`, `LeadFilter.component.tsx`, `LeadSkeleton.component.tsx`, `LeadEmptyState.component.tsx`, `RoleSelection.component.tsx`, `UserOnboardingForm.component.tsx`, `ForumFeed.component.tsx`, `PostCard.component.tsx`, `ReactionSystem.component.tsx`, `CommentThread.component.tsx`, `CreatePost.component.tsx`, `SearchAndFilter.component.tsx`, `FeaturesSection.component.tsx`, `CTASection.component.tsx`, `DashboardLayout.component.tsx`
 
 #### Best Practices
 
@@ -1461,4 +1463,6 @@ For backward compatibility, all mock functions are re-exported from `jestMock.he
 - [ ] CommentThread (`src/components/features/forum/CommentThread.component.tsx`)
 - [ ] CreatePost (`src/components/features/forum/CreatePost.component.tsx`)
 - [ ] SearchAndFilter (`src/components/features/forum/SearchAndFilter.component.tsx`)
+- [ ] FeaturesSection (`src/components/features/about/FeaturesSection.component.tsx`)
+- [ ] CTASection (`src/components/features/about/CTASection.component.tsx`)
 - [ ] DashboardLayout (`src/components/features/dashboard/DashboardLayout.component.tsx`)

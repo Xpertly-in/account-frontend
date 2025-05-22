@@ -11,7 +11,7 @@ export function useCAProfile() {
     const fetchProfile = async () => {
       if (auth.user) {
         const { data } = await supabase
-          .from("ca_profiles")
+          .from("profiles")
           .select("name, email")
           .eq("user_id", auth.user.id)
           .single();

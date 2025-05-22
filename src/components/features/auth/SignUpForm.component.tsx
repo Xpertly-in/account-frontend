@@ -13,6 +13,8 @@ import SignUpFormFields from "./SignUpFormFields.component";
 import SignUpFormTerms from "./SignUpFormTerms.component";
 import { ExtendedSignUpFormData } from "@/types/auth.type";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { UserRole } from "@/types/onboarding.type";
 
 interface SignUpFormProps {
   hideContainer?: boolean;
@@ -21,7 +23,7 @@ interface SignUpFormProps {
 export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { signUp } = useAuth();
+  const { signUp, signIn } = useAuth();
   const { signIn: signInWithGoogle } = useGoogleAuth();
   const [formData, setFormData] = useState<ExtendedSignUpFormData>({
     name: "",
@@ -32,6 +34,7 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const { auth } = useAuth();
 
   // Check if we're in the CA context
   const isCAContext = pathname?.includes("/ca") || pathname?.includes("/signup/ca");
@@ -49,6 +52,12 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
     setIsFormValid(isValid);
   }, [formData]);
 
+  useEffect(() => {
+    if (auth.user) {
+      checkUserProfileAndRedirect(auth.user.id);
+    }
+  }, [auth.user]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -59,43 +68,17 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isFormValid) {
-      return;
-    }
-
-    console.log("formData", formData);
-
     setIsLoading(true);
 
     try {
-      const { error, user } = await signUp(formData.email, formData.password, formData.name);
+      const { error } = await signUp(formData.email, formData.password, formData.name);
 
       if (error) {
-        if (error.code === "user_already_exists") {
-          toast.error("Account already exists", {
-            description: "Please sign in instead or use a different email address.",
-            action: {
-              label: "Sign in",
-              onClick: () => router.push("/login/ca"),
-            },
-          });
-        } else {
-          toast.error("Sign up failed", {
-            description: error.message || "Please check your information and try again.",
-          });
-        }
+        toast.error("Sign up failed", {
+          description: error.message || "Please check your information and try again.",
+        });
         return;
       }
-
-      toast.success("Sign up successful", {
-        description: "Your account has been created.",
-      });
-
-      // Short timeout to ensure toast is visible before redirect
-      setTimeout(() => {
-        router.push("/ca/onboarding");
-      }, 500);
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error("Signup error:", error);
@@ -110,6 +93,37 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
     } catch (error) {
       toast.error("Failed to sign in with Google");
       console.error("Google sign-in error:", error);
+    }
+  };
+
+  // Common function to check profile and redirect
+  const checkUserProfileAndRedirect = async (userId: string) => {
+    try {
+      // Check if user has a role
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", userId)
+        .single();
+
+      if (profileError && profileError.code !== "PGRST116") {
+        console.error("Error checking profile:", profileError);
+        return;
+      }
+
+      // If no profile exists, redirect to role selection
+      if (!profile) {
+        router.push("/role-select");
+        return;
+      }
+
+      // If role exists, redirect to appropriate onboarding
+      if (profile.role) {
+        router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+      }
+    } catch (error) {
+      console.error("Error in checkUserProfileAndRedirect:", error);
+      toast.error("An error occurred while checking your profile");
     }
   };
 

@@ -8,6 +8,7 @@ import { Camera } from "@phosphor-icons/react";
 import { FormValues } from "@/types/onboarding.type";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Select } from "@/ui/Select.ui";
 
 interface BasicInfoFormProps {
   formData: FormValues;
@@ -74,7 +75,7 @@ export function BasicInfoForm({
       </div>
 
       {/* Name and Phone Side by Side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="name" className="text-sm font-medium text-foreground block mb-0.5">
             Full Name <span className="text-red-500">*</span>
@@ -93,6 +94,31 @@ export function BasicInfoForm({
             <p className="text-xs text-red-500 mt-0.5">{validationErrors.name}</p>
           )}
         </div>
+        <div>
+          <label htmlFor="gender" className="text-sm font-medium text-foreground block mb-0.5">
+            Gender <span className="text-red-500">*</span>
+          </label>
+          <Select
+            id="gender"
+            name="gender"
+            value={formData.gender as string}
+            onChange={e => handleInputChange("gender", e.target.value)}
+            required
+            className={validationErrors.gender ? "border-red-500" : ""}
+          >
+            <option value="">Select your gender</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+            <option value="OTHER">Other</option>
+            <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+          </Select>
+          {validationErrors.gender && (
+            <p className="text-xs text-red-500 mt-0.5">{validationErrors.gender}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="phone" className="text-sm font-medium text-foreground block mb-0.5">
             Phone Number <span className="text-red-500">*</span>
@@ -114,7 +140,7 @@ export function BasicInfoForm({
       </div>
 
       {/* About Section */}
-      <div className="mb-3">
+      <div className="">
         <label htmlFor="about" className="text-sm font-medium text-foreground block mb-0.5">
           About <span className="text-red-500">*</span>
         </label>

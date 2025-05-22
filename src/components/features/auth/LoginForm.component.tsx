@@ -16,6 +16,8 @@ import LoginFormSecurity from "./LoginFormSecurity.component";
 import { supabase } from "@/lib/supabase";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { EventCategory } from "@/helper/googleAnalytics.helper";
+import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
+import { UserRole } from "@/types/onboarding.type";
 
 interface LoginFormProps {
   hideContainer?: boolean;
@@ -36,6 +38,7 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const { auth } = useAuth();
 
   // Validate form when inputs change
   useEffect(() => {
@@ -102,38 +105,33 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         return;
       }
 
-      // Check onboarding status in ca_profiles table
-      const { data: profile, error: profileError } = await supabase
-        .from("ca_profiles")
-        .select("onboarding_completed")
+      // After successful login, first check role
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role, onboarding_completed")
         .eq("user_id", user.id)
         .single();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        toast.error("Error checking profile status");
+      if (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("An error occurred while checking your profile");
         return;
       }
 
-      // Track successful login
-      trackFormSubmission("login_form", true, {
-        method: "email",
-        redirect: !profile?.onboarding_completed ? "onboarding" : "dashboard",
-      });
-
-      toast.success("Login successful", {
-        description: "Welcome back!",
-      });
-
-      // Redirect based on onboarding status
-      if (!profile?.onboarding_completed) {
-        router.push("/ca/onboarding");
-      } else {
-        // Get the stored redirect path or default to dashboard
-        const redirectTo = localStorage.getItem("postLoginRedirect") || "/ca/dashboard";
-        localStorage.removeItem("postLoginRedirect");
-        router.push(redirectTo);
+      // If no role is set, redirect to role selection
+      if (!profile?.role) {
+        router.push("/role-select");
+        return;
       }
+
+      // If role exists, then check onboarding status
+      if (!profile.onboarding_completed) {
+        router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+        return;
+      }
+
+      // If both role exists and onboarding is completed, go to dashboard
+      router.push("/ca/dashboard");
     } catch (error) {
       // Track login error
       trackFormSubmission("login_form", false, {
@@ -149,27 +147,55 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   };
 
   const handleGoogleSignIn = async () => {
-    // Track Google sign-in attempt
-    trackUserInteraction({
-      action: "click",
-      label: "google_sign_in",
-      params: { method: "google" },
-      timestamp: Date.now(),
-    });
-
     try {
       await signInWithGoogle();
+      // After Google sign-in, the user will be redirected back and authenticated.
+      // The following useEffect will handle the redirect.
     } catch (error) {
-      // Track failed Google sign-in
-      trackFormSubmission("login_form", false, {
-        method: "google",
-        error: "Google sign-in failed",
-      });
-
       toast.error("Failed to sign in with Google");
       console.error("Google sign-in error:", error);
     }
   };
+
+  // Add a useEffect to handle post-auth redirect after Google sign-in
+  useEffect(() => {
+    const checkAndRedirect = async () => {
+      if (!auth.user) return;
+      
+      try {
+        // First check if user has a role set
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role, onboarding_completed")
+          .eq("user_id", auth.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+
+        // If no role is set, redirect to role selection
+        if (!profile?.role) {
+          router.push("/role-select");
+          return;
+        }
+
+        // If role exists, then check onboarding status
+        if (!profile.onboarding_completed) {
+          router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+          return;
+        }
+
+        // If both role exists and onboarding is completed, go to dashboard
+        router.push("/ca/dashboard");
+      } catch (error) {
+        console.error("Error in checkAndRedirect:", error);
+        toast.error("An error occurred while checking your profile");
+      }
+    };
+    checkAndRedirect();
+  }, [auth.user]);
 
   const formContent = (
     <>

@@ -86,6 +86,10 @@ export default function OnboardingStepper({
         currentStepErrors.name = "Name is required";
         hasErrors = true;
       }
+      if (!formData.gender) {
+        currentStepErrors.gender = "Gender is required";
+        hasErrors = true;
+      }
       if (!formData.phone) {
         currentStepErrors.phone = "Phone number is required";
         hasErrors = true;
