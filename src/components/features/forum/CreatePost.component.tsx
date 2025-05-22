@@ -14,16 +14,18 @@ import { useAuth } from "@/store/context/Auth.provider";
 
 interface CreatePostProps {
   onPostCreated?: () => void;
+  initialContent?: string;
 }
 
 // ↓ hoist this out of the component
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
-export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
+export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialContent = "" }) => {
   const { auth } = useAuth();
   // don’t render form until we know who’s logged in
   if (auth.isLoading || !auth.user) return null;
-  const [content, setContent] = useState("");
+  // initialize editor with initialContent if provided
+  const [content, setContent] = useState(initialContent);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
@@ -35,16 +37,19 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
   const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
+  
 
-  // Load draft from localStorage
+  // only load draft if no initialContent from feed
   useEffect(() => {
-    const draft = localStorage.getItem("create-post-draft");
-    if (draft) {
-      const data = JSON.parse(draft);
-      setContent(data.content || "");
-      setTags(data.tags || []);
+    if (!initialContent) {
+      const draft = localStorage.getItem("create-post-draft");
+      if (draft) {
+        const data = JSON.parse(draft);
+        setContent(data.content || "");
+        setTags(data.tags || []);
+      }
     }
-  }, []);
+  }, [initialContent]);
 
   // fetch existing categories & tags
   useEffect(() => {
@@ -149,10 +154,13 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
 
   return (
     <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Rich text editor for content */}
+        <div className="space-y-1">
+        <label className="text-sm font-medium">Content</label>
         <div className="prose dark:prose-invert max-w-none">
           <ReactQuill value={content} onChange={setContent} placeholder="Write your post…" />
+        </div>
         </div>
 
         {/* Category (live-search + create) */}
