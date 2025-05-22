@@ -2,10 +2,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import "react-quill/dist/quill.snow.css";
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
-import { Textarea } from "@/ui/Textarea.ui";
 import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
 import { Tag, X } from "@phosphor-icons/react";
@@ -15,11 +16,13 @@ interface CreatePostProps {
   onPostCreated?: () => void;
 }
 
+// ↓ hoist this out of the component
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+
 export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
   const { auth } = useAuth();
   // don’t render form until we know who’s logged in
   if (auth.isLoading || !auth.user) return null;
-  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -38,7 +41,6 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     const draft = localStorage.getItem("create-post-draft");
     if (draft) {
       const data = JSON.parse(draft);
-      setTitle(data.title || "");
       setContent(data.content || "");
       setTags(data.tags || []);
     }
@@ -56,9 +58,9 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
 
   // Save draft on change
   useEffect(() => {
-    const data = { title, content, tags };
+    const data = { content, category, tags, images };
     localStorage.setItem("create-post-draft", JSON.stringify(data));
-  }, [title, content, tags]);
+  }, [content, category, tags, images]);
 
   const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -120,7 +122,6 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     // 2) insert post record with the image URLs
     const { error } = await supabase.from("posts").insert([
       {
-        title,
         content,
         category: finalCategory,
         tags,
@@ -136,7 +137,6 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
       console.error("Error creating post:", error.message);
     } else {
       // clear form & draft
-      setTitle("");
       setContent("");
       setTags([]);
       setImages([]);
@@ -150,23 +150,9 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
   return (
     <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          placeholder="Post title"
-          value={title}
-          onChange={e => setTitle(e.currentTarget.value)}
-          required
-        />
-
-        <div>
-          <Textarea
-            placeholder="What's on your mind?"
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            required
-          />
-          <p className="text-right text-xs text-gray-500 dark:text-gray-400">
-            {content.length}/280
-          </p>
+        {/* Rich text editor for content */}
+        <div className="prose dark:prose-invert max-w-none">
+          <ReactQuill value={content} onChange={setContent} placeholder="Write your post…" />
         </div>
 
         {/* Category (live-search + create) */}

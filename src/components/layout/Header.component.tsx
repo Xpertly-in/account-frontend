@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/helper/tw.helper";
 import Link from "next/link";
 import { Logo } from "@/ui/Logo.ui";
 import { Button } from "@/ui/Button.ui";
@@ -37,6 +39,7 @@ export function Header() {
   };
 
   const isLoggedIn = mounted && (auth.user || hasSession);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/50 dark:bg-background/90">
@@ -49,19 +52,45 @@ export function Header() {
             <nav className="ml-8 hidden items-center space-x-8 md:flex">
               <Link
                 href="/search"
-                className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname.startsWith("/search")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
               >
                 Find CA
               </Link>
               <Link
                 href="/about"
-                className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname.startsWith("/about")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
               >
                 About
               </Link>
               <Link
+                href="/forum"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname.startsWith("/forum")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
+              >
+                Community
+              </Link>
+              <Link
                 href="/contact"
-                className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname.startsWith("/contact")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
               >
                 Contact
               </Link>

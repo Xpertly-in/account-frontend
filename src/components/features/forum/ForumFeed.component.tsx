@@ -14,6 +14,12 @@ export const ForumFeed: React.FC = () => {
   // example data fetch
   const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // add pagination state
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>("");
@@ -21,68 +27,72 @@ export const ForumFeed: React.FC = () => {
   const [sortOpen, setSortOpen] = useState(false);
   const [sortOption, setSortOption] = useState<"recent" | "trending">("recent");
 
-// refs for dropdowns
-const filterRef = useRef<HTMLDivElement>(null);
-const sortRef   = useRef<HTMLDivElement>(null);
+  // refs for dropdowns
+  const filterRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
 
-// close filter if clicked outside
-useEffect(() => {
-  const onClick = (e: MouseEvent) => {
-    if (filterOpen && filterRef.current && !filterRef.current.contains(e.target as Node)) {
-      setFilterOpen(false);
-    }
-  };
-  document.addEventListener("mousedown", onClick);
-  return () => document.removeEventListener("mousedown", onClick);
-}, [filterOpen]);
+  // close filter if clicked outside
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (filterOpen && filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [filterOpen]);
 
-// close sort if clicked outside
-useEffect(() => {
-  const onClick = (e: MouseEvent) => {
-    if (sortOpen && sortRef.current && !sortRef.current.contains(e.target as Node)) {
-      setSortOpen(false);
-    }
-  };
-  document.addEventListener("mousedown", onClick);
-  return () => document.removeEventListener("mousedown", onClick);
-}, [sortOpen]);
+  // close sort if clicked outside
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (sortOpen && sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [sortOpen]);
 
   // ↓ lift out fetch logic so we can re-use it
-  const fetchPosts = useCallback(async () => {
-    setIsLoading(true);
+  const fetchPosts = useCallback(
+    async (pageNumber = 0) => {
+      setIsLoading(true);
 
-    // Base query (excluding deleted)
-    let query = supabase.from("posts").select("*").eq("is_deleted", false);
+      // Base query (excluding deleted)
+      let query = supabase.from("posts").select("*").eq("is_deleted", false);
 
-    // Search
-    if (searchTerm) {
-      query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`);
-    }
+      // Search
+      if (searchTerm) {
+        query = query.or(`content.ilike.%${searchTerm}%`);
+      }
 
-    // Category filter
-    if (filterCategory) {
-      query = query.eq("category", filterCategory);
-    }
+      // Category filter
+      if (filterCategory) {
+        query = query.eq("category", filterCategory);
+      }
 
-    // Tags filter (array contains)
-    if (filterTags.length) {
-      query = query.contains("tags", filterTags);
-    }
+      // Tags filter (array contains)
+      if (filterTags.length) {
+        query = query.contains("tags", filterTags);
+      }
 
-    // Sort: trending=likes_count, recent=updated_at
-    const sortCol = sortOption === "trending" ? "likes_count" : "updated_at";
-    query = query.order(sortCol, { ascending: false });
+      // Sort: trending=likes_count, recent=updated_at
+      const sortCol = sortOption === "trending" ? "likes_count" : "updated_at";
+      query = query.order(sortCol, { ascending: false });
 
-    const { data, error } = await query;
-    if (error) {
-      console.error("Error fetching posts:", error);
-    } else {
-      setPosts(
-        data.map(p => ({
+      // Apply pagination
+      const from = pageNumber * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      query = query.range(from, to);
+
+      const { data, error } = await query;
+      if (error) {
+        console.error("Error fetching posts:", error);
+      } else {
+        const mapped = data.map(p => ({
           id: p.id,
           created_at: p.created_at,
           updated_at: p.updated_at,
-          title: p.title,
           content: p.content,
           author_id: p.author_id,
           category: p.category,
@@ -91,15 +101,42 @@ useEffect(() => {
           likes_count: p.likes_count,
           comment_count: p.comment_count,
           is_deleted: p.is_deleted,
-        }))
-      );
-    }
-    setIsLoading(false);
+        }));
+        setPosts(prev => (pageNumber === 0 ? mapped : [...prev, ...mapped]));
+        setHasMore(mapped.length === PAGE_SIZE);
+      }
+      setIsLoading(false);
+    },
+    [searchTerm, filterCategory, filterTags, sortOption]
+  );
+
+  // reset pagination when filters/search/sort change
+  useEffect(() => {
+    setPage(0);
+    setHasMore(true);
+    setPosts([]);
   }, [searchTerm, filterCategory, filterTags, sortOption]);
 
+  // fetch posts on mount and when page changes
   useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+    fetchPosts(page);
+  }, [fetchPosts, page]);
+
+  // {{ edit_5 }} infinite-scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop + 100 >=
+          document.documentElement.offsetHeight &&
+        !isLoading &&
+        hasMore
+      ) {
+        setPage(prev => prev + 1);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLoading, hasMore]);
 
   // fetch category & tag enums from Supabase
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
@@ -116,7 +153,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
-      <Container className="space-y-12">
+      <Container className="space-y-12 !max-w-2xl">
         {/* Section Header */}
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
@@ -278,24 +315,24 @@ useEffect(() => {
           <Plus size={24} weight="fill" />
         </Link>
         {/* Posts Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            <div className="col-span-full text-center py-20 text-gray-500">Loading…</div>
-          ) : (
-            posts.map(post => (
-              <div
-                key={post.id}
-                className="transition-transform transform hover:-translate-y-1 hover:shadow-xl"
-              >
-                <PostCard
-                  {...post}
-                  onCategoryClick={cat => setFilterCategory(cat)}
-                  onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
-                />
-              </div>
-            ))
-          )}
+        <div className="space-y-6">
+          {posts.map(post => (
+            <div
+              key={post.id}
+              className="transition-transform transform hover:-translate-y-1 hover:shadow-xl"
+            >
+              <PostCard
+                {...post}
+                onCategoryClick={cat => setFilterCategory(cat)}
+                onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
+              />
+            </div>
+          ))}
         </div>
+        {isLoading && <div className="text-center py-6 text-gray-500">Loading more posts…</div>}
+        {!hasMore && !isLoading && (
+          <div className="text-center py-6 text-gray-500">No more posts.</div>
+        )}
       </Container>
     </div>
   );

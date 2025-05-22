@@ -21,7 +21,6 @@ export interface PostCardProps {
   id: number;
   created_at: string;
   updated_at: string;
-  title: string;
   content: string;
   author_id: string;
   category?: string;
@@ -37,7 +36,6 @@ export interface PostCardProps {
 export const PostCard: React.FC<PostCardProps> = ({
   category,
   author_id,
-  title,
   content,
   images,
   tags,
@@ -48,6 +46,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onTagClick,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [expanded, setExpanded] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
   const initials = useMemo(
@@ -64,7 +63,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   return (
     <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-start justify-between p-4">
+      <div className="flex items-start justify-between p-3">
         <div>
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -95,12 +94,20 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {/* Body & Image Carousel */}
-      <div className="px-4 pb-4 space-y-4">
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{content}</p>
-        </div>
-        {images?.length > 0 && (
+      <div className="px-3 pb-3 space-y-2">
+       <div
+         className={`prose text-sm text-gray-700 dark:prose-invert dark:text-gray-300 max-w-none ${
+           expanded ? "" : "line-clamp-3 overflow-hidden"
+         }`}
+         dangerouslySetInnerHTML={{ __html: content }}
+       />
+       <button
+         onClick={() => setExpanded(prev => !prev)}
+         className="text-primary text-sm mt-1"
+       >
+         {expanded ? "Show less" : "Read more"}
+       </button>
+       {images?.length > 0 && (
           <div
             className="relative w-full aspect-video bg-muted overflow-hidden rounded-lg cursor-zoom-in"
             onClick={() => {
@@ -108,11 +115,10 @@ export const PostCard: React.FC<PostCardProps> = ({
               setIsPreviewOpen(true);
             }}
           >
-            <Image
+            <img
               src={images[currentIndex]}
               alt={`Slide ${currentIndex + 1}`}
-              fill
-              className="object-cover"
+              className="w-full h-full object-contain object-center"
             />
             {/* Prev */}
             {currentIndex > 0 && (
@@ -156,7 +162,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Tags (clickable) */}
       {tags?.length > 0 && (
-        <div className="px-4 py-2 flex flex-wrap gap-2">
+        <div className="px-3 py-1 flex flex-wrap gap-1">
           {tags.map(tag => (
             <span
               key={tag}
@@ -169,15 +175,22 @@ export const PostCard: React.FC<PostCardProps> = ({
         </div>
       )}
 
+      {/* Like & Comment counts */}
+      <div className="px-3 py-1 flex items-center text-sm text-gray-700 dark:text-gray-400">
+        <span>{likes_count} Likes</span>
+        <span className="mx-2">·</span>
+        <span>{comment_count} Comments</span>
+      </div>
+
       {/* Actions */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-between text-gray-600 dark:text-gray-400">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 flex justify-between text-gray-600 dark:text-gray-400">
         <button className="flex items-center gap-1 hover:text-primary">
           <ThumbsUp size={18} />
-          <span className="text-sm">{likes_count}</span>
+          <span className="text-sm">Like</span>
         </button>
         <button className="flex items-center gap-1 hover:text-primary">
           <ChatCircle size={18} />
-          <span className="text-sm">{comment_count}</span>
+          <span className="text-sm">Comment</span>
         </button>
         <button className="flex items-center gap-1 hover:text-primary">
           <ShareNetwork size={18} />
