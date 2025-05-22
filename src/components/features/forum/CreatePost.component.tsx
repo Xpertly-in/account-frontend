@@ -26,6 +26,13 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // load enums
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
+  const [tagsOptions, setTagsOptions] = useState<string[]>([]);
+  const [category, setCategory] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+
   // Load draft from localStorage
   useEffect(() => {
     const draft = localStorage.getItem("create-post-draft");
@@ -37,17 +44,32 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     }
   }, []);
 
+  // fetch existing categories & tags
+  useEffect(() => {
+    (async () => {
+      const { data: catData } = await supabase.from("categories").select("name");
+      setCategoriesList(catData?.map(c => c.name) || []);
+      const { data: tagData } = await supabase.from("tags").select("name");
+      setTagsOptions(tagData?.map(t => t.name) || []);
+    })();
+  }, []);
+
   // Save draft on change
   useEffect(() => {
     const data = { title, content, tags };
     localStorage.setItem("create-post-draft", JSON.stringify(data));
   }, [title, content, tags]);
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
       const newTag = tagInput.trim();
       if (!tags.includes(newTag)) {
+        // upsert tag
+        if (!tagsOptions.includes(newTag)) {
+          await supabase.from("tags").insert({ name: newTag });
+          setTagsOptions(prev => [...prev, newTag]);
+        }
         setTags([...tags, newTag]);
       }
       setTagInput("");
@@ -68,7 +90,15 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // TODO: implement actual image uploads and populate `images` field
+    // upsert new category
+    let finalCategory = category;
+    if (creatingCategory && newCategory.trim()) {
+      const name = newCategory.trim();
+      await supabase.from("categories").insert({ name });
+      setCategoriesList(prev => [...prev, name]);
+      finalCategory = name;
+    }
+
     // 1) upload each File, collect its public URL
     const imageUrls = await Promise.all(
       images.map(async file => {
@@ -91,7 +121,15 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
     const { error } = await supabase
       .from("posts")
       .insert([
-        { title, content, tags, images: imageUrls, author_id: authorName, is_deleted: false },
+        {
+          title,
+          content,
+          category: finalCategory,
+          tags,
+          images: imageUrls,
+          author_id: authorName,
+          is_deleted: false,
+        },
       ]);
 
     if (error) {
@@ -131,28 +169,62 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated }) => {
           </p>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-1 block">Tags</label>
+        {/* Category */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Category</label>
+          <select
+            value={creatingCategory ? "__new" : category}
+            onChange={e => {
+              const v = e.currentTarget.value;
+              if (v === "__new") {
+                setCreatingCategory(true);
+              } else {
+                setCategory(v);
+                setCreatingCategory(false);
+              }
+            }}
+            className="w-full rounded border px-2 py-1"
+          >
+            <option value="">Select category</option>
+            {categoriesList.map(c => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+            <option value="__new">+ Add new category</option>
+          </select>
+          {creatingCategory && (
+            <Input
+              placeholder="New category"
+              value={newCategory}
+              onChange={e => setNewCategory(e.currentTarget.value)}
+              className="mt-2"
+            />
+          )}
+        </div>
+
+        {/* Tags */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Tags</label>
           <div className="flex flex-wrap gap-2 mb-2">
             {tags.map(tag => (
-              <span
-                key={tag}
-                className="bg-primary text-white px-2 py-1 rounded-full flex items-center gap-1 text-xs"
-              >
-                <Tag size={12} weight="fill" />
+              <span key={tag} className="bg-primary text-white px-2 py-1 rounded-full text-xs">
                 {tag}
-                <button type="button" onClick={() => handleRemoveTag(tag)} className="text-xs ml-1">
-                  &times;
-                </button>
               </span>
             ))}
           </div>
           <Input
-            placeholder="Add a tag and press Enter"
+            list="tags-list"
+            placeholder="Type a tag and press Enter"
             value={tagInput}
             onChange={e => setTagInput(e.currentTarget.value)}
             onKeyDown={handleAddTag}
           />
+          <datalist id="tags-list">
+            {tagsOptions.map(t => (
+              <option key={t} value={t} />
+            ))}
+          </datalist>
         </div>
 
         <FileUpload

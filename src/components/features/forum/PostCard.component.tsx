@@ -33,6 +33,7 @@ export interface PostCardProps {
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
+  category,
   author_id,
   title,
   content,
@@ -59,15 +60,22 @@ export const PostCard: React.FC<PostCardProps> = ({
   return (
     <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{author_id}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
+      <div className="flex items-start justify-between p-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{author_id}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
+            </div>
           </div>
+          {category && (
+            <span className="mt-2 inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full">
+              {category}
+            </span>
+          )}
         </div>
         <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
           <DotsThree size={20} />
@@ -138,7 +146,10 @@ export const PostCard: React.FC<PostCardProps> = ({
       {tags?.length > 0 && (
         <div className="px-4 py-2 flex flex-wrap gap-2">
           {tags.map(tag => (
-            <span key={tag} className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
+            <span
+              key={tag}
+              className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full"
+            >
               #{tag}
             </span>
           ))}
@@ -146,7 +157,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       )}
 
       {/* Actions */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex justify-around text-gray-600 dark:text-gray-400">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-between text-gray-600 dark:text-gray-400">
         <button className="flex items-center gap-1 hover:text-primary">
           <ThumbsUp size={18} />
           <span className="text-sm">{likes_count}</span>
@@ -155,13 +166,9 @@ export const PostCard: React.FC<PostCardProps> = ({
           <ChatCircle size={18} />
           <span className="text-sm">{comment_count}</span>
         </button>
-        <button className="flex items-center gap-2 hover:text-primary">
+        <button className="flex items-center gap-1 hover:text-primary">
           <ShareNetwork size={18} />
-          <span className="hidden sm:inline">Share</span>
-        </button>
-        <button className="flex items-center gap-2 hover:text-primary">
-          <PaperPlaneRight size={18} />
-          <span className="hidden sm:inline">Send</span>
+          <span className="text-sm">Share</span>
         </button>
       </div>
       {/* Image preview modal */}
