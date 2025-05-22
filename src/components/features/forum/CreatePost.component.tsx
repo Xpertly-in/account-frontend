@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import "react-quill/dist/quill.snow.css";
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
@@ -12,17 +11,25 @@ import { Button } from "@/ui/Button.ui";
 import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 
+// Dynamically import ReactQuill with no SSR
+const ReactQuill = dynamic(() => import('react-quill'), {
+  ssr: false,
+  loading: () => <p>Loading editor...</p>,
+});
+
+// Dynamically import the CSS
+const QuillCSS = dynamic(() => import('react-quill/dist/quill.snow.css'), {
+  ssr: false,
+});
+
 interface CreatePostProps {
   onPostCreated?: () => void;
   initialContent?: string;
 }
 
-// ↓ hoist this out of the component
-const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
-
 export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialContent = "" }) => {
   const { auth } = useAuth();
-  // don’t render form until we know who’s logged in
+  // don't render form until we know who's logged in
   if (auth.isLoading || !auth.user) return null;
   // initialize editor with initialContent if provided
   const [content, setContent] = useState(initialContent);

@@ -9,12 +9,19 @@ import { User } from "@supabase/supabase-js";
 // Create a context for authentication
 const AuthContext = createContext<{
   auth: AuthState;
-  signIn: (email: string, password: string) => Promise<{ error: any; data?: { user: User | null } }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any; user: User | null }>;
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ error: any; data?: { user: User | null } }>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<{ error: any; user: User | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
 }>({
-  auth: { user: null, isLoading: true },
+  auth: { user: null, isLoading: true, isAuthenticated: false },
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null, user: null }),
   signOut: async () => {},
@@ -28,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({
     user: null,
     isLoading: true,
+    isAuthenticated: false,
   });
 
   const router = useRouter();
@@ -36,14 +44,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         setAuth({
           user: session?.user || null,
           isLoading: false,
+          isAuthenticated: !!session?.user,
         });
       } catch (error) {
         console.error("Error checking session", error);
-        setAuth(prev => ({ ...prev, isLoading: false }));
+        setAuth(prev => ({ ...prev, isLoading: false, isAuthenticated: false }));
       }
     };
 
@@ -62,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      setAuth({ user: data.user, isLoading: false });
+      setAuth({ user: data.user, isLoading: false, isAuthenticated: !!data.user });
       return { error: null, data: { user: data.user } };
     } catch (error) {
       console.error("Error signing in", error);
@@ -89,18 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Create CA profile record
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('ca_profiles')
-          .insert([
-            {
-              user_id: data.user.id,
-              email: data.user.email,
-              name: name,
-            },
-          ]);
+        const { error: profileError } = await supabase.from("profiles").insert([
+          {
+            user_id: data.user.id,
+            email: data.user.email,
+            name: name,
+          },
+        ]);
 
         if (profileError) {
-          console.error('Error creating CA profile:', profileError);
+          console.error("Error creating profile:", profileError);
           // Don't return error here as the user is already created
         }
       }
@@ -118,20 +127,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear any stored data
       localStorage.removeItem("mockUser");
       localStorage.removeItem("postLoginRedirect");
-      
+
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       // Update local state
-      setAuth({ user: null, isLoading: false });
-      
+      setAuth({ user: null, isLoading: false, isAuthenticated: false });
+
       // Force a hard refresh to clear any cached state
       window.location.href = "/";
     } catch (error) {
       console.error("Error signing out:", error);
       // Even if there's an error, try to clear local state and redirect
-      setAuth({ user: null, isLoading: false });
+      setAuth({ user: null, isLoading: false, isAuthenticated: false });
       window.location.href = "/";
     }
   };
@@ -149,11 +158,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setAuth({ user: session.user, isLoading: false });
-      } else if (event === 'SIGNED_OUT') {
-        setAuth({ user: null, isLoading: false });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        setAuth({ user: session.user, isLoading: false, isAuthenticated: true });
+      } else if (event === "SIGNED_OUT") {
+        setAuth({ user: null, isLoading: false, isAuthenticated: false });
       }
     });
 

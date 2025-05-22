@@ -268,7 +268,7 @@ export function EducationForm({ educations, onEducationsChange, educationsLoadin
 
   return (
     <Card className="mb-8 p-6">
-      <div className="mb-6">
+      <div className="">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold">Education</h2>
@@ -299,7 +299,7 @@ export function EducationForm({ educations, onEducationsChange, educationsLoadin
           {educations.map((education, index) => (
             <div
               key={education.id}
-              className="border rounded-lg p-4 space-y-4"
+              className=""
             >
               {editingEducationId === education.id ? (
                 <>
@@ -323,7 +323,7 @@ export function EducationForm({ educations, onEducationsChange, educationsLoadin
                   </div>
                 </>
               ) : (
-                <>
+                <div className="bg-muted border p-4 rounded-lg">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium">{education.degree}</h3>
@@ -367,7 +367,7 @@ export function EducationForm({ educations, onEducationsChange, educationsLoadin
                       {education.description}
                     </p>
                   )}
-                </>
+                </div>
               )}
             </div>
           ))}

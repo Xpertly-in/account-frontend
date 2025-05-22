@@ -24,11 +24,11 @@ interface DatabaseProfile {
   profile_picture: string;
   about: string;
   years_of_experience: number;
-  ca_address: {
+  address: {
     city: string;
     state: string;
   } | null;
-  ca_social_profile: {
+  social_profile: {
     areas_of_expertise: string;
   } | null;
 }
@@ -52,18 +52,18 @@ export default function CASearchPage() {
     setLoading(true);
     try {
       let query = supabase
-        .from('ca_profiles')
+        .from('profiles')
         .select(`
           id,
           name,
           profile_picture,
           about,
           years_of_experience,
-          ca_address (
+          address (
             city,
             state
           ),
-          ca_social_profile (
+          social_profile (
             areas_of_expertise
           )
         `)
@@ -75,11 +75,11 @@ export default function CASearchPage() {
       }
 
       if (location) {
-        query = query.or(`ca_address.city.ilike.%${location}%,ca_address.state.ilike.%${location}%`);
+        query = query.or(`address.city.ilike.%${location}%,address.state.ilike.%${location}%`);
       }
 
       if (expertise) {
-        query = query.ilike('ca_social_profile.areas_of_expertise', `%${expertise}%`);
+        query = query.ilike('social_profile.areas_of_expertise', `%${expertise}%`);
       }
 
       const { data, error } = await query;
@@ -93,9 +93,9 @@ export default function CASearchPage() {
         profile_picture: ca.profile_picture,
         about: ca.about,
         years_of_experience: ca.years_of_experience,
-        city: ca.ca_address?.city || '',
-        state: ca.ca_address?.state || '',
-        areas_of_expertise: ca.ca_social_profile?.areas_of_expertise || '',
+        city: ca.address?.city || '',
+        state: ca.address?.state || '',
+        areas_of_expertise: ca.social_profile?.areas_of_expertise || '',
       }));
 
       setCAs(transformedData);

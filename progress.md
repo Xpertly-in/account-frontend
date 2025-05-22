@@ -49,6 +49,25 @@
   - [x] Helper functions use `.helper.ts` extension
 - [x] Update imports across the codebase for new directory structure
 - [x] Update PRD with new file naming conventions and directory structure
+- [x] Implement domain-based organization approach
+  - [x] Move dashboard lead components to domain-specific `/components/leads/` directory
+    - [x] Migrated LeadCard.component.tsx
+    - [x] Migrated LeadFilter.component.tsx
+    - [x] Migrated LeadSkeleton.component.tsx
+    - [x] Migrated LeadEmptyState.component.tsx
+    - [x] Migrated Leads.component.tsx
+  - [x] Update all import paths across the codebase
+    - [x] Updated page components that import leads components
+    - [x] Updated test files to reference new component locations
+    - [x] Maintained proper imports for shared types and utilities
+  - [x] Clean up and verify changes
+    - [x] Deleted original files from dashboard directory
+    - [x] Ran tests to verify functionality is preserved
+    - [x] Ensured no duplicate components remained
+  - [x] Document and standardize the approach
+    - [x] Updated progress.md with migration details
+    - [x] Updated prd.md with domain-based organization principles
+    - [x] Added guidelines for future component organization
 
 ## Phase 2: UI/UX Design & Component Layout
 
@@ -94,6 +113,10 @@
 
   - [x] Move "Why Choose Xpertly?" section to About page
   - [x] Move "Are You a Chartered Accountant?" section to About page
+  - [x] Create FeaturesSection.component.tsx under /components/about
+  - [x] Create CTASection.component.tsx under /components/about
+  - [ ] Update hero section with search
+  - [ ] Integrate Forum feed section
   - [x] Update hero section with search
   - [x] Integrate Forum feed section
   - [ ] Redesign featured CA listings
@@ -390,14 +413,35 @@
 
   - [ ] New Leads Section
 
-    - [ ] Write tests for LeadCard component (Red)
-    - [ ] Implement LeadCard UI (Green)
-    - [ ] Create leads list view
-    - [ ] Add sorting functionality by urgency, date, service
-    - [ ] Implement filtering functionality
-    - [ ] Create lead action buttons (contact, dismiss, save)
-    - [ ] Test responsiveness and accessibility (Refactor)
-    - [ ] Ensure dark mode support
+    - [x] Write tests for LeadCard component (Red)
+    - [x] Implement LeadCard UI (Green)
+    - [x] Create leads list view with responsive grid layout
+    - [x] Add search functionality with clear button
+    - [x] Implement filtering functionality for status and urgency
+    - [x] Create lead action buttons (contact, dismiss)
+    - [x] Implement loading states with skeleton UI
+    - [x] Create empty state with helpful messages
+    - [x] Add proper formatting for dates and urgency labels
+    - [x] Test responsiveness and accessibility (Refactor)
+    - [x] Ensure dark mode support
+    - [x] Enhance design consistency with fixed card heights and sticky footer
+    - [x] Fix authentication on page refresh
+    - [x] Remove duplicate sign-out button from dashboard
+    - [x] Refactor LeadsComponent to follow 200-line constraint
+      - [x] Extract LeadCard component for individual lead display
+      - [x] Extract LeadFilter component for filtering UI
+      - [x] Extract LeadSkeleton component for loading states
+      - [x] Extract LeadEmptyState component for empty state
+      - [x] Ensure all tests pass after refactoring
+      - [x] Write dedicated tests for LeadCard component
+    - [x] Implement domain-based organization for leads components
+      - [x] Move components from dashboard directory to domain-specific leads directory
+      - [x] Update import paths across the codebase
+      - [x] Update test files to reference new component locations
+      - [x] Delete original files to avoid duplication
+      - [x] Verify all tests pass with new structure
+      - [x] Update documentation with new organizational approach
+    - [ ] Integrate with actual Supabase data
 
   - [ ] Contact Requests Section
 
@@ -587,6 +631,15 @@
     - [x] Added dark mode testing
     - [x] Achieved good coverage for form rendering and validation
     - [x] Identified test limitations for complex form submission flows
+  - [x] Create example LeadsComponent for CA dashboard test
+    - [x] Created test suite with 5 test cases for the Leads dashboard component
+    - [x] Enhanced jestMock.helper.tsx with specialized dashboard test helpers
+    - [x] Added helper function for injecting test lead data directly in the DOM
+    - [x] Added centralized mock setup functions for all UI components and icons
+    - [x] Enhanced component with proper null checking for robustness
+    - [x] Implemented tests for search, loading states, and empty states
+    - [x] Kept test file under 200 lines (170 lines total)
+    - [x] Achieved over 50% code coverage for the Leads component
   - [x] Achieved 100% overall UI components test coverage (15/15 components tested)
   - [ ] Create example Auth provider test
   - [ ] Create example SearchBar component test
@@ -677,229 +730,4 @@
 - [x] SignUpFormContent (`src/components/features/auth/SignUpFormContent.component.tsx`) - **232 lines**
 - [x] CAAuthTabs (`src/components/features/auth/CAAuthTabs.component.tsx`) - 84 lines
 - [x] SearchBar (`src/components/features/search/SearchBar.component.tsx`)
-- [x] CACard (`src/components/features/common/CACard.component.tsx`)
-- [ ] RoleSelection (`src/components/features/onboarding/RoleSelection.component.tsx`)
-- [ ] UserOnboardingForm (`src/components/features/onboarding/UserOnboardingForm.component.tsx`)
-- [ ] ForumFeed (`src/components/features/forum/ForumFeed.component.tsx`)
-- [ ] PostCard (`src/components/features/forum/PostCard.component.tsx`)
-- [ ] ReactionSystem (`src/components/features/forum/ReactionSystem.component.tsx`)
-- [ ] CommentThread (`src/components/features/forum/CommentThread.component.tsx`)
-- [ ] CreatePost (`src/components/features/forum/CreatePost.component.tsx`)
-- [ ] SearchAndFilter (`src/components/features/forum/SearchAndFilter.component.tsx`)
-- [ ] DashboardLayout (`src/components/features/dashboard/DashboardLayout.component.tsx`)
-- [ ] LeadCard (`src/components/features/dashboard/LeadCard.component.tsx`)
-- [ ] ContactRequestCard (`src/components/features/dashboard/ContactRequestCard.component.tsx`)
-- [ ] PostComposer (`src/components/features/dashboard/PostComposer.component.tsx`)
-
-## Analytics Integration
-
-### Completed Tasks
-
-- [x] Set up Google Analytics 4 configuration
-- [x] Create analytics helper functions
-- [x] Implement Jotai atoms for analytics state
-- [x] Create GoogleAnalytics component
-- [x] Add GA4 script to layout
-- [x] Update documentation
-- [x] Implement analytics tracking in components
-  - [x] Added analytics tracking to SearchBar component
-  - [x] Added analytics tracking to CACard component
-- [x] Implement analytics opt-out functionality
-  - [x] Created AnalyticsOptOut component
-  - [x] Created useAnalyticsEnabled hook
-  - [x] Updated useAnalytics hook to respect opt-out preferences
-  - [x] Updated GoogleAnalytics component to respect opt-out preferences
-- [x] Add analytics event tracking to forms
-  - [x] Added analytics tracking to LoginForm component
-  - [x] Track login attempts, successes, and failures
-  - [x] Track Google authentication attempts
-- [x] Document analytics events
-  - [x] Created analytics_events.md documentation
-  - [x] Documented all event categories and parameters
-  - [x] Added implementation examples
-  - [x] Documented opt-out functionality
-- [x] Add analytics testing
-  - [x] Created tests for useAnalytics hook
-  - [x] Created tests for GoogleAnalytics component
-  - [x] Created tests for AnalyticsOptOut component
-  - [x] Tested all tracking methods
-  - [x] Added mocks for Google Analytics
-- [x] Set up analytics dashboard
-  - [x] Created documentation for setting up GA4 dashboard
-  - [x] Provided instructions for custom reports
-  - [x] Added guide for funnel analysis setup
-  - [x] Documented alert configuration
-- [x] Create analytics reports
-  - [x] Documented recommended report types
-  - [x] Provided instructions for creating custom reports
-  - [x] Added guide for interpreting analytics data
-- [x] Set up analytics monitoring
-  - [x] Created instructions for setting up alerts
-  - [x] Added troubleshooting guide
-  - [x] Documented key metrics to monitor
-- [x] Create centralized Jest mock helper
-  - [x] Created comprehensive `jestMock.helper.tsx` with common mocks
-  - [x] Implemented mocks for navigation (usePathname, useSearchParams)
-  - [x] Implemented mocks for Next.js components (Script, Link, Image)
-  - [x] Implemented mocks for analytics functions and hooks
-  - [x] Implemented mocks for storage (localStorage, sessionStorage)
-  - [x] Implemented mocks for Supabase
-  - [x] Implemented mocks for global window objects
-  - [x] Implemented mocks for UI components
-  - [x] Updated test files to use centralized mocks
-  - [x] Documented proper mock usage in helper file
-- [x] Create consolidated analytics documentation
-  - [x] Combined analytics_events.md and google_analytics_setup.md into a single source of truth
-  - [x] Created comprehensive inventory of components requiring analytics tracking
-  - [x] Developed a phased implementation plan for remaining components
-  - [x] Added detailed documentation for existing and planned analytics events
-  - [x] Improved implementation examples for developers
-
-### Analytics Implementation Todo
-
-#### Phase 1: Critical User Flows
-
-- [ ] **SignUp Flow Tracking**
-
-  - [ ] `SignUpForm.component.tsx`
-    - [ ] Track form submission attempts (`signup_attempt` event)
-    - [ ] Track successful/failed signups (`signup_form` event with success/error params)
-    - [ ] Track signup method (email vs Google)
-  - [ ] `SignUpFormTerms.component.tsx`
-    - [ ] Track terms acceptance clicks (`terms_acceptance` event)
-  - [ ] `GoogleAuth.provider.tsx`
-    - [ ] Track Google auth flow steps (`google_auth_flow` event)
-    - [ ] Track error states and user cancellations
-  - [ ] `RoleSelection.component.tsx`
-
-    - [ ] Track role selection screen views
-    - [ ] Track role selection events
-    - [ ] Track time spent on decision
-    - [ ] Track abandonment at this step
-
-  - [ ] `UserOnboardingForm.component.tsx`
-
-    - [ ] Track form starts and completions
-    - [ ] Track field completion rates
-    - [ ] Track time spent on each field
-    - [ ] Track skip rates for optional fields
-    - [ ] Monitor form submission success/failure
-
-  - [ ] **Forum Components**
-    - [ ] Track post views and engagement metrics
-    - [ ] Monitor reaction usage patterns
-    - [ ] Track comment creation and threading
-    - [ ] Measure search and filter usage
-    - [ ] Analyze content creation patterns
-    - [ ] Track post sharing and virality
-    - [ ] Monitor hashtag popularity and growth
-
-- [ ] **Profile Engagement Tracking**
-
-  - [ ] `CAProfileHero.component.tsx`
-    - [ ] Track hero section impressions (`profile_view` event)
-    - [ ] Track social link clicks (`social_link_click` event)
-    - [ ] Track profile image clicks for enlargement
-  - [ ] `CAContactInfo.component.tsx`
-    - [ ] Track contact method clicks (phone, email, etc.)
-    - [ ] Track copy-to-clipboard actions
-    - [ ] Track expanded section views
-
-- [ ] **Onboarding Funnel Tracking**
-  - [ ] `DynamicForm.component.tsx`
-    - [ ] Track form step completions (`onboarding_step_complete` event)
-    - [ ] Track form step views (`onboarding_step_view` event)
-    - [ ] Track form submission attempts and validations
-  - [ ] `FormNavigation.component.tsx`
-    - [ ] Track navigation actions (next/back/skip buttons)
-    - [ ] Track abandonment points in the flow
-
-#### Phase 2: Enhanced User Experience
-
-- [ ] **Detailed Auth Tracking**
-
-  - [ ] `CAAuthTabs.component.tsx` / `AuthTabs.component.tsx`
-    - [ ] Track tab switches (`tab_change` event)
-    - [ ] Track dwell time on each tab
-  - [ ] `ForgotPasswordForm.component.tsx`
-    - [ ] Track password reset requests (`password_reset` event)
-    - [ ] Track email submission success/failure
-    - [ ] Track reset link clicks
-
-- [ ] **Profile Component Tracking**
-
-  - [ ] `CAProfessionalDetails.component.tsx`
-    - [ ] Track section expansion/collapse
-    - [ ] Track interaction with certification details
-  - [ ] `CAServicesSection.component.tsx`
-    - [ ] Track service tag clicks
-    - [ ] Track section scrolling behavior
-  - [ ] `CAReviewsSection.component.tsx`
-    - [ ] Track review impressions
-    - [ ] Track pagination/navigation through reviews
-    - [ ] Track sorting/filtering of reviews
-
-- [ ] **Page-level Enhancements**
-  - [ ] `app/page.tsx` (Homepage)
-    - [ ] Track CTA button clicks
-    - [ ] Track scroll depth and section viewability
-    - [ ] Track entry points to other sections
-  - [ ] `app/search/page.tsx`
-    - [ ] Track filter usage patterns
-    - [ ] Track search refinements
-    - [ ] Track pagination interactions
-
-#### Phase 3: Complete Coverage
-
-- [ ] **Detailed Form Interactions**
-
-  - [ ] `SignUpFormFields.component.tsx` / `LoginFormFields.component.tsx`
-    - [ ] Track field validation errors
-    - [ ] Track field completion rates
-    - [ ] Track field focus time
-  - [ ] `SignUpFormButton.component.tsx`
-    - [ ] Track button state changes
-    - [ ] Track time to clickability
-
-- [ ] **Edge Case Handling**
-
-  - [ ] Track error states throughout the application
-  - [ ] Track browser-specific behaviors
-  - [ ] Track performance issues encountered
-
-- [ ] **Additional App Pages**
-  - [ ] `app/ca/dashboard/page.tsx` (Standardized dashboard location)
-    - [ ] Track dashboard widget interactions
-    - [ ] Track notification handling
-    - [ ] Track settings changes
-  - [ ] `app/auth/page.tsx`
-    - [ ] Track auth entry points
-    - [ ] Track authentication method preferences
-
-#### Phase 4: Optimization
-
-- [ ] Review analytics data quality
-- [ ] Optimize event parameters for better reporting
-- [ ] Add custom dimensions for enhanced segmentation
-- [ ] Implement enhanced e-commerce tracking if applicable
-
-### Next Steps
-
-- [ ] Integrate analytics with other components like SignUpForm
-- [ ] Consider implementing a cookie consent banner
-
-- [ ] Admin Dashboard
-- [ ] SEO Optimization
-
-  - [ ] Meta tags configuration
-  - [ ] Open Graph tags
-  - [ ] Dynamic meta descriptions
-  - [ ] Structured data (JSON-LD)
-  - [ ] Heading hierarchy
-  - [ ] Sitemap generation
-  - [ ] robots.txt configuration
-  - [ ] Canonical URLs
-  - [ ] Image alt text
-  - [ ] Performance optimization
-  - [ ] URL structure and slugs
-  - [ ] Breadcrumb navigation
+- [x] CACard (`

@@ -64,7 +64,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
     try {
       if (id.startsWith('temp-')) {
         const { data, error } = await supabase
-          .from("ca_services")
+          .from("services")
           .insert([{
             ca_id: auth.user.id,
             service_name: service.name,
@@ -81,7 +81,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
         toast.success("Service added successfully");
       } else {
         const { error } = await supabase
-          .from("ca_services")
+          .from("services")
           .update({
             service_name: service.name,
           })
@@ -110,7 +110,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
         onServicesChange(services.filter(s => s.id !== id));
       } else {
         const { error } = await supabase
-          .from("ca_services")
+          .from("services")
           .update({ is_active: false })
           .eq("service_id", id);
 
