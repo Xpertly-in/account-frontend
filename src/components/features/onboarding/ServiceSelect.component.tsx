@@ -1,16 +1,13 @@
-import { useState, useEffect } from "react";
-import AsyncSelect from "react-select/async";
+import { useState, useEffect, useRef } from "react";
+import { Plus, X, Check, SpinnerGap } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
-
-interface ServiceOption {
-  value: string;
-  label: string;
-}
+import { Button } from "@/ui/Button.ui";
+import { Input } from "@/ui/Input.ui";
+import { useAuth } from "@/store/context/Auth.provider";
 
 interface ServiceSelectProps {
-  value: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
+  value?: string[]; // Not used, but for compatibility
+  onChange?: (value: string[]) => void; // Not used, but for compatibility
   error?: string;
   disabled?: boolean;
 }
@@ -25,122 +22,214 @@ const DEFAULT_SERVICES = [
   "Financial Consulting",
 ];
 
-export function ServiceSelect({ value, onChange, onBlur, error, disabled }: ServiceSelectProps) {
+export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
+  const { auth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [availableServices, setAvailableServices] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [customService, setCustomService] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load existing services from the database
-  const loadExistingServices = async () => {
-    const { data } = await supabase
-      .from("ca_services")
-      .select("service_name")
-      .eq("is_active", true);
-    
-    if (data) {
-      return data.map(service => ({
-        value: service.service_name,
-        label: service.service_name,
-      }));
+  // Fetch all available services (deduped)
+  useEffect(() => {
+    const loadServices = async () => {
+      setIsLoading(true);
+      try {
+        const { data } = await supabase
+          .from("ca_services")
+          .select("service_name")
+          .eq("is_active", true);
+        let all = [...DEFAULT_SERVICES];
+        if (data) {
+          all = [...all, ...data.map(service => service.service_name)];
+        }
+        setAvailableServices(Array.from(new Set(all)));
+      } catch (error) {
+        setAvailableServices([...DEFAULT_SERVICES]);
+        console.error("Error loading services:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadServices();
+  }, []);
+
+  // Fetch user's selected services
+  useEffect(() => {
+    const fetchUserServices = async () => {
+      if (!auth.user) return;
+      setIsLoading(true);
+      try {
+        const { data } = await supabase
+          .from("ca_services")
+          .select("service_name")
+          .eq("ca_id", auth.user.id)
+          .eq("is_active", true);
+        if (data) {
+          setSelectedServices(data.map(s => s.service_name));
+        }
+      } catch (error) {
+        setSelectedServices([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUserServices();
+  }, [auth.user]);
+
+  // Autofocus custom input
+  useEffect(() => {
+    if (showCustomInput && inputRef.current) {
+      inputRef.current.focus();
     }
-    return [];
+  }, [showCustomInput]);
+
+  // Handle chip click (toggle)
+  const handleChipClick = async (service: string) => {
+    if (!auth.user || isLoading) return;
+    setIsLoading(true);
+    if (selectedServices.includes(service)) {
+      // Remove from DB
+      const { error } = await supabase
+        .from("ca_services")
+        .update({ is_active: false })
+        .eq("ca_id", auth.user.id)
+        .eq("service_name", service);
+      if (!error) {
+        setSelectedServices(prev => prev.filter(s => s !== service));
+      }
+    } else {
+      // Insert into DB
+      const { error } = await supabase
+        .from("ca_services")
+        .insert({
+          ca_id: auth.user.id,
+          service_name: service,
+          is_active: true,
+        });
+      if (!error) {
+        setSelectedServices(prev => [...prev, service]);
+      }
+    }
+    setIsLoading(false);
   };
 
-  // Load options for the select
-  const loadOptions = async (inputValue: string) => {
+  // Handle custom service add
+  const handleCustomServiceAdd = async () => {
+    if (!auth.user || !customService.trim() || isLoading) return;
     setIsLoading(true);
-    
-    try {
-      // Combine default services with existing services
-      const existingServices = await loadExistingServices();
-      const allServices = [...DEFAULT_SERVICES, ...existingServices.map(s => s.value)];
-      
-      // Filter and format options
-      const filteredOptions = allServices
-        .filter(service => 
-          service.toLowerCase().includes(inputValue.toLowerCase())
-        )
-        .map(service => ({
-          value: service,
-          label: service,
-        }));
-
-      // Add the input value as an option if it's not empty and not in the list
-      if (inputValue && !allServices.includes(inputValue)) {
-        filteredOptions.unshift({
-          value: inputValue,
-          label: `Add "${inputValue}"`,
-        });
-      }
-
-      return filteredOptions;
-    } finally {
-      setIsLoading(false);
+    const service = customService.trim();
+    // Insert into DB
+    const { error } = await supabase
+      .from("ca_services")
+      .insert({
+        ca_id: auth.user.id,
+        service_name: service,
+        is_active: true,
+      });
+    if (!error) {
+      setAvailableServices(prev => Array.from(new Set([...prev, service])));
+      setSelectedServices(prev => [...prev, service]);
+      setShowCustomInput(false);
+      setCustomService("");
     }
+    setIsLoading(false);
   };
 
   return (
-    <div className="w-full">
-      <AsyncSelect
-        cacheOptions
-        defaultOptions
-        loadOptions={loadOptions}
-        value={{ value, label: value }}
-        onChange={(option) => onChange(option?.value || "")}
-        onBlur={onBlur}
-        isLoading={isLoading}
-        isDisabled={disabled}
-        placeholder="Search or add a service..."
-        className="react-select-container"
-        classNamePrefix="react-select"
-        noOptionsMessage={() => "Type to add a new service"}
-        components={{
-          DropdownIndicator: () => null,
-        }}
-        styles={{
-          control: (base, state) => ({
-            ...base,
-            backgroundColor: 'var(--background)',
-            borderColor: error ? 'rgb(239, 68, 68)' : state.isFocused ? 'var(--primary)' : 'var(--border)',
-            boxShadow: state.isFocused ? '0 0 0 2px var(--primary/20)' : 'none',
-            '&:hover': {
-              borderColor: error ? 'rgb(239, 68, 68)' : 'var(--primary)',
-            },
-          }),
-          menu: (base) => ({
-            ...base,
-            backgroundColor: 'var(--background)',
-            border: '1px solid var(--border)',
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-          }),
-          option: (base, state) => ({
-            ...base,
-            backgroundColor: state.isFocused ? 'var(--primary/10)' : 'transparent',
-            color: 'var(--foreground)',
-            '&:active': {
-              backgroundColor: 'var(--primary/20)',
-            },
-          }),
-          singleValue: (base) => ({
-            ...base,
-            color: 'var(--foreground)',
-          }),
-          input: (base) => ({
-            ...base,
-            color: 'var(--foreground)',
-          }),
-          placeholder: (base) => ({
-            ...base,
-            color: 'var(--muted-foreground)',
-          }),
-          noOptionsMessage: (base) => ({
-            ...base,
-            color: 'var(--muted-foreground)',
-          }),
-          loadingMessage: (base) => ({
-            ...base,
-            color: 'var(--muted-foreground)',
-          }),
-        }}
-      />
+    <div className="w-full space-y-3">
+      <div className="flex flex-wrap gap-2 min-h-[48px] items-center relative">
+        {isLoading && (
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 animate-spin text-primary">
+            <SpinnerGap size={20} />
+          </span>
+        )}
+        {!isLoading && availableServices.length === 0 && (
+          <span className="text-muted-foreground text-sm">No services available.</span>
+        )}
+        {availableServices.map((service) => {
+          const isActive = selectedServices.includes(service);
+          return (
+            <button
+              key={service}
+              type="button"
+              onClick={() => handleChipClick(service)}
+              disabled={disabled || isLoading}
+              tabIndex={0}
+              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-1 transition-all focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2
+                ${isActive
+                  ? 'bg-primary text-white shadow-md' 
+                  : 'bg-muted/70 text-foreground hover:bg-primary/10 hover:text-primary'}
+                ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              `}
+              aria-pressed={isActive}
+              aria-label={service}
+            >
+              {service}
+              {isActive && <Check size={16} className="ml-1" />}
+            </button>
+          );
+        })}
+        {!showCustomInput && (
+          <button
+            type="button"
+            onClick={() => setShowCustomInput(true)}
+            disabled={disabled || isLoading}
+            className="px-4 py-2 rounded-full text-sm font-medium bg-muted/70 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2"
+            tabIndex={0}
+            aria-label="Add custom service"
+          >
+            <Plus size={16} />
+            Custom
+          </button>
+        )}
+      </div>
+      {showCustomInput && (
+        <div className="flex gap-2 items-center mt-2">
+          <Input
+            ref={inputRef}
+            value={customService}
+            onChange={(e) => setCustomService(e.target.value)}
+            placeholder="Enter custom service..."
+            className="flex-1 min-w-0"
+            onKeyDown={async (e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                await handleCustomServiceAdd();
+              }
+              if (e.key === 'Escape') {
+                setShowCustomInput(false);
+                setCustomService("");
+              }
+            }}
+            aria-label="Custom service name"
+            disabled={disabled || isLoading}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setShowCustomInput(false);
+              setCustomService("");
+            }}
+            aria-label="Cancel custom service"
+            tabIndex={0}
+          >
+            <X size={16} />
+          </Button>
+          <Button
+            type="button"
+            onClick={handleCustomServiceAdd}
+            disabled={!customService.trim() || disabled || isLoading}
+            className="bg-primary text-white px-4 py-2 rounded-full"
+            aria-label="Add custom service"
+          >
+            Add
+          </Button>
+        </div>
+      )}
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
