@@ -12,6 +12,7 @@ import {
   ShareNetwork,
   PaperPlaneRight,
   DotsThree,
+  PencilSimple,
   CaretLeft,
   CaretRight,
   X,
@@ -31,9 +32,11 @@ export interface PostCardProps {
   is_deleted?: boolean;
   onCategoryClick?: (category: string) => void;
   onTagClick?: (tag: string) => void;
+  onEdit?: (id: number) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
+  id,
   category,
   author_id,
   content,
@@ -44,6 +47,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   comment_count = 0,
   onCategoryClick,
   onTagClick,
+  onEdit,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -51,6 +55,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
   const initials = useMemo(
     () =>
       author_id
@@ -61,7 +66,6 @@ export const PostCard: React.FC<PostCardProps> = ({
     [author_id]
   );
   const relativeTime = useMemo(() => formatRelativeTime(new Date(updated_at)), [updated_at]);
-
 
   const touchStartX = useRef(0);
 
@@ -104,22 +108,39 @@ export const PostCard: React.FC<PostCardProps> = ({
             </div>
           </div>
         </div>
-        <div>
-          {/* Category badge (clickable) */}
+        <div className="flex items-center space-x-2">
           {category && (
-            <div className="px-4 -mt-2 mb-2">
-              <span
-                onClick={() => onCategoryClick?.(category)}
-                className="mt-4 inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
-              >
-                {category}
-              </span>
-            </div>
+            <span
+              onClick={() => onCategoryClick?.(category)}
+              className="mt-4 inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
+            >
+              {category}
+            </span>
           )}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="Open menu"
+              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              <DotsThree size={20} />
+            </button>
+            {menuOpen && onEdit && (
+              <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onEdit(id);
+                  }}
+                  className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <PencilSimple size={16} />
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-          <DotsThree size={20} />
-        </button>
       </div>
 
       {/* Body & Image Carousel */}

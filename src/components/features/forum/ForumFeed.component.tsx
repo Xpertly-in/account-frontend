@@ -153,14 +153,14 @@ export const ForumFeed: React.FC = () => {
   }, []);
 
   useEffect(() => {
-      const handler = (e: MouseEvent) => {
-        if (tagsOpen && tagsRef.current && !tagsRef.current.contains(e.target as Node)) {
-          setTagsOpen(false);
-        }
-      };
-      document.addEventListener("mousedown", handler);
-      return () => document.removeEventListener("mousedown", handler);
-    }, [tagsOpen]);
+    const handler = (e: MouseEvent) => {
+      if (tagsOpen && tagsRef.current && !tagsRef.current.contains(e.target as Node)) {
+        setTagsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [tagsOpen]);
 
   const handleAddThread = () => {
     if (newThread.trim()) {
@@ -224,35 +224,35 @@ export const ForumFeed: React.FC = () => {
             </div>
 
             {/* Tags Dropdown */}
-           <div ref={tagsRef} className="relative">
-             <button
-               onClick={() => setTagsOpen((o) => !o)}
-               className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
-             >
-               <Tag size={20} className="text-gray-600 dark:text-gray-300" />
-             </button>
-             {tagsOpen && (
-               <div className="absolute right-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
-                 {tagsList.map((tag) => (
-                   <button
-                     key={tag}
-                     onClick={() =>
-                       setFilterTags((ts) =>
-                         ts.includes(tag) ? ts.filter((t) => t !== tag) : [...ts, tag]
-                       )
-                     }
-                     className={`w-full text-left px-2 py-1 text-sm rounded ${
-                       filterTags.includes(tag)
-                         ? "bg-primary text-white"
-                         : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                     }`}
-                   >
-                     {tag}
-                   </button>
-                 ))}
-               </div>
-             )}
-           </div>
+            <div ref={tagsRef} className="relative">
+              <button
+                onClick={() => setTagsOpen(o => !o)}
+                className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
+              >
+                <Tag size={20} className="text-gray-600 dark:text-gray-300" />
+              </button>
+              {tagsOpen && (
+                <div className="absolute right-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
+                  {tagsList.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() =>
+                        setFilterTags(ts =>
+                          ts.includes(tag) ? ts.filter(t => t !== tag) : [...ts, tag]
+                        )
+                      }
+                      className={`w-full text-left px-2 py-1 text-sm rounded ${
+                        filterTags.includes(tag)
+                          ? "bg-primary text-white"
+                          : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Sort Dropdown */}
             <div ref={sortRef} className="relative">
@@ -316,7 +316,8 @@ export const ForumFeed: React.FC = () => {
               <PostCard
                 {...post}
                 onCategoryClick={cat => setFilterCategory(cat)}
-                onTagClick={tag => setFilterTags(t => (t.includes(tag) ? t : [...t, tag]))}
+                onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
+                onEdit={id => router.push(`/forum/${id}/edit`)}
               />
             </Card>
           ))}
