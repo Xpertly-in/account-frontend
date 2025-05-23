@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
+import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for button elements
 import { MagnifyingGlass, Funnel, Sliders, Plus, X, Tag } from "@phosphor-icons/react";
 import { PostCard, PostCardProps } from "./PostCard.component";
 import { Container } from "@/components/layout/Container.component";
@@ -199,12 +200,12 @@ export const ForumFeed: React.FC = () => {
           <div className="w-full flex justify-end gap-2 sm:w-auto">
             {/* Category Dropdown */}
             <div ref={filterRef} className="relative">
-              <button
+              <Button
                 onClick={() => setFilterOpen(o => !o)}
                 className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
               >
                 <Funnel size={20} className="text-gray-600 dark:text-gray-300" />
-              </button>
+              </Button>
               {filterOpen && (
                 <div className="absolute left-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   <select
@@ -225,12 +226,12 @@ export const ForumFeed: React.FC = () => {
 
             {/* Tags Dropdown */}
             <div ref={tagsRef} className="relative">
-              <button
+              <Button
                 onClick={() => setTagsOpen(o => !o)}
                 className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
               >
                 <Tag size={20} className="text-gray-600 dark:text-gray-300" />
-              </button>
+              </Button>
               {tagsOpen && (
                 <div className="absolute right-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   {tagsList.map(tag => (
@@ -256,12 +257,12 @@ export const ForumFeed: React.FC = () => {
 
             {/* Sort Dropdown */}
             <div ref={sortRef} className="relative">
-              <button
+              <Button
                 onClick={() => setSortOpen(o => !o)}
                 className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
               >
                 <Sliders size={20} className="text-gray-600 dark:text-gray-300" />
-              </button>
+              </Button>
               {sortOpen && (
                 <div className="absolute right-0 mt-2 w-40 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   {(["recent", "trending"] as const).map(opt => (
@@ -288,7 +289,6 @@ export const ForumFeed: React.FC = () => {
 
         {/* Hero: Title + New Thread */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">Community Forum</h1> */}
           <div className="flex items-center flex-1 w-full sm:w-auto">
             <Input
               placeholder={threadPlaceholder}
@@ -296,13 +296,13 @@ export const ForumFeed: React.FC = () => {
               onChange={e => setNewThread(e.currentTarget.value)}
               className="flex-1 border border-gray-300 dark:border-gray-600 rounded-full px-4 py-2 bg-white dark:bg-gray-800 shadow-inner focus:ring-primary/50"
             />
-            <button
+            <Button
               onClick={handleAddThread}
               disabled={!newThread.trim()}
               className="ml-2 p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full shadow-lg disabled:opacity-50 hover:scale-105 transition"
             >
               <Plus size={20} weight="bold" />
-            </button>
+            </Button>
           </div>
         </div>
 

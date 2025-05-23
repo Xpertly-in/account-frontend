@@ -70,6 +70,16 @@ export const PostCard: React.FC<PostCardProps> = ({
   );
   const relativeTime = useMemo(() => formatRelativeTime(new Date(updated_at)), [updated_at]);
 
+  useEffect(() => {
+    const handler = () => {
+      if (menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
   const touchStartX = useRef(0);
 
   // swipe handlers for carousel
