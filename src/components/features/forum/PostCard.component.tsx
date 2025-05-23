@@ -4,7 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Card } from "@/ui/Card.ui";
-import { Avatar, AvatarFallback } from "@/ui/Avatar.ui";
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import {
   ThumbsUp,
@@ -22,10 +22,11 @@ import { useAuth } from "@/store/context/Auth.provider";
 
 export interface PostCardProps {
   id: number;
-  created_at: string;
   updated_at: string;
   content: string;
   author_id: string;
+  author_name: string;
+  author_avatar?: string;
   category?: string;
   tags: string[];
   images: string[];
@@ -42,6 +43,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   id,
   category,
   author_id,
+  author_name = "",
+  author_avatar,
   content,
   images,
   tags,
@@ -60,18 +63,17 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const initials = useMemo(
-    () =>
-      author_id
-        .split(" ")
-        .map(n => n[0])
-        .join("")
-        .toUpperCase(),
-    [author_id]
-  );
+
+  const initials = useMemo(() => {
+    return author_name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase();
+  }, [author_name]);
   const relativeTime = useMemo(() => formatRelativeTime(new Date(updated_at)), [updated_at]);
   const { auth } = useAuth();
-  const currentUserName = auth.user?.user_metadata?.name ?? auth.user?.email ?? auth.user?.id
+  const currentUserId = auth.user?.id;
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Replace the old “close on any mousedown” effect with this:
   useEffect(() => {
@@ -114,43 +116,48 @@ export const PostCard: React.FC<PostCardProps> = ({
   return (
     <div className="rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-start justify-between p-3">
-        <div>
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
+      <div className="flex items-center p-3">
+        {/* Left: avatar + author info */}
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10">
+            {author_avatar ? (
+              <AvatarImage src={author_avatar} alt={`${author_name}'s avatar`} />
+            ) : (
               <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-semibold text-gray-900 dark:text-gray-100">{author_id}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
-            </div>
+            )}
+          </Avatar>
+          <div className="flex flex-col">
+            <p className="font-semibold text-gray-900 dark:text-gray-100">{author_name}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        {/* Center: category badge */}
+        <div className="flex-1 flex justify-center">
           {category && (
             <span
               onClick={() => onCategoryClick?.(category)}
-              className="mt-4 inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
+              className="bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
             >
               {category}
             </span>
           )}
-          
-          {currentUserName === author_id && (
+        </div>
+        {/* Right: menu */}
+        <div className="flex items-center space-x-2">
+          {currentUserId === author_id && (
             <div className="relative" ref={wrapperRef}>
               <button
                 onClick={() => setMenuOpen(o => !o)}
                 aria-label="Open menu"
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
-                <DotsThree size={20} />
+                <DotsThree size={24} />
               </button>
               {menuOpen && onEdit && (
                 <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   <button
                     onClick={() => {
                       setMenuOpen(false);
-                      console.log(`Editing post with ID: ${id}`); // keep your log
                       onEdit(id);
                     }}
                     className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"

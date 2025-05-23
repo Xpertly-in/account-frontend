@@ -8,6 +8,7 @@ import { Container } from "@/components/layout/Container.component";
 import { Button } from "@/ui/Button.ui";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
 import Link from "next/link";
+import { profile } from "console";
 
 export default function Home() {
   const [latestPosts, setLatestPosts] = useState<PostCardProps[]>([]);
@@ -15,7 +16,22 @@ export default function Home() {
     const fetchLatest = async () => {
       const { data, error } = await supabase
         .from("posts")
-        .select("*")
+        .select(`
+            id,
+            content,
+            category,
+            tags,
+            images,
+            likes_count,
+            comment_count,
+            updated_at,
+            is_deleted,
+            author_id,
+            profiles (
+              name,
+              profile_picture
+            )
+          `)
         .eq("is_deleted", false)
         .order("updated_at", { ascending: false })
         .limit(3);
@@ -23,10 +39,11 @@ export default function Home() {
         setLatestPosts(
           data.map(p => ({
             id: p.id,
-            created_at: p.created_at,
             updated_at: p.updated_at,
             content: p.content,
             author_id: p.author_id,
+            author_name: p.profiles.name,
+            author_avatar: p.profiles.profile_picture,
             category: p.category,
             tags: p.tags,
             images: p.images,
