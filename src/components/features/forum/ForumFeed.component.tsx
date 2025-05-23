@@ -318,6 +318,11 @@ export const ForumFeed: React.FC = () => {
                 onCategoryClick={cat => setFilterCategory(cat)}
                 onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
                 onEdit={id => router.push(`/forum/${id}/edit`)}
+                onDelete={async id => {
+                  if (!confirm("Delete this post?")) return;
+                  await supabase.from("posts").update({ is_deleted: true }).eq("id", id);
+                  setPosts(prev => prev.filter(p => p.id !== id));
+                }}
               />
             </Card>
           ))}

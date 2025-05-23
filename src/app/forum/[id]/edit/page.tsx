@@ -41,11 +41,11 @@ function EditPostContent() {
       <Container className="max-w-3xl py-16">
         {/* Back button */}
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/forum")}
           className="flex items-center gap-2 text-primary hover:underline mb-8"
         >
           <CaretLeft size={20} weight="bold" />
-          Back to Post
+          Back to Forum
         </button>
         {/* Title */}
         <h1 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 mb-6">Edit Post</h1>
@@ -57,7 +57,7 @@ function EditPostContent() {
             initialCategory={post.category}
             initialTags={post.tags}
             initialImages={post.images}
-            onPostUpdated={() => router.back()}
+            onPostUpdated={() => router.push("/forum")}
           />
         </div>
       </Container>

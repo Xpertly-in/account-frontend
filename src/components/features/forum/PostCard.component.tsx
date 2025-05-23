@@ -13,6 +13,7 @@ import {
   PaperPlaneRight,
   DotsThree,
   PencilSimple,
+  TrashSimple,
   CaretLeft,
   CaretRight,
   X,
@@ -33,6 +34,7 @@ export interface PostCardProps {
   onCategoryClick?: (category: string) => void;
   onTagClick?: (tag: string) => void;
   onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -48,6 +50,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onCategoryClick,
   onTagClick,
   onEdit,
+  onDelete,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -135,7 +138,17 @@ export const PostCard: React.FC<PostCardProps> = ({
                   className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <PencilSimple size={16} />
-                  Edit
+                  Edit Post
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete?.(id);
+                  }}
+                  className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <TrashSimple size={16} />
+                  Delete Post
                 </button>
               </div>
             )}
