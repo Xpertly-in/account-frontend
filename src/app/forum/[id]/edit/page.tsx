@@ -18,7 +18,7 @@ function EditPostContent() {
     if (!id) return;
     supabase
       .from("posts")
-      .select("id, content, category, tags, images")
+      .select("id, content, category, tags, images, author_id")
       .eq("id", id)
       .single()
       .then(({ data }) => setPost(data));
@@ -31,6 +31,15 @@ function EditPostContent() {
       router.push("/login/ca");
     }
   }, [auth.user, auth.isLoading, router]);
+
+  // Prevent non-authors from editing
+  useEffect(() => {
+    if (!auth.isLoading && auth.user && post) {
+      if (post.author_id !== auth.user.id) {
+        router.push("/forum");
+      }
+    }
+  }, [auth.isLoading, auth.user, post, router]);
 
   if (auth.isLoading || !auth.user || !post) {
     return null;

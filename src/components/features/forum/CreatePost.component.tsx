@@ -145,14 +145,14 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     const imageUrls = [...existingUrls, ...newUrls];
 
     // derive a display name
-    const authorName = auth.user?.user_metadata?.name ?? auth.user?.email ?? auth.user?.id;
+    const authorId = auth.user?.id;
 
     const payload = {
       content,
       category: finalCategory,
       tags,
       images: imageUrls,
-      author_id: authorName,
+      author_id: authorId,
       is_deleted: false,
       likes_count: 0,
       comment_count: 0,

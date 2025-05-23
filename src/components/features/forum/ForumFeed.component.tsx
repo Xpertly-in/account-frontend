@@ -10,10 +10,13 @@ import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for bu
 import { MagnifyingGlass, Funnel, Sliders, Plus, X, Tag } from "@phosphor-icons/react";
 import { PostCard, PostCardProps } from "./PostCard.component";
 import { Container } from "@/components/layout/Container.component";
+import { useAuth } from "@/store/context/Auth.provider";
 
 export const ForumFeed: React.FC = () => {
   const router = useRouter();
   const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const { auth } = useAuth();
+  const currentUserId = auth.user?.id;
   const [isLoading, setIsLoading] = useState(true);
 
   const PAGE_SIZE = 10;
@@ -78,7 +81,30 @@ export const ForumFeed: React.FC = () => {
   const fetchPosts = useCallback(
     async (pageNumber = 0) => {
       setIsLoading(true);
-      let query = supabase.from("posts").select("*").eq("is_deleted", false);
+
+      // join profiles so we get the user’s display name
+      let query = supabase
+        .from("posts")
+        .select(
+          `
+          id,
+          content,
+          category,
+          tags,
+          images,
+          likes_count,
+          comment_count,
+          updated_at,
+          is_deleted,
+          author_id,
+          profiles (
+            name,
+            profile_picture
+          )
+          `
+        )
+        .eq("is_deleted", false);
+      // let query = supabase.from("posts").select("*").eq("is_deleted", false);
 
       if (searchTerm) query = query.ilike("content", `%${searchTerm}%`);
       if (filterCategory) query = query.eq("category", filterCategory);
@@ -95,10 +121,11 @@ export const ForumFeed: React.FC = () => {
       if (!error && data) {
         const mapped = data.map(p => ({
           id: p.id,
-          created_at: p.created_at,
           updated_at: p.updated_at,
           content: p.content,
           author_id: p.author_id,
+          author_name: p.profiles.name,
+          author_avatar: p.profiles.profile_picture,
           category: p.category,
           tags: p.tags,
           images: p.images,
@@ -319,6 +346,11 @@ export const ForumFeed: React.FC = () => {
                 onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
                 onEdit={id => router.push(`/forum/${id}/edit`)}
                 onDelete={async id => {
+                  // guard: only the post’s author may delete
+                  if (!currentUserId || currentUserId !== post.author_id) {
+                    alert("You are not authorized to delete this post");
+                    return;
+                  }
                   if (!confirm("Delete this post?")) return;
                   await supabase.from("posts").update({ is_deleted: true }).eq("id", id);
                   setPosts(prev => prev.filter(p => p.id !== id));
