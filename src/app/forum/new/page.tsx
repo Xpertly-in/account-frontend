@@ -44,7 +44,7 @@ function NewPostContent() {
         </h1>
         {/* Form Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 md:p-12">
-          <CreatePost initialContent={searchParams.get("initialContent") ?? ""} onPostCreated={() => router.push("/forum")} />
+          <CreatePost initialContent={initialContent ?? ""} onPostCreated={() => router.push("/forum")} />
         </div>
       </Container>
     </div>
