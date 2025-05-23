@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import 'react-quill/dist/quill.snow.css';
 import { Header } from "@/components/layout/Header.component";
 import { Footer } from "@/components/layout/Footer.component";
 import { Providers } from "@/store/Providers";

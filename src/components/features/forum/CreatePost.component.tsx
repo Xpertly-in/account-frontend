@@ -17,10 +17,10 @@ const ReactQuill = dynamic(() => import('react-quill'), {
   loading: () => <p>Loading editor...</p>,
 });
 
-// Dynamically import the CSS
-const QuillCSS = dynamic(() => import('react-quill/dist/quill.snow.css'), {
-  ssr: false,
-});
+// // Dynamically import the CSS
+// const ReactQuill = dynamic(() => import('react-quill/dist/quill.snow.css'), {
+//   ssr: false,
+// });
 
 interface CreatePostProps {
   onPostCreated?: () => void;

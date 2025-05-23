@@ -141,7 +141,7 @@ export default function UserOnboardingStepper() {
         // Insert new services
         const serviceRows = services.map((service: string) => ({
           id: uuidv4(),
-          ca_id: auth.user.id,
+          ca_id: auth.user!.id,
           service_name: service === "Other" ? otherService : service,
           is_active: true
         }));
