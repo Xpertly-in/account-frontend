@@ -12,7 +12,7 @@ import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 
 // Dynamically import ReactQuill with no SSR
-const ReactQuill = dynamic(() => import('react-quill'), {
+const ReactQuill = dynamic(() => import("react-quill"), {
   ssr: false,
   loading: () => <p>Loading editor...</p>,
 });
@@ -23,28 +23,41 @@ const ReactQuill = dynamic(() => import('react-quill'), {
 // });
 
 interface CreatePostProps {
+  postId?: string;
   onPostCreated?: () => void;
+  onPostUpdated?: () => void;
   initialContent?: string;
+  initialCategory?: string;
+  initialTags?: string[];
+  initialImages?: string[];
 }
 
-export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialContent = "" }) => {
+export const CreatePost: React.FC<CreatePostProps> = ({
+  postId,
+  onPostCreated,
+  onPostUpdated,
+  initialContent = "",
+  initialCategory = "",
+  initialTags = [],
+  initialImages = [],
+}) => {
   const { auth } = useAuth();
   // don't render form until we know who's logged in
   if (auth.isLoading || !auth.user) return null;
   // initialize editor with initialContent if provided
   const [content, setContent] = useState(initialContent);
+  const [category, setCategory] = useState(initialCategory);
+  const [tags, setTags] = useState<string[]>(initialTags);
+  // merge existing URLs & newly added Files into one list
+  const [allImages, setAllImages] = useState<(File | string)[]>([...initialImages]);
   const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // load enums
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [tagsOptions, setTagsOptions] = useState<string[]>([]);
-  const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
-  
 
   // only load draft if no initialContent from feed
   useEffect(() => {
@@ -70,9 +83,9 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialCo
 
   // Save draft on change
   useEffect(() => {
-    const data = { content, category, tags, images };
+    const data = { content, category, tags, allImages };
     localStorage.setItem("create-post-draft", JSON.stringify(data));
-  }, [content, category, tags, images]);
+  }, [content, category, tags, allImages]);
 
   const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -96,7 +109,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialCo
 
   const handleImageChange = (file: File | null) => {
     if (file) {
-      setImages(prev => [...prev, file]);
+      setAllImages(prev => [...prev, file]);
     }
   };
 
@@ -113,9 +126,11 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialCo
       finalCategory = name;
     }
 
-    // 1) upload each File, collect its public URL
-    const imageUrls = await Promise.all(
-      images.map(async file => {
+    // 1) separate existing URLs vs new Files
+    const newFiles = allImages.filter(img => img instanceof File) as File[];
+    const existingUrls = allImages.filter(img => typeof img === "string") as string[];
+    const newUrls = await Promise.all(
+      newFiles.map(async file => {
         const ts = Date.now();
         const ext = file.name.split(".").pop();
         const path = `${ts}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -127,33 +142,34 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialCo
         return data.publicUrl;
       })
     );
+    const imageUrls = [...existingUrls, ...newUrls];
 
     // derive a display name
     const authorName = auth.user?.user_metadata?.name ?? auth.user?.email ?? auth.user?.id;
 
-    // 2) insert post record with the image URLs
-    const { error } = await supabase.from("posts").insert([
-      {
-        content,
-        category: finalCategory,
-        tags,
-        images: imageUrls,
-        author_id: authorName,
-        is_deleted: false,
-        likes_count: 0,
-        comment_count: 0,
-      },
-    ]);
-
-    if (error) {
-      console.error("Error creating post:", error.message);
+    const payload = {
+      content,
+      category: finalCategory,
+      tags,
+      images: imageUrls,
+      author_id: authorName,
+      is_deleted: false,
+      likes_count: 0,
+      comment_count: 0,
+    };
+    let error;
+    if (postId) {
+      ({ error } = await supabase.from("posts").update(payload).eq("id", postId));
+      if (!error) onPostUpdated?.();
     } else {
-      // clear form & draft
-      setContent("");
-      setTags([]);
-      setImages([]);
-      localStorage.removeItem("create-post-draft");
-      onPostCreated?.();
+      ({ error } = await supabase.from("posts").insert([payload]));
+      if (!error) {
+        setContent("");
+        setTags([]);
+        setAllImages([]);
+        localStorage.removeItem("create-post-draft");
+        onPostCreated?.();
+      }
     }
 
     setIsSubmitting(false);
@@ -164,10 +180,10 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialCo
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Rich text editor for content */}
         <div className="space-y-1">
-        <label className="text-sm font-medium">Content</label>
-        <div className="prose dark:prose-invert max-w-none">
-          <ReactQuill value={content} onChange={setContent} placeholder="Write your post…" />
-        </div>
+          <label className="text-sm font-medium">Content</label>
+          <div className="prose dark:prose-invert max-w-none">
+            <ReactQuill value={content} onChange={setContent} placeholder="Write your post…" />
+          </div>
         </div>
 
         {/* Category (live-search + create) */}
@@ -251,22 +267,35 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onPostCreated, initialCo
           onChange={handleImageChange}
         />
 
-        {images.length > 0 && (
+        {/* Preview all (existing URLs + new uploads) */}
+        {allImages.length > 0 && (
           <div className="grid grid-cols-4 gap-2">
-            {images.map((file, idx) => (
-              <div key={idx} className="relative h-20 w-full overflow-hidden rounded-md">
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
-                  className="h-full w-full object-cover"
-                />
+            {allImages.map((img, idx) => (
+              <div key={idx} className="relative h-full w-full overflow-hidden rounded-md">
+                {typeof img === "string" ? (
+                  <img src={img} alt={`Image ${idx + 1}`} className="h-full w-full object-cover" />
+                ) : (
+                  <img
+                    src={URL.createObjectURL(img)}
+                    alt={img.name}
+                    className="h-full w-full object-cover"
+                  />
+                )}
+                <button
+                  type="button"
+                  aria-label="Remove image"
+                  onClick={() => setAllImages(prev => prev.filter((_, j) => j !== idx))}
+                  className="absolute top-1 right-1 bg-black/50 text-white p-0.5 rounded-full hover:bg-black/70"
+                >
+                  <X size={12} weight="bold" />
+                </button>
               </div>
             ))}
           </div>
         )}
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Posting…" : "Post"}
+          {isSubmitting ? (postId ? "Updating…" : "Posting…") : postId ? "Update Post" : "Post"}
         </Button>
       </form>
     </Card>
