@@ -71,7 +71,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       .join("")
       .toUpperCase();
   }, [author_name]);
-  const relativeTime = useMemo(() => formatRelativeTime(new Date(updated_at)), [updated_at]);
+  const relativeTime = useMemo(() => formatRelativeTime(updated_at), [updated_at]);
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
   const wrapperRef = useRef<HTMLDivElement>(null);
