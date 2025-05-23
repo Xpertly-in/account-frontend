@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Lead } from "@/types/dashboard/lead.type";
 import { Badge } from "@/ui/Badge.ui";
 import { Button } from "@/ui/Button.ui";
@@ -9,12 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/ui/Card.ui";
+import { createLeadEngagement } from "@/services/leads.service";
 
 interface LeadCardProps {
   lead: Lead;
 }
 
 export const LeadCard = ({ lead }: LeadCardProps) => {
+  const [isCreatingEngagement, setIsCreatingEngagement] = useState(false);
+
   // Helper to format date
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -55,6 +59,27 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
         return "inline-flex rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800";
       default:
         return "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800";
+    }
+  };
+
+  // Handle View Contact button click
+  const handleViewContact = async () => {
+    setIsCreatingEngagement(true);
+    try {
+      // TODO: Get actual CA ID from auth context
+      const caId = "mock-ca-id";
+      const { error } = await createLeadEngagement(lead.id, caId);
+
+      if (error) {
+        console.error("Error creating engagement:", error);
+      } else {
+        // TODO: Optionally refresh leads data or show success message
+        console.log("Engagement created successfully");
+      }
+    } catch (error) {
+      console.error("Error creating engagement:", error);
+    } finally {
+      setIsCreatingEngagement(false);
     }
   };
 
@@ -116,6 +141,13 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
               <div className="text-sm italic text-gray-600 dark:text-gray-400">{lead.notes}</div>
             </div>
           )}
+          {lead.engagementCount !== undefined && lead.engagementCount > 0 && (
+            <div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {lead.engagementCount} CAs viewed
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
       <CardFooter className="mt-auto flex h-[60px] items-center justify-between border-t border-gray-100 bg-gray-50 px-6 dark:border-gray-700 dark:bg-gray-800/50">
@@ -133,8 +165,10 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
           <Button
             size="sm"
             className="h-9 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+            onClick={handleViewContact}
+            disabled={isCreatingEngagement}
           >
-            Contact
+            {isCreatingEngagement ? "Loading..." : "View Contact"}
           </Button>
         </div>
       </CardFooter>

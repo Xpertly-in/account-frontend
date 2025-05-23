@@ -63,6 +63,7 @@ export interface Lead {
   notes?: string; // Additional notes provided by customer
   timestamp: string; // When the lead was submitted
   status: `${LeadStatus}`; // Using enum values
+  engagementCount?: number; // Number of CAs who have viewed this lead
 }
 
 /**
