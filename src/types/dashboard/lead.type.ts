@@ -85,3 +85,10 @@ export type LeadSort = {
   field: `${LeadSortField}`;
   direction: `${SortDirection}`;
 };
+
+export interface LeadEngagement {
+  id: string;
+  leadId: string;
+  caId: string;
+  viewedAt: string;
+}

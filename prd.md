@@ -1126,6 +1126,7 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
       - Additional notes (if provided)
       - Submission timestamp
       - Status (new, contacted, closed)
+      - CA engagements (records of CAs who viewed/contacted the lead with timestamps)
 
     - **Contact Requests Data:**
 

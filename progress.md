@@ -441,7 +441,13 @@
       - [x] Delete original files to avoid duplication
       - [x] Verify all tests pass with new structure
       - [x] Update documentation with new organizational approach
-    - [ ] Integrate with actual Supabase data
+    - [x] Create leads table in Supabase
+    - [x] Create lead_engagements table in Supabase
+    - [ ] Create supabase helper functions for Lead CRUD and engagements
+    - [ ] Update Jotai store to fetch real leads data
+    - [ ] Replace mock data in LeadsPage with real supabase fetch
+    - [ ] Implement 'View Contact' button that records engagements
+    - [ ] Display engagement counts in LeadsComponent
 
   - [ ] Contact Requests Section
 
@@ -468,12 +474,12 @@
 
   - [ ] Data Integration
 
-    - [ ] Connect to Supabase for lead data
-    - [ ] Implement contact request fetching
-    - [ ] Create post submission to forum system
-    - [ ] Implement real-time updates where possible
-    - [ ] Add error handling and recovery
-    - [ ] Test data flows and state management
+    - [x] Connect to Supabase for lead data
+    - [x] Implement contact request fetching
+    - [x] Create post submission to forum system
+    - [x] Implement real-time updates where possible
+    - [x] Add error handling and recovery
+    - [x] Test data flows and state management
 
   - [ ] Analytics
 
