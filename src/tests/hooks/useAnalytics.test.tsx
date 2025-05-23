@@ -1,8 +1,12 @@
 import React from "react";
 import { renderHook, act } from "@testing-library/react";
-import { useAnalytics } from "@/hooks/useAnalytics";
+// import { useAnalytics } from "@/hooks/useAnalytics"; // Will be unmocked
 import { Provider } from "@/store/jotai";
 import { mockGlobalWindow } from "@/tests/mocks/jestMock.helper";
+
+// Unmock useAnalytics for this test suite
+jest.unmock("@/hooks/useAnalytics");
+const { useAnalytics } = jest.requireActual("@/hooks/useAnalytics");
 
 // Set up window mocks
 beforeAll(() => {

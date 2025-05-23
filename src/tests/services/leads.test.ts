@@ -44,6 +44,24 @@ describe("Leads Service Functions", () => {
     status: LeadStatus.NEW,
   };
 
+  // Mock database response (snake_case fields)
+  const mockDbLead = {
+    id: "lead-1",
+    customer_id: "customer-1",
+    services: ["Tax Filing", "GST Registration"],
+    urgency: "Immediately",
+    location_city: "Mumbai",
+    location_state: "Maharashtra",
+    contact_preference: "Email",
+    contact_info: "john@example.com",
+    notes: "Urgent tax filing needed",
+    created_at: "2024-01-15T10:30:00Z",
+    status: "new",
+    profiles: {
+      full_name: "John Doe",
+    },
+  };
+
   const mockEngagement: LeadEngagement = {
     id: "engagement-1",
     leadId: "lead-1",
@@ -58,7 +76,7 @@ describe("Leads Service Functions", () => {
   describe("fetchLeads", () => {
     it("should fetch leads successfully", async () => {
       // Arrange
-      const mockResponse = { data: [mockLead], error: null };
+      const mockResponse = { data: [mockDbLead], error: null };
       mockSupabase.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
           order: jest.fn().mockResolvedValue(mockResponse),
