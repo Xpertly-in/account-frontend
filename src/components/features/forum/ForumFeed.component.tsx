@@ -10,10 +10,13 @@ import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for bu
 import { MagnifyingGlass, Funnel, Sliders, Plus, X, Tag } from "@phosphor-icons/react";
 import { PostCard, PostCardProps } from "./PostCard.component";
 import { Container } from "@/components/layout/Container.component";
+import { useAuth } from "@/store/context/Auth.provider";
 
 export const ForumFeed: React.FC = () => {
   const router = useRouter();
   const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const { auth } = useAuth();
+  const currentUserName = auth.user?.user_metadata?.name ?? auth.user?.email ?? auth.user?.id;
   const [isLoading, setIsLoading] = useState(true);
 
   const PAGE_SIZE = 10;
@@ -319,6 +322,11 @@ export const ForumFeed: React.FC = () => {
                 onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
                 onEdit={id => router.push(`/forum/${id}/edit`)}
                 onDelete={async id => {
+                  // guard: only the post’s author may delete
+                  if (!currentUserName || currentUserName !== post.author_id) {
+                    alert("You are not authorized to delete this post");
+                    return;
+                  }
                   if (!confirm("Delete this post?")) return;
                   await supabase.from("posts").update({ is_deleted: true }).eq("id", id);
                   setPosts(prev => prev.filter(p => p.id !== id));

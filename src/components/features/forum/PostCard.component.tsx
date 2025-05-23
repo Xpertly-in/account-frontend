@@ -18,6 +18,7 @@ import {
   CaretRight,
   X,
 } from "@phosphor-icons/react";
+import { useAuth } from "@/store/context/Auth.provider";
 
 export interface PostCardProps {
   id: number;
@@ -69,16 +70,20 @@ export const PostCard: React.FC<PostCardProps> = ({
     [author_id]
   );
   const relativeTime = useMemo(() => formatRelativeTime(new Date(updated_at)), [updated_at]);
-
+  const { auth } = useAuth();
+  const currentUserName = auth.user?.user_metadata?.name ?? auth.user?.email ?? auth.user?.id
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  // Replace the old “close on any mousedown” effect with this:
   useEffect(() => {
-    const handler = () => {
-      if (menuOpen) {
+    const handler = (e: MouseEvent) => {
+      // only close if the click is outside our menu/button wrapper
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [menuOpen]);
+  }, []);
 
   const touchStartX = useRef(0);
 
@@ -130,39 +135,43 @@ export const PostCard: React.FC<PostCardProps> = ({
               {category}
             </span>
           )}
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen(o => !o)}
-              aria-label="Open menu"
-              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-            >
-              <DotsThree size={20} />
-            </button>
-            {menuOpen && onEdit && (
-              <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onEdit(id);
-                  }}
-                  className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <PencilSimple size={16} />
-                  Edit Post
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDelete?.(id);
-                  }}
-                  className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <TrashSimple size={16} />
-                  Delete Post
-                </button>
-              </div>
-            )}
-          </div>
+          
+          {currentUserName === author_id && (
+            <div className="relative" ref={wrapperRef}>
+              <button
+                onClick={() => setMenuOpen(o => !o)}
+                aria-label="Open menu"
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <DotsThree size={20} />
+              </button>
+              {menuOpen && onEdit && (
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      console.log(`Editing post with ID: ${id}`); // keep your log
+                      onEdit(id);
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <PencilSimple size={16} />
+                    Edit Post
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onDelete?.(id);
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <TrashSimple size={16} />
+                    Delete Post
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
