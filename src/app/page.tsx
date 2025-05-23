@@ -8,7 +8,6 @@ import { Container } from "@/components/layout/Container.component";
 import { Button } from "@/ui/Button.ui";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
 import Link from "next/link";
-import { profile } from "console";
 
 export default function Home() {
   const [latestPosts, setLatestPosts] = useState<PostCardProps[]>([]);
