@@ -21,8 +21,6 @@ export const fetchLeads = async (
   pagination?: PaginationParams
 ): Promise<PaginatedLeadsResponse> => {
   try {
-    console.log("🔍 fetchLeads API called with search:", filter?.search);
-
     // Build a simple query without complex joins for search
     let query = supabase.from("leads").select(`
         *,
