@@ -131,12 +131,12 @@ export const leadsErrorAtom = atom(
 /**
  * Fetch leads atom - action to fetch leads from Supabase
  */
-export const fetchLeadsAtom = atom(null, async (get, set) => {
+export const fetchLeadsAtom = atom(null, async (get, set, caId?: string) => {
   // Set loading state
   set(leadsLoadingAtom, true);
 
   try {
-    const { data, error } = await fetchLeads();
+    const { data, error } = await fetchLeads(caId);
 
     if (error) {
       set(leadsErrorAtom, error.message || "Failed to fetch leads");

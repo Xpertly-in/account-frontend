@@ -126,16 +126,28 @@ export const updateLead = async (
 };
 
 /**
- * Fetches all leads from the database
+ * Fetches all leads from the database (WITHOUT contact info for security)
+ * @param caId - The ID of the current CA to check engagements
  * @returns Promise with leads data or error
  */
-export const fetchLeads = async (): Promise<{ data: Lead[] | null; error: any }> => {
+export const fetchLeads = async (caId?: string): Promise<{ data: Lead[] | null; error: any }> => {
   try {
-    const { data, error } = await supabase
+    // First, get all leads WITHOUT contact info
+    const { data: leadsData, error: leadsError } = await supabase
       .from("leads")
       .select(
         `
-        *,
+        id,
+        customer_id,
+        services,
+        urgency,
+        location_city,
+        location_state,
+        contact_preference,
+        notes,
+        status,
+        created_at,
+        updated_at,
         profiles!customer_id (
           name
         )
@@ -143,14 +155,32 @@ export const fetchLeads = async (): Promise<{ data: Lead[] | null; error: any }>
       )
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (leadsError) throw leadsError;
+
+    let engagementsMap = new Map<string, boolean>();
+
+    // If CA ID provided, fetch their engagements in one query
+    if (caId) {
+      const { data: engagements, error: engError } = await supabase
+        .from("lead_engagements")
+        .select("lead_id")
+        .eq("ca_id", caId);
+
+      if (engError) {
+        console.warn("Error fetching engagements:", engError);
+      } else {
+        engagements?.forEach(eng => {
+          engagementsMap.set(eng.lead_id, true);
+        });
+      }
+    }
 
     // Transform database response to match our TypeScript interface
     const transformedData: Lead[] =
-      data?.map(item => ({
+      leadsData?.map(item => ({
         id: item.id,
         customerId: item.customer_id,
-        customerName: item.profiles?.name || "Unknown Customer",
+        customerName: (item.profiles as any)?.name || "Unknown Customer",
         services: item.services || [],
         urgency: item.urgency,
         location: {
@@ -158,10 +188,11 @@ export const fetchLeads = async (): Promise<{ data: Lead[] | null; error: any }>
           state: item.location_state,
         },
         contactPreference: item.contact_preference,
-        contactInfo: item.contact_info,
+        contactInfo: "", // NEVER send contact info in initial fetch
         notes: item.notes,
         timestamp: item.created_at,
         status: item.status,
+        hasEngagement: engagementsMap.has(item.id), // Track if CA has engaged
       })) || [];
 
     return { data: transformedData, error: null };
@@ -172,7 +203,61 @@ export const fetchLeads = async (): Promise<{ data: Lead[] | null; error: any }>
 };
 
 /**
- * Creates a new lead engagement record
+ * Fetches contact info for a specific lead (only after engagement)
+ * @param leadId - The ID of the lead
+ * @returns Promise with contact info or error
+ */
+export const fetchLeadContactInfo = async (
+  leadId: string
+): Promise<{ contactInfo: string | null; error: any }> => {
+  try {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("contact_info")
+      .eq("id", leadId)
+      .single();
+
+    if (error) throw error;
+
+    return { contactInfo: data.contact_info, error: null };
+  } catch (error) {
+    console.error("Error fetching lead contact info:", error);
+    return { contactInfo: null, error };
+  }
+};
+
+/**
+ * Checks if a CA has already engaged with a specific lead
+ * @param leadId - The ID of the lead
+ * @param caId - The ID of the CA
+ * @returns Promise with boolean indicating if engagement exists
+ */
+export const checkExistingEngagement = async (
+  leadId: string,
+  caId: string
+): Promise<{ exists: boolean; error: any }> => {
+  try {
+    const { data, error } = await supabase
+      .from("lead_engagements")
+      .select("lead_id")
+      .eq("lead_id", leadId)
+      .eq("ca_id", caId)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 is "not found" error, which is expected when no engagement exists
+      throw error;
+    }
+
+    return { exists: !!data, error: null };
+  } catch (error) {
+    console.error("Error checking existing engagement:", error);
+    return { exists: false, error };
+  }
+};
+
+/**
+ * Creates a new lead engagement record and updates lead status
  * @param leadId - The ID of the lead being engaged with
  * @param caId - The ID of the CA engaging with the lead
  * @returns Promise with engagement data or error
@@ -182,6 +267,17 @@ export const createLeadEngagement = async (
   caId: string
 ): Promise<{ data: LeadEngagement | null; error: any }> => {
   try {
+    // Check if engagement already exists
+    const { exists, error: checkError } = await checkExistingEngagement(leadId, caId);
+    if (checkError) throw checkError;
+
+    if (exists) {
+      return {
+        data: null,
+        error: { message: "Engagement already exists for this CA and lead" },
+      };
+    }
+
     const engagement = {
       lead_id: leadId,
       ca_id: caId,
@@ -196,9 +292,24 @@ export const createLeadEngagement = async (
 
     if (error) throw error;
 
-    // Transform database response to match our interface
+    // Update lead status to "contacted" if it's currently "new"
+    const { error: updateError } = await supabase
+      .from("leads")
+      .update({
+        status: "contacted",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadId)
+      .eq("status", "new"); // Only update if status is currently "new"
+
+    if (updateError) {
+      console.warn("Error updating lead status:", updateError);
+      // Don't fail the engagement creation if status update fails
+    }
+
+    // Transform database response to match our interface (no id field in new schema)
     const transformedData: LeadEngagement = {
-      id: data.id,
+      id: `${data.lead_id}-${data.ca_id}`, // Create composite ID for compatibility
       leadId: data.lead_id,
       caId: data.ca_id,
       viewedAt: data.viewed_at,
@@ -230,7 +341,7 @@ export const getLeadEngagements = async (
     // Transform database response to match our interface
     const transformedData: LeadEngagement[] =
       data?.map(item => ({
-        id: item.id,
+        id: `${item.lead_id}-${item.ca_id}`, // Create composite ID for compatibility
         leadId: item.lead_id,
         caId: item.ca_id,
         viewedAt: item.viewed_at,

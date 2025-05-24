@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { FunnelSimple, MagnifyingGlass, X } from "@phosphor-icons/react";
-import { leadsDataAtom, leadsLoadingAtom } from "@/store/jotai/dashboard.store";
+import { leadsDataAtom, leadsLoadingAtom, fetchLeadsAtom } from "@/store/jotai/dashboard.store";
+import { useAuth } from "@/store/context/Auth.provider";
 import { LeadFilter, LeadSort } from "@/types/dashboard/lead.type";
 import { Button } from "@/ui/Button.ui";
 import { Input } from "@/ui/Input.ui";
@@ -11,9 +12,19 @@ import { LeadSkeleton } from "./LeadSkeleton.component";
 import { LeadEmptyState } from "./LeadEmptyState.component";
 
 export const LeadsComponent = () => {
+  const { auth } = useAuth();
+
   // State from Jotai store
   const [leads] = useAtom(leadsDataAtom);
   const [isLoading] = useAtom(leadsLoadingAtom);
+  const [, fetchLeads] = useAtom(fetchLeadsAtom);
+
+  // Fetch leads with CA ID when component mounts
+  useEffect(() => {
+    if (auth.user) {
+      fetchLeads(auth.user.id);
+    }
+  }, [auth.user, fetchLeads]);
 
   // Local state
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,7 +102,11 @@ export const LeadsComponent = () => {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filteredLeads.map(lead => (
-            <LeadCard key={lead.id} lead={lead} />
+            <LeadCard
+              key={lead.id}
+              lead={lead}
+              onLeadUpdate={() => auth.user && fetchLeads(auth.user.id)}
+            />
           ))}
         </div>
       )}
