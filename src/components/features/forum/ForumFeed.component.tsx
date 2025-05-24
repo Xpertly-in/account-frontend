@@ -88,6 +88,7 @@ export const ForumFeed: React.FC = () => {
         .select(
           `
           id,
+          title,
           content,
           category,
           tags,
@@ -122,6 +123,7 @@ export const ForumFeed: React.FC = () => {
         const mapped = data.map(p => ({
           id: p.id,
           updated_at: p.updated_at,
+          title: p.title,
           content: p.content,
           author_id: p.author_id,
           author_name: p.profiles.name,

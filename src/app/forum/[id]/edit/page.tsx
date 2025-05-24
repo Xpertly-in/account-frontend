@@ -18,7 +18,7 @@ function EditPostContent() {
     if (!id) return;
     supabase
       .from("posts")
-      .select("id, content, category, tags, images, author_id")
+      .select("id, title, content, category, tags, images, author_id")
       .eq("id", id)
       .single()
       .then(({ data }) => setPost(data));
@@ -47,21 +47,20 @@ function EditPostContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/30 dark:from-primary-dark/10 dark:to-primary-dark/30 py-12">
-      <Container className="max-w-3xl py-16">
+      <Container className="max-w-3xl py-4">
         {/* Back button */}
         <button
           onClick={() => router.push("/forum")}
-          className="flex items-center gap-2 text-primary hover:underline mb-8"
+          className="flex items-center gap-2 text-primary hover:underline mb-2"
         >
           <CaretLeft size={20} weight="bold" />
           Back to Forum
         </button>
-        {/* Title */}
-        <h1 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 mb-6">Edit Post</h1>
         {/* Form Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 md:p-12">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-4">
           <CreatePost
             postId={id!.toString()}
+            initialTitle={post.title}
             initialContent={post.content}
             initialCategory={post.category}
             initialTags={post.tags}
