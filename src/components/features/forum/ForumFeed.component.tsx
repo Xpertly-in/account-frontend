@@ -105,9 +105,10 @@ export const ForumFeed: React.FC = () => {
           `
         )
         .eq("is_deleted", false);
-      // let query = supabase.from("posts").select("*").eq("is_deleted", false);
 
-      if (searchTerm) query = query.ilike("content", `%${searchTerm}%`);
+      if (searchTerm) {
+        query = query.or(`content.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`);
+      }
       if (filterCategory) query = query.eq("category", filterCategory);
       if (filterTags.length) query = query.contains("tags", filterTags);
 
@@ -199,14 +200,14 @@ export const ForumFeed: React.FC = () => {
   // };
 
   return (
-    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-4">
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-2">
       {/* Decorative Blobs */}
       <div className="pointer-events-none absolute -top-32 -left-32 w-72 h-72 rounded-full bg-gradient-to-tr from-purple-300 to-indigo-300 blur-2xl opacity-30 dark:opacity-20" />
       <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-pink-300 to-yellow-300 blur-2xl opacity-30 dark:opacity-20" />
 
-      <Container className="max-w-3xl space-y-8">
+      <Container className="max-w-3xl space-y-2">
         {/* Simplified Search & Filters */}
-        <div className="flex items-center mb-6 space-x-3">
+        <div className="flex items-center mb-4 space-x-3">
           <div className="relative flex-1 bg-white rounded-full">
             <MagnifyingGlass
               size={20}
@@ -229,7 +230,58 @@ export const ForumFeed: React.FC = () => {
           </Button>{" "}
         </div>
 
-        {/* replace old “Hero” input with single Create button */}
+        {/* Active filters & sort */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {searchTerm && (
+            <div className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full">
+              <span>Search: {searchTerm}</span>
+              <button onClick={() => setSearchTerm("")} className="ml-1">
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          {filterCategory && (
+            <div className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full">
+              <span>Category: {filterCategory}</span>
+              <button onClick={() => setFilterCategory("")} className="ml-1">
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          {filterTags.map(tag => (
+            <div
+              key={tag}
+              className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full"
+            >
+              <span>#{tag}</span>
+              <button
+                onClick={() => setFilterTags(ts => ts.filter(t => t !== tag))}
+                className="ml-1"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+          <div className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full">
+            <span>Sort: {sortOption[0].toUpperCase() + sortOption.slice(1)}</span>
+            <button onClick={() => setSortOption("recent")} className="ml-1">
+              <X size={12} />
+            </button>
+          </div>
+          {(searchTerm || filterCategory || filterTags.length > 0 || sortOption !== "recent") && (
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setFilterCategory("");
+                setFilterTags([]);
+                setSortOption("recent");
+              }}
+              className="text-xs text-primary hover:underline ml-2"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
 
         {/* Bottom fixed Filter & Sort bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex z-20">
@@ -249,7 +301,11 @@ export const ForumFeed: React.FC = () => {
                   <select
                     value={filterCategory}
                     onChange={e => setFilterCategory(e.target.value)}
-                    className="w-full mt-1 border rounded px-2 py-1"
+                    className={`w-full mt-1 px-2 py-1 rounded focus:outline-none ${
+                      filterCategory
+                        ? "border-primary text-primary"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
                   >
                     <option value="">All Categories</option>
                     {categoriesList.map(c => (
@@ -303,7 +359,11 @@ export const ForumFeed: React.FC = () => {
                       setSortOption(opt);
                       setSortOpen(false);
                     }}
-                    className="block w-full text-left px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className={`block w-full text-left px-2 py-1 text-sm ${
+                      sortOption === opt
+                        ? "bg-primary text-white"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
                   >
                     {opt[0].toUpperCase() + opt.slice(1)}
                   </button>
@@ -314,7 +374,7 @@ export const ForumFeed: React.FC = () => {
         </div>
 
         {/* Posts List */}
-        <div className="space-y-6">
+        <div className="space-y-2">
           {posts.map(post => (
             <Card
               key={post.id}
