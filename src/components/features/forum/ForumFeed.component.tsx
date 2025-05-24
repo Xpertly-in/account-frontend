@@ -93,8 +93,7 @@ export const ForumFeed: React.FC = () => {
           category,
           tags,
           images,
-          likes_count,
-          comment_count,
+          reaction_counts,
           updated_at,
           is_deleted,
           author_id,
@@ -132,8 +131,7 @@ export const ForumFeed: React.FC = () => {
           category: p.category,
           tags: p.tags,
           images: p.images,
-          likes_count: p.likes_count,
-          comment_count: p.comment_count,
+          reaction_counts: p.reaction_counts,
           is_deleted: p.is_deleted,
         }));
         setPosts(prev => (pageNumber === 0 ? mapped : [...prev, ...mapped]));

@@ -164,8 +164,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       images: imageUrls,
       author_id: authorId,
       is_deleted: false,
-      likes_count: 0,
-      comment_count: 0,
+      reaction_counts: 0,
     };
 
     let error;
