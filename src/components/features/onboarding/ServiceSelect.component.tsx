@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import { Plus, X, Check, SpinnerGap } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";

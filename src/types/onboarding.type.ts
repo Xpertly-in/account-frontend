@@ -217,3 +217,12 @@ export enum OnboardingStep {
   VERIFICATION = "verification",
   COMPLETION = "completion",
 }
+
+export interface Service {
+  service_id: string;
+  ca_id: string;
+  service_name: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
