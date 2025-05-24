@@ -21,14 +21,14 @@ export const fetchLeads = async (
   pagination?: PaginationParams
 ): Promise<PaginatedLeadsResponse> => {
   try {
-    // Build base query for counting
-    let countQuery = supabase.from("leads").select("*", { count: "exact", head: true });
+    console.log("🔍 fetchLeads API called with search:", filter?.search);
 
-    // Build main query with proper joins
+    // Build a simple query without complex joins for search
     let query = supabase.from("leads").select(`
         *,
         profiles!leads_customer_id_fkey(name),
         lead_engagements!left(
+          ca_id,
           viewed_at,
           is_hidden,
           hidden_at,
@@ -37,68 +37,31 @@ export const fetchLeads = async (
         )
       `);
 
-    // Apply CA-specific filtering if caId is provided
-    if (caId) {
-      query = query.eq("lead_engagements.ca_id", caId);
-      if (!filter?.includeHidden) {
-        query = query.not("lead_engagements.is_hidden", "eq", true);
-      }
-    }
-
-    // Apply other filters
+    // Apply basic filters first (these work fine with joins)
     if (filter?.urgency && filter.urgency.length > 0) {
       query = query.in("urgency", filter.urgency);
-      countQuery = countQuery.in("urgency", filter.urgency);
     }
     if (filter?.services && filter.services.length > 0) {
       query = query.overlaps("services", filter.services);
-      countQuery = countQuery.overlaps("services", filter.services);
     }
     if (filter?.status && filter.status.length > 0) {
       query = query.in("status", filter.status);
-      countQuery = countQuery.in("status", filter.status);
     }
     if (filter?.dateRange) {
       query = query.gte("created_at", filter.dateRange.from).lte("created_at", filter.dateRange.to);
-      countQuery = countQuery
-        .gte("created_at", filter.dateRange.from)
-        .lte("created_at", filter.dateRange.to);
     }
 
-    // Apply search functionality
-    if (filter?.search && filter.search.trim()) {
-      const searchTerm = filter.search.trim();
-      const searchConditions = [
-        `profiles.name.ilike.%${searchTerm}%`,
-        `location_city.ilike.%${searchTerm}%`,
-        `location_state.ilike.%${searchTerm}%`,
-      ];
-      query = query.or(searchConditions.join(","));
-      countQuery = countQuery.or(searchConditions.join(","));
-      query = query.or(`services.cs.{${searchTerm}}`);
-      countQuery = countQuery.or(`services.cs.{${searchTerm}}`);
-    }
-
-    // Get total count
-    const { count, error: countError } = await countQuery;
-    if (countError) throw countError;
-
-    // Apply pagination
-    if (pagination) {
-      const { page, pageSize } = pagination;
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
-    }
-
-    // Execute main query
+    // For search, we'll apply it after fetching the data to avoid Supabase join issues
+    // Execute main query (no search at DB level to avoid join conflicts)
     const { data, error } = await query.order("created_at", { ascending: false });
     if (error) throw error;
 
-    // Transform data
-    const transformedData =
+    // Transform data and apply CA-specific filtering
+    let transformedData =
       data?.map((lead: any) => {
-        const engagement = lead.lead_engagements?.[0];
+        // Find engagement for this specific CA
+        const engagement = lead.lead_engagements?.find((eng: any) => eng.ca_id === caId);
+
         return {
           id: lead.id,
           customerId: lead.customer_id,
@@ -122,18 +85,56 @@ export const fetchLeads = async (
         };
       }) || [];
 
+    // Apply CA-specific filtering after transformation
+    if (caId && !filter?.includeHidden) {
+      transformedData = transformedData.filter(lead => !lead.isHidden);
+    }
+
+    // Apply search filtering in JavaScript (to avoid Supabase join issues)
+    if (filter?.search && filter.search.trim()) {
+      const searchTerm = filter.search.trim().toLowerCase();
+
+      transformedData = transformedData.filter(lead => {
+        // Search across all relevant fields
+        const searchableText = [
+          lead.customerName,
+          lead.location.city,
+          lead.location.state,
+          lead.contactInfo,
+          lead.notes,
+          lead.urgency,
+          lead.status,
+          lead.contactPreference,
+          ...(lead.services || []),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return searchableText.includes(searchTerm);
+      });
+    }
+
     // Calculate pagination metadata
-    const totalCount = count || 0;
+    const actualCount = transformedData.length;
     const currentPage = pagination?.page || 1;
-    const pageSize = pagination?.pageSize || totalCount;
-    const totalPages = Math.ceil(totalCount / pageSize);
+    const pageSize = pagination?.pageSize || actualCount;
+
+    // Apply pagination to transformed data
+    let paginatedData = transformedData;
+    if (pagination) {
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize;
+      paginatedData = transformedData.slice(from, to);
+    }
+
+    const totalPages = Math.ceil(actualCount / pageSize);
     const hasNextPage = currentPage < totalPages;
     const hasPreviousPage = currentPage > 1;
 
     return {
-      data: transformedData,
+      data: paginatedData,
       error: null,
-      totalCount,
+      totalCount: actualCount,
       hasNextPage,
       hasPreviousPage,
       currentPage,
@@ -245,7 +246,8 @@ export const useLeads = (filter?: LeadFilter, pagination?: PaginationParams) => 
     queryKey: ["leads", auth.user?.id, filter, pagination],
     queryFn: () => fetchLeads(auth.user?.id, filter, pagination),
     enabled: !!auth.user?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Always refetch when query key changes
+    refetchOnWindowFocus: false,
   });
 
   return {

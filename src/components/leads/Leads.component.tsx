@@ -26,7 +26,7 @@ export const LeadsComponent = () => {
   // Prepare filter and pagination for TanStack Query
   const filterWithSearch = {
     ...currentFilter,
-    search: debouncedSearchTerm || undefined,
+    search: debouncedSearchTerm,
   };
 
   const paginationParams = {
