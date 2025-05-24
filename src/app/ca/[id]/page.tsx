@@ -27,7 +27,7 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
     const { data: caProfile, error: caError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", params.id)
+      .eq("user_id", params.id)
       .eq("role", "ACCOUNTANT")
       .eq("onboarding_completed", true)
       .single();

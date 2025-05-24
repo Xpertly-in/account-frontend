@@ -42,7 +42,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
     onServicesChange([
       ...services,
       {
-        id: newId,
+        service_id: newId,
         name: newServiceName.trim(),
       },
     ]);
@@ -52,7 +52,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
 
   const handleCancelEdit = () => {
     if (editingServiceId?.startsWith('temp-')) {
-      onServicesChange(services.filter(service => service.id !== editingServiceId));
+      onServicesChange(services.filter(service => service.service_id !== editingServiceId));
     }
     setEditingServiceId(null);
     setValidationErrors({});
@@ -76,7 +76,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
         if (error) throw error;
 
         onServicesChange(services.map(s => 
-          s.id === id ? { ...service, id: data.service_id } : s
+          s.service_id === id ? { ...service, service_id: data.service_id } : s
         ));
         toast.success("Service added successfully");
       } else {
@@ -85,12 +85,12 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
           .update({
             service_name: service.name,
           })
-          .eq("service_id", id);
+          .eq("service_id", service.service_id);
 
         if (error) throw error;
 
         onServicesChange(services.map(s => 
-          s.id === id ? { ...service, id } : s
+          s.service_id === id ? { ...service, service_id: id } : s
         ));
         toast.success("Service updated successfully");
       }
@@ -107,7 +107,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
 
     try {
       if (id.startsWith('temp-')) {
-        onServicesChange(services.filter(s => s.id !== id));
+        onServicesChange(services.filter(s => s.service_id !== id));
       } else {
         const { error } = await supabase
           .from("services")
@@ -116,7 +116,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
 
         if (error) throw error;
 
-        onServicesChange(services.filter(s => s.id !== id));
+        onServicesChange(services.filter(s => s.service_id !== id));
         toast.success("Service removed successfully");
       }
     } catch (error) {
@@ -155,7 +155,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
                   [field.id]: e.target.value,
                 };
                 onServicesChange(services.map(s => 
-                  s.id === service.id ? updatedService : s
+                  s.service_id === service.service_id ? updatedService : s
                 ));
               }}
               required={field.required}
@@ -180,7 +180,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
                   [field.id]: e.target.value,
                 };
                 onServicesChange(services.map(s => 
-                  s.id === service.id ? updatedService : s
+                  s.service_id === service.service_id ? updatedService : s
                 ));
               }}
               required={field.required}

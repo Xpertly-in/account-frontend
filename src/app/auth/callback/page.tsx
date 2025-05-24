@@ -33,13 +33,33 @@ export default function AuthCallback() {
             .eq("user_id", session.user.id)
             .single();
 
-          if (profileError && profileError.code !== "PGRST116") {
+          if (profileError) {
+            if (profileError.code === "PGRST116") {
+              // No profile exists, create a basic profile and redirect to role selection
+              const { error: insertError } = await supabase
+                .from("profiles")
+                .insert([{
+                  user_id: session.user.id,
+                  email: session.user.email,
+                  name: session.user.user_metadata?.full_name || session.user.email,
+                  profile_picture: session.user.user_metadata?.avatar_url,
+                  onboarding_completed: false
+                }]);
+
+              if (insertError) {
+                console.error("Error creating profile:", insertError);
+                throw insertError;
+              }
+              
+              router.push("/role-select");
+              return;
+            }
             console.error("Error checking profile:", profileError);
             throw profileError;
           }
 
-          // If no profile exists, redirect to role selection
-          if (!profile) {
+          // If no role is set, redirect to role selection
+          if (!profile?.role) {
             router.push("/role-select");
             return;
           }
