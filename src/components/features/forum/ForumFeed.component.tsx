@@ -225,7 +225,7 @@ export const ForumFeed: React.FC = () => {
             className="p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full shadow-lg hover:scale-105 transition"
             aria-label="Create new post"
           >
-            <Plus size={20} weight="bold" className="mr-2" />
+            <Plus size={20} weight="bold" className="mr" />
             Create Post
           </Button>{" "}
         </div>
