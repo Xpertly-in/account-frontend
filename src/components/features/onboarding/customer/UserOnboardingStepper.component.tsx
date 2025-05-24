@@ -134,18 +134,27 @@ export default function UserOnboardingStepper() {
         updated_at: new Date().toISOString(),
       }, { onConflict: "ca_id" });
       if (addressError) throw addressError;
-      // Upsert services (as a simple array or as individual rows)
+      // Upsert services
       if (Array.isArray(services) && services.length > 0) {
-        // Remove old services for this user
-        await supabase.from("services").delete().eq("ca_id", auth.user.id);
-        // Insert new services
+        // First, deactivate all existing services
+        const { error: deactivateError } = await supabase
+          .from("services")
+          .update({ is_active: false })
+          .eq("ca_id", auth.user!.id);
+        
+        if (deactivateError) throw deactivateError;
+
+        // Then insert new services
         const serviceRows = services.map((service: string) => ({
-          id: uuidv4(),
-          ca_id: auth.user.id,
+          ca_id: auth.user!.id,
           service_name: service === "Other" ? otherService : service,
           is_active: true
         }));
-        const { error: serviceError } = await supabase.from("services").insert(serviceRows);
+
+        const { error: serviceError } = await supabase
+          .from("services")
+          .insert(serviceRows);
+
         if (serviceError) throw serviceError;
       }
       toast.success("Profile and onboarding saved successfully!");

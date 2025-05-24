@@ -149,52 +149,21 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      // After Google sign-in, the user will be redirected back and authenticated.
-      // The following useEffect will handle the redirect.
+      // The auth callback page will handle the role check and redirect
     } catch (error) {
       toast.error("Failed to sign in with Google");
       console.error("Google sign-in error:", error);
     }
   };
 
-  // Add a useEffect to handle post-auth redirect after Google sign-in
+  // Remove the useEffect for role checking since it's now handled in the callback
   useEffect(() => {
-    const checkAndRedirect = async () => {
-      if (!auth.user) return;
-      
-      try {
-        // First check if user has a role set
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("role, onboarding_completed")
-          .eq("user_id", auth.user.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-          return;
-        }
-
-        // If no role is set, redirect to role selection
-        if (!profile?.role) {
-          router.push("/role-select");
-          return;
-        }
-
-        // If role exists, then check onboarding status
-        if (!profile.onboarding_completed) {
-          router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
-          return;
-        }
-
-        // If both role exists and onboarding is completed, go to dashboard
-        router.push("/ca/dashboard");
-      } catch (error) {
-        console.error("Error in checkAndRedirect:", error);
-        toast.error("An error occurred while checking your profile");
+    if (auth.user) {
+      // Only handle non-Google auth redirects here
+      if (!window.location.pathname.includes('/auth/callback')) {
+        checkAndRedirect();
       }
-    };
-    checkAndRedirect();
+    }
   }, [auth.user]);
 
   const formContent = (

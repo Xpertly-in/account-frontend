@@ -21,7 +21,7 @@ export default function RoleSelectPage() {
         // First check if user has a role set
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("role, onboarding_completed")
+          .select("user_id, role, onboarding_completed")
           .eq("user_id", auth.user.id)
           .single();
 
@@ -63,7 +63,7 @@ export default function RoleSelectPage() {
       // First check if profile exists
       const { data: existingProfile, error: checkError } = await supabase
         .from("profiles")
-        .select("id")
+        .select("user_id")
         .eq("user_id", auth.user.id)
         .single();
 
