@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+"use client";
+
+
 import { Inter } from "next/font/google";
 import "./globals.css";
 import 'react-quill/dist/quill.snow.css';
@@ -9,10 +11,7 @@ import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Xpertly - Find Your Chartered Accountant",
-  description: "Discover and connect with verified Chartered Accountants in your area",
-};
+
 
 export default function RootLayout({
   children,
