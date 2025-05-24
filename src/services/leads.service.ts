@@ -37,7 +37,7 @@ export const createLead = async (
         `
         *,
         profiles!customer_id (
-          full_name
+          name
         )
       `
       )
@@ -49,7 +49,7 @@ export const createLead = async (
     const transformedData: Lead = {
       id: data.id,
       customerId: data.customer_id,
-      customerName: data.profiles?.full_name || "Unknown Customer",
+      customerName: data.profiles?.name || "Unknown Customer",
       services: data.services || [],
       urgency: data.urgency,
       location: {
@@ -92,7 +92,7 @@ export const updateLead = async (
         `
         *,
         profiles!customer_id (
-          full_name
+          name
         )
       `
       )
@@ -104,7 +104,7 @@ export const updateLead = async (
     const transformedData: Lead = {
       id: data.id,
       customerId: data.customer_id,
-      customerName: data.profiles?.full_name || "Unknown Customer",
+      customerName: data.profiles?.name || "Unknown Customer",
       services: data.services || [],
       urgency: data.urgency,
       location: {
@@ -137,7 +137,7 @@ export const fetchLeads = async (): Promise<{ data: Lead[] | null; error: any }>
         `
         *,
         profiles!customer_id (
-          full_name
+          name
         )
       `
       )
@@ -150,7 +150,7 @@ export const fetchLeads = async (): Promise<{ data: Lead[] | null; error: any }>
       data?.map(item => ({
         id: item.id,
         customerId: item.customer_id,
-        customerName: item.profiles?.full_name || "Unknown Customer",
+        customerName: item.profiles?.name || "Unknown Customer",
         services: item.services || [],
         urgency: item.urgency,
         location: {

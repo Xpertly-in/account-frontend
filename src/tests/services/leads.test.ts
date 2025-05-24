@@ -58,7 +58,7 @@ describe("Leads Service Functions", () => {
     created_at: "2024-01-15T10:30:00Z",
     status: "new",
     profiles: {
-      full_name: "John Doe",
+      name: "John Doe",
     },
   };
 

@@ -24,7 +24,45 @@ A comprehensive platform connecting Chartered Accountants with clients, featurin
 - ✅ Verified build compilation and About page inclusion
 - ✅ Maintained mobile-first design and component line limits
 
-## 🔧 Database Schema Migration (Latest)
+## 🔧 Leads Integration Bug Fix (Latest)
+
+**CRITICAL BUG FIX**: Fixed leads not displaying in the application due to database field mismatch.
+
+**Issues Identified**:
+
+- ✅ **Field Name Mismatch**: Service was querying `full_name` but profiles table has `name` field
+- ✅ **Schema Migration Impact**: Updated all service functions to use correct field names
+- ✅ **Test Data Alignment**: Updated test mocks to match actual database schema
+- ✅ **Debug Component**: Created debug page to test leads fetching directly
+
+**Fixes Applied**:
+
+```typescript
+// Before (incorrect)
+profiles!customer_id (
+  full_name
+)
+
+// After (correct)
+profiles!customer_id (
+  name
+)
+```
+
+**Files Updated**:
+
+- ✅ `src/services/leads.service.ts` - Fixed all three functions (createLead, updateLead, fetchLeads)
+- ✅ `src/tests/services/leads.test.ts` - Updated mock data to use `name` field
+- ✅ Created `src/app/ca/dashboard/leads/debug.tsx` - Debug component for testing
+
+**Next Steps**:
+
+- ⚠️ **TODO**: Test the debug page at `/ca/dashboard/leads/debug` to verify leads are fetching
+- ⚠️ **TODO**: Verify Supabase environment variables are properly configured
+- ⚠️ **TODO**: Run the schema migration script if not already applied
+- ⚠️ **TODO**: Test the main leads page to ensure data is displaying
+
+## 🔧 Database Schema Migration (Previous)
 
 **CRITICAL SCHEMA CHANGE**: Migrated profiles table to use `user_id` as primary key instead of separate `id` field.
 
@@ -56,6 +94,8 @@ FOREIGN KEY (ca_id) REFERENCES public.profiles(user_id);
 
 - ✅ Updated sample data to use correct user_id values
 - ✅ Updated verification queries to join on `user_id` instead of `id`
+- ✅ **FIXED**: Updated leads service to use `name` field instead of `full_name` from profiles table
+- ✅ **FIXED**: Updated test files to use correct field names
 - ⚠️ **TODO**: Update all helper functions to use `user_id` for profile operations
 - ⚠️ **TODO**: Update TypeScript interfaces to reflect schema changes
 - ⚠️ **TODO**: Update all components that reference profile `id` field

@@ -8,7 +8,46 @@
 
 ---
 
-## 2. Goals & Objectives
+## 2. Immediate Tasks (Critical) 🚨
+
+### Database Integration & Bug Fixes
+
+- [ ] **Environment Configuration**
+
+  - [ ] Verify Supabase environment variables are properly set
+  - [ ] Test Supabase connection in development environment
+  - [ ] Ensure database schema migration has been applied
+
+- [ ] **Leads Integration Testing**
+
+  - [ ] Test debug page at `/ca/dashboard/leads/debug` to verify data fetching
+  - [ ] Verify leads are displaying correctly in main dashboard
+  - [ ] Test lead filtering and sorting functionality
+  - [ ] Verify lead engagement tracking works correctly
+
+- [ ] **Schema Migration Completion**
+
+  - [ ] Run schema migration script if not already applied
+  - [ ] Verify all foreign key constraints are working
+  - [ ] Test all CRUD operations with new schema
+  - [ ] Update any remaining references to old `id` field
+
+- [ ] **Type System Updates**
+
+  - [ ] Update all TypeScript interfaces to reflect schema changes
+  - [ ] Update helper functions to use `user_id` for profile operations
+  - [ ] Update components that reference profile `id` field
+  - [ ] Ensure all enum values match database constraints
+
+- [ ] **Testing & Validation**
+  - [ ] Run all existing tests to ensure they pass
+  - [ ] Add integration tests for leads functionality
+  - [ ] Test authentication flow with new schema
+  - [ ] Verify data consistency across all features
+
+---
+
+## 3. Goals & Objectives
 
 - **User-Centric Design:**
 
@@ -26,7 +65,7 @@
 
 ---
 
-## 3. Target Audience
+## 4. Target Audience
 
 - **Primary Users:** Users searching for verified Chartered Accountants.
 - **Secondary Users:** Chartered Accountants promoting their services and managing inquiries.
@@ -34,7 +73,7 @@
 
 ---
 
-## 4. Tech Stack & Libraries
+## 5. Tech Stack & Libraries
 
 ### Core Libraries & Frameworks
 
