@@ -24,7 +24,43 @@ A comprehensive platform connecting Chartered Accountants with clients, featurin
 - ✅ Verified build compilation and About page inclusion
 - ✅ Maintained mobile-first design and component line limits
 
-## 🔧 Database Schema Alignment (Latest)
+## 🔧 Database Schema Migration (Latest)
+
+**CRITICAL SCHEMA CHANGE**: Migrated profiles table to use `user_id` as primary key instead of separate `id` field.
+
+**Migration Rationale**:
+
+- ✅ **Eliminates Confusion**: Removes dual identity fields (`id` vs `user_id`) in profiles table
+- ✅ **Simplifies Relationships**: All foreign keys now directly reference `user_id` from auth system
+- ✅ **Improves Data Integrity**: Direct relationship between auth users and profile records
+- ✅ **Reduces Complexity**: No need to maintain separate UUID for profiles when `user_id` serves the purpose
+
+**Schema Changes Applied**:
+
+```sql
+-- Remove id column and make user_id primary key
+ALTER TABLE public.profiles DROP COLUMN id;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_pkey PRIMARY KEY (user_id);
+
+-- Update all foreign key references
+ALTER TABLE public.leads
+ADD CONSTRAINT leads_customer_id_fkey
+FOREIGN KEY (customer_id) REFERENCES public.profiles(user_id);
+
+ALTER TABLE public.lead_engagements
+ADD CONSTRAINT lead_engagements_ca_id_fkey
+FOREIGN KEY (ca_id) REFERENCES public.profiles(user_id);
+```
+
+**Code Updates Required**:
+
+- ✅ Updated sample data to use correct user_id values
+- ✅ Updated verification queries to join on `user_id` instead of `id`
+- ⚠️ **TODO**: Update all helper functions to use `user_id` for profile operations
+- ⚠️ **TODO**: Update TypeScript interfaces to reflect schema changes
+- ⚠️ **TODO**: Update all components that reference profile `id` field
+
+## 🔧 Database Schema Alignment (Previous)
 
 **CRITICAL FIX**: Updated leads implementation to properly align with the actual Supabase database schema.
 
@@ -40,10 +76,23 @@ A comprehensive platform connecting Chartered Accountants with clients, featurin
 **Database Schema Compliance**:
 
 ```sql
+-- Profiles table structure (user_id is primary key)
+create table public.profiles (
+  user_id             uuid         primary key,
+  name                text         not null,
+  email               text         not null,
+  phone               text,
+  profile_picture     text,
+  role                text         not null,
+  onboarding_completed boolean     not null default false,
+  created_at          timestamptz  not null default now(),
+  updated_at          timestamptz  not null default now()
+);
+
 -- Leads table structure (matches implementation)
 create table public.leads (
   id                  uuid         primary key default uuid_generate_v4(),
-  customer_id         uuid         not null references public.profiles(id),
+  customer_id         uuid         not null references public.profiles(user_id),
   services            text[]       not null,
   urgency             text         not null,
   contact_preference  text         not null,
@@ -60,7 +109,7 @@ create table public.leads (
 create table public.lead_engagements (
   id           uuid         primary key default uuid_generate_v4(),
   lead_id      uuid         not null references public.leads(id) on delete cascade,
-  ca_id        uuid         not null references public.profiles(id) on delete cascade,
+  ca_id        uuid         not null references public.profiles(user_id) on delete cascade,
   viewed_at    timestamptz  not null default now()
 );
 ```
@@ -134,6 +183,7 @@ create table public.lead_engagements (
 
 - [x] **Supabase Setup** - Database, authentication, real-time subscriptions
 - [x] **Database Schema** - Tables for leads, lead_engagements, user profiles
+- [x] **Schema Migration** - Migrated profiles table to use user_id as primary key
 - [x] **Helper Functions** - Database CRUD operations with error handling
 - [x] **Type Safety** - TypeScript interfaces matching database schema
 
