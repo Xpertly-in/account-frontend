@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/ui/Card.ui";
-import { createLeadEngagement, fetchLeadContactInfo } from "@/services/leads.service";
+import { useCreateEngagement, useHideLead } from "@/services/leads.service";
 import { useAuth } from "@/store/context/Auth.provider";
 
 interface LeadCardProps {
@@ -20,7 +20,8 @@ interface LeadCardProps {
 
 export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
   const { auth } = useAuth();
-  const [isCreatingEngagement, setIsCreatingEngagement] = useState(false);
+  const { createEngagement, isLoading: isCreatingEngagement } = useCreateEngagement();
+  const { hideLead, unhideLead, isHiding, isUnhiding } = useHideLead();
   const [contactInfo, setContactInfo] = useState<string>("");
   const [showContactInfo, setShowContactInfo] = useState(false);
 
@@ -33,17 +34,14 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
       const hasEngagement = lead.hasEngagement || false;
       setShowContactInfo(hasEngagement);
 
-      // If already engaged, fetch contact info
-      if (hasEngagement && !contactInfo) {
-        const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
-        if (fetchedContactInfo) {
-          setContactInfo(fetchedContactInfo);
-        }
+      // If already engaged, show contact info from lead data
+      if (hasEngagement && lead.contactInfo) {
+        setContactInfo(lead.contactInfo);
       }
     };
 
     checkEngagement();
-  }, [auth.user, lead.id, lead.hasEngagement, contactInfo]);
+  }, [auth.user, lead.id, lead.hasEngagement, lead.contactInfo]);
 
   // Helper to format date
   const formatDate = (dateString: string) => {
@@ -103,52 +101,98 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
       return;
     }
 
-    setIsCreatingEngagement(true);
     try {
-      // Use the authenticated user's ID as the CA ID
-      const caId = auth.user.id;
-      const { data, error } = await createLeadEngagement(lead.id, caId);
-
-      if (error) {
-        if (error.message?.includes("already exists")) {
-          // Engagement already exists, fetch contact info
-          const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
-          if (fetchedContactInfo) {
-            setContactInfo(fetchedContactInfo);
+      // Use the mutation to create engagement
+      createEngagement(lead.id, {
+        onSuccess: () => {
+          // Show contact info from lead data
+          if (lead.contactInfo) {
+            setContactInfo(lead.contactInfo);
             setShowContactInfo(true);
           }
-        } else {
-          console.error("Error creating engagement:", error);
-        }
-      } else if (data) {
-        // Engagement created successfully, fetch contact info
-        const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
-        if (fetchedContactInfo) {
-          setContactInfo(fetchedContactInfo);
-          setShowContactInfo(true);
-        }
 
-        // Refresh leads data to show updated status
-        if (onLeadUpdate) {
-          onLeadUpdate();
-        }
+          // Refresh leads data to show updated status
+          if (onLeadUpdate) {
+            onLeadUpdate();
+          }
 
-        console.log("Engagement created successfully");
-      }
+          console.log("Engagement created successfully");
+        },
+        onError: (error: any) => {
+          if (error.message?.includes("already exists")) {
+            // Engagement already exists, show contact info
+            if (lead.contactInfo) {
+              setContactInfo(lead.contactInfo);
+              setShowContactInfo(true);
+            }
+          } else {
+            console.error("Error creating engagement:", error);
+          }
+        },
+      });
     } catch (error) {
       console.error("Error creating engagement:", error);
-    } finally {
-      setIsCreatingEngagement(false);
     }
   };
 
+  // Handle Archive/Unarchive button click
+  const handleArchiveToggle = async () => {
+    if (!auth.user) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    try {
+      const isArchived = !!lead.hiddenAt;
+
+      if (isArchived) {
+        // Unarchive the lead
+        unhideLead(lead.id, {
+          onSuccess: () => {
+            console.log("Lead unarchived successfully");
+            if (onLeadUpdate) {
+              onLeadUpdate();
+            }
+          },
+          onError: error => {
+            console.error("Error unarchiving lead:", error);
+          },
+        });
+      } else {
+        // Archive the lead
+        hideLead(lead.id, {
+          onSuccess: () => {
+            console.log("Lead archived successfully");
+            if (onLeadUpdate) {
+              onLeadUpdate();
+            }
+          },
+          onError: error => {
+            console.error("Error archiving lead:", error);
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling archive status:", error);
+    }
+  };
+
+  const isArchived = !!lead.hiddenAt;
+
   return (
-    <Card className="flex min-h-[280px] flex-col overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+    <Card
+      className={`flex min-h-[280px] flex-col overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800 ${
+        isArchived ? "opacity-75" : ""
+      }`}
+    >
       <CardHeader className="border-b border-gray-100 pb-3 pt-4 dark:border-gray-700">
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {lead.customerName}
+              {isArchived && (
+                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">(Archived)</span>
+              )}
             </CardTitle>
             <CardDescription className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
               {lead.location.city}, {lead.location.state} • {formatDate(lead.timestamp)}
@@ -224,10 +268,12 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
             size="sm"
             variant="outline"
             className="h-9 rounded-lg border-gray-200 text-sm dark:border-gray-700"
+            onClick={handleArchiveToggle}
+            disabled={isHiding || isUnhiding}
           >
-            Archive
+            {isHiding || isUnhiding ? "Loading..." : isArchived ? "Unarchive" : "Archive"}
           </Button>
-          {!showContactInfo && (
+          {!showContactInfo && !isArchived && (
             <Button
               size="sm"
               className="h-9 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
