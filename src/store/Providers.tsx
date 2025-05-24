@@ -7,6 +7,7 @@ import { AuthProvider } from "@/store/context/Auth.provider";
 import { GoogleAuthProvider } from "@/store/context/GoogleAuth.provider";
 import { JotaiProvider } from "@/store/jotai/Jotai.provider";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 // Always use dynamic imports for analytics components
 const GoogleAnalytics = dynamic(
@@ -20,6 +21,7 @@ const AnalyticsOptOut = dynamic(
 );
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   // Ensure consistent hydration across environments
   const [mounted, setMounted] = useState(false);
   // Use ref to prevent hydration mismatches across re-renders
@@ -49,7 +51,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <GoogleAuthProvider>
               {children}
               <GoogleAnalytics />
-              <AnalyticsOptOut />
+              {/* hide privacy toggle on forum pages */}
+              {!pathname.startsWith("/forum") && <AnalyticsOptOut />}
             </GoogleAuthProvider>
           </AuthProvider>
         </JotaiProvider>

@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation"; // added
 import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
@@ -17,15 +18,12 @@ const ReactQuill = dynamic(() => import("react-quill"), {
   loading: () => <p>Loading editor...</p>,
 });
 
-// // Dynamically import the CSS
-// const ReactQuill = dynamic(() => import('react-quill/dist/quill.snow.css'), {
-//   ssr: false,
-// });
-
 interface CreatePostProps {
   postId?: string;
   onPostCreated?: () => void;
   onPostUpdated?: () => void;
+
+  initialTitle?: string; // added
   initialContent?: string;
   initialCategory?: string;
   initialTags?: string[];
@@ -36,57 +34,69 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   postId,
   onPostCreated,
   onPostUpdated,
+  initialTitle = "", // added
   initialContent = "",
   initialCategory = "",
   initialTags = [],
   initialImages = [],
 }) => {
+  const router = useRouter(); // added for Cancel
   const { auth } = useAuth();
-  // don't render form until we know who's logged in
   if (auth.isLoading || !auth.user) return null;
-  // initialize editor with initialContent if provided
+
+  // --- State ---
+  const [title, setTitle] = useState(initialTitle); // added
   const [content, setContent] = useState(initialContent);
   const [category, setCategory] = useState(initialCategory);
   const [tags, setTags] = useState<string[]>(initialTags);
-  // merge existing URLs & newly added Files into one list
   const [allImages, setAllImages] = useState<(File | string)[]>([...initialImages]);
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // load enums
+  // enum lists & helpers
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [tagsOptions, setTagsOptions] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
 
-  // only load draft if no initialContent from feed
+  // --- Load draft if no initialContent ---
   useEffect(() => {
     if (!initialContent) {
       const draft = localStorage.getItem("create-post-draft");
       if (draft) {
         const data = JSON.parse(draft);
+        setTitle(data.title || ""); // added
         setContent(data.content || "");
         setTags(data.tags || []);
+        setAllImages(data.allImages || []);
       }
     }
   }, [initialContent]);
 
-  // fetch existing categories & tags
+  // --- Fetch categories & tags once ---
   useEffect(() => {
     (async () => {
       const { data: catData } = await supabase.from("categories").select("name");
       setCategoriesList(catData?.map(c => c.name) || []);
+
       const { data: tagData } = await supabase.from("tags").select("name");
       setTagsOptions(tagData?.map(t => t.name) || []);
     })();
   }, []);
 
-  // Save draft on change
+  // --- Save draft on every change ---
   useEffect(() => {
-    const data = { content, category, tags, allImages };
-    localStorage.setItem("create-post-draft", JSON.stringify(data));
-  }, [content, category, tags, allImages]);
+    const draft = {
+      title, // added
+      content,
+      category,
+      tags,
+      allImages,
+    };
+    localStorage.setItem("create-post-draft", JSON.stringify(draft));
+  }, [title, content, category, tags, allImages]);
 
+  // ... existing handleAddTag, handleRemoveTag, handleImageChange ...
   const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
@@ -117,7 +127,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    // upsert new category
+    // upsert category if needed
     let finalCategory = category;
     if (creatingCategory && newCategory.trim()) {
       const name = newCategory.trim();
@@ -126,7 +136,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       finalCategory = name;
     }
 
-    // 1) separate existing URLs vs new Files
+    // upload new files & gather URLs
     const newFiles = allImages.filter(img => img instanceof File) as File[];
     const existingUrls = allImages.filter(img => typeof img === "string") as string[];
     const newUrls = await Promise.all(
@@ -143,11 +153,11 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       })
     );
     const imageUrls = [...existingUrls, ...newUrls];
-
-    // derive a display name
     const authorId = auth.user?.id;
 
+    // include title in payload
     const payload = {
+      title, // added
       content,
       category: finalCategory,
       tags,
@@ -157,6 +167,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       likes_count: 0,
       comment_count: 0,
     };
+
     let error;
     if (postId) {
       ({ error } = await supabase.from("posts").update(payload).eq("id", postId));
@@ -164,6 +175,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     } else {
       ({ error } = await supabase.from("posts").insert([payload]));
       if (!error) {
+        // clear after successful post
+        setTitle(""); // added
         setContent("");
         setTags([]);
         setAllImages([]);
@@ -176,9 +189,25 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   };
 
   return (
-    <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+    <Card className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Rich text editor for content */}
+        {/* Title */}
+        <div className="space-y-1">
+          <label htmlFor="post-title" className="text-sm font-medium">
+            Title
+          </label>
+          <Input
+            id="post-title"
+            placeholder="Enter post title"
+            value={title}
+            onChange={e => setTitle(e.currentTarget.value)}
+            className="w-full rounded border px-3 py-2 focus:ring-primary focus:border-primary"
+            maxLength={185}
+          />
+          <p className="text-xs text-gray-500">{title.length}/185 characters</p>
+        </div>
+
+        {/* Content */}
         <div className="space-y-1">
           <label className="text-sm font-medium">Content</label>
           <div className="prose dark:prose-invert max-w-none">
@@ -260,27 +289,22 @@ export const CreatePost: React.FC<CreatePostProps> = ({
           </datalist>
         </div>
 
+        {/* Images */}
         <FileUpload
           id="post-images"
-          label="Upload image"
+          label="Add images (optional)"
           accept="image/*"
-          onChange={handleImageChange}
+          onChange={file => file && setAllImages(p => [...p, file])}
         />
-
-        {/* Preview all (existing URLs + new uploads) */}
         {allImages.length > 0 && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {allImages.map((img, idx) => (
-              <div key={idx} className="relative h-full w-full overflow-hidden rounded-md">
-                {typeof img === "string" ? (
-                  <img src={img} alt={`Image ${idx + 1}`} className="h-full w-full object-cover" />
-                ) : (
-                  <img
-                    src={URL.createObjectURL(img)}
-                    alt={img.name}
-                    className="h-full w-full object-cover"
-                  />
-                )}
+              <div key={idx} className="relative h-24 w-full overflow-hidden rounded-lg">
+                <img
+                  src={typeof img === "string" ? img : URL.createObjectURL(img)}
+                  alt={`Preview ${idx + 1}`}
+                  className="h-full w-full object-cover"
+                />
                 <button
                   type="button"
                   aria-label="Remove image"
@@ -294,9 +318,23 @@ export const CreatePost: React.FC<CreatePostProps> = ({
           </div>
         )}
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? (postId ? "Updating…" : "Posting…") : postId ? "Update Post" : "Post"}
-        </Button>
+        {/* Actions */}
+        <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            onClick={() => router.back()}
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-primary text-white rounded hover:opacity-95 transition"
+          >
+            {isSubmitting ? (postId ? "Updating…" : "Posting…") : postId ? "Update Post" : "Post"}
+          </Button>
+        </div>
       </form>
     </Card>
   );

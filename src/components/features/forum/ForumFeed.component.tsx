@@ -34,28 +34,28 @@ export const ForumFeed: React.FC = () => {
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [tagsList, setTagsList] = useState<string[]>([]);
 
-  const [newThread, setNewThread] = useState("");
+  // const [newThread, setNewThread] = useState("");
   const filterRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
   const tagsRef = useRef<HTMLDivElement>(null);
-  // dynamic placeholder messages for the “Start a new thread” input
-  const threadPlaceholders = [
-    "Start a new thread…",
-    "Ask your accounting question here…",
-    "Share your audit tips…",
-    "Discuss tax strategies…",
-    "Post your bookkeeping challenge…",
-  ];
-  const [threadPlaceholder, setThreadPlaceholder] = useState(
-    threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)]
-  );
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const next = threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)];
-      setThreadPlaceholder(next);
-    }, 3000); // rotate every 8s
-    return () => clearInterval(interval);
-  }, []);
+  // // dynamic placeholder messages for the “Start a new thread” input
+  // const threadPlaceholders = [
+  //   "Start a new thread…",
+  //   "Ask your accounting question here…",
+  //   "Share your audit tips…",
+  //   "Discuss tax strategies…",
+  //   "Post your bookkeeping challenge…",
+  // ];
+  // const [threadPlaceholder, setThreadPlaceholder] = useState(
+  //   threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)]
+  // );
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     const next = threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)];
+  //     setThreadPlaceholder(next);
+  //   }, 3000); // rotate every 8s
+  //   return () => clearInterval(interval);
+  // }, []);
 
   // Click-outside to close dropdowns
   useEffect(() => {
@@ -190,55 +190,64 @@ export const ForumFeed: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, [tagsOpen]);
 
-  const handleAddThread = () => {
-    if (newThread.trim()) {
-      router.push(`/forum/new?initialContent=${encodeURIComponent(newThread.trim())}`);
-    }
-  };
+  // const handleAddThread = () => {
+  //   if (newThread.trim()) {
+  //     router.push(`/forum/new?initialContent=${encodeURIComponent(newThread.trim())}`);
+  //   }
+  // };
 
   return (
-    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-16">
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-4">
       {/* Decorative Blobs */}
       <div className="pointer-events-none absolute -top-32 -left-32 w-72 h-72 rounded-full bg-gradient-to-tr from-purple-300 to-indigo-300 blur-2xl opacity-30 dark:opacity-20" />
       <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-pink-300 to-yellow-300 blur-2xl opacity-30 dark:opacity-20" />
 
       <Container className="max-w-3xl space-y-8">
-        {/* Search & Filters Bar */}
-        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-2xl flex flex-wrap items-center gap-3 p-4 shadow-lg">
-          {/* Search Input */}
-          <div className="flex items-center w-full sm:flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-full px-3 py-2">
-            <MagnifyingGlass size={20} className="text-gray-500 dark:text-gray-400" />
+        {/* Simplified Search & Filters */}
+        <div className="flex items-center mb-6 space-x-3">
+          <div className="relative flex-1 bg-white rounded-full">
+            <MagnifyingGlass
+              size={20}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+            />
             <Input
               placeholder="Search posts…"
               value={searchTerm}
               onChange={e => setSearchTerm(e.currentTarget.value)}
-              className="bg-transparent flex-1 ml-2 placeholder-gray-500 focus:outline-none"
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-full focus:ring-primary focus:border-primary"
             />
-            {searchTerm && (
-              <X
-                size={18}
-                className="cursor-pointer text-gray-500 dark:text-gray-400"
-                onClick={() => setSearchTerm("")}
-              />
-            )}
           </div>
+          <Button
+            onClick={() => router.push("/forum/new")}
+            className="p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full shadow-lg hover:scale-105 transition"
+            aria-label="Create new post"
+          >
+            <Plus size={20} weight="bold" className="mr-2" />
+            Create Post
+          </Button>{" "}
+        </div>
 
-          {/* Filter & Sort Buttons Group */}
-          <div className="w-full flex justify-end gap-2 sm:w-auto">
-            {/* Category Dropdown */}
-            <div ref={filterRef} className="relative">
-              <Button
-                onClick={() => setFilterOpen(o => !o)}
-                className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
-              >
-                <Funnel size={20} className="text-gray-600 dark:text-gray-300" />
-              </Button>
-              {filterOpen && (
-                <div className="absolute left-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
+        {/* replace old “Hero” input with single Create button */}
+
+        {/* Bottom fixed Filter & Sort bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex z-20">
+          <div ref={filterRef} className="flex-1 relative">
+            <button
+              onClick={() => setFilterOpen(o => !o)}
+              className="w-full py-3 flex items-center justify-center space-x-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Funnel size={20} />
+              <span className="text-sm">Filter</span>
+            </button>
+            {filterOpen && (
+              <div className="absolute bottom-12 left-0 right-0 bg-white dark:bg-gray-800 p-4 shadow-lg border-t border-gray-200 dark:border-gray-700 z-30">
+                {/* Category */}
+                <div className="mb-4">
+                  <label className="text-sm font-medium">Category</label>
                   <select
                     value={filterCategory}
                     onChange={e => setFilterCategory(e.target.value)}
-                    className="w-full px-2 py-1 border rounded"
+                    className="w-full mt-1 border rounded px-2 py-1"
                   >
                     <option value="">All Categories</option>
                     {categoriesList.map(c => (
@@ -248,88 +257,57 @@ export const ForumFeed: React.FC = () => {
                     ))}
                   </select>
                 </div>
-              )}
-            </div>
-
-            {/* Tags Dropdown */}
-            <div ref={tagsRef} className="relative">
-              <Button
-                onClick={() => setTagsOpen(o => !o)}
-                className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
-              >
-                <Tag size={20} className="text-gray-600 dark:text-gray-300" />
-              </Button>
-              {tagsOpen && (
-                <div className="absolute right-0 mt-2 w-48 max-h-60 overflow-auto p-3 space-y-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
-                  {tagsList.map(tag => (
-                    <button
-                      key={tag}
-                      onClick={() =>
-                        setFilterTags(ts =>
-                          ts.includes(tag) ? ts.filter(t => t !== tag) : [...ts, tag]
-                        )
-                      }
-                      className={`w-full text-left px-2 py-1 text-sm rounded ${
-                        filterTags.includes(tag)
-                          ? "bg-primary text-white"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
+                {/* Tags */}
+                <div>
+                  <label className="text-sm font-medium">Tags</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {tagsList.map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() =>
+                          setFilterTags(ts =>
+                            ts.includes(tag) ? ts.filter(t => t !== tag) : [...ts, tag]
+                          )
+                        }
+                        className={`px-2 py-1 rounded-full text-sm border ${
+                          filterTags.includes(tag)
+                            ? "bg-primary text-white"
+                            : "border-gray-300 dark:border-gray-600"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Sort Dropdown */}
-            <div ref={sortRef} className="relative">
-              <Button
-                onClick={() => setSortOpen(o => !o)}
-                className="p-2 bg-white dark:bg-gray-900 rounded-full shadow"
-              >
-                <Sliders size={20} className="text-gray-600 dark:text-gray-300" />
-              </Button>
-              {sortOpen && (
-                <div className="absolute right-0 mt-2 w-40 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
-                  {(["recent", "trending"] as const).map(opt => (
-                    <button
-                      key={opt}
-                      onClick={() => {
-                        setSortOption(opt);
-                        setSortOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-1 text-sm rounded ${
-                        sortOption === opt
-                          ? "bg-primary text-white"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
-                    >
-                      {opt[0].toUpperCase() + opt.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-        </Card>
 
-        {/* Hero: Title + New Thread */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center flex-1 w-full sm:w-auto">
-            <Input
-              placeholder={threadPlaceholder}
-              value={newThread}
-              onChange={e => setNewThread(e.currentTarget.value)}
-              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-full px-4 py-2 bg-white dark:bg-gray-800 shadow-inner focus:ring-primary/50"
-            />
-            <Button
-              onClick={handleAddThread}
-              disabled={!newThread.trim()}
-              className="ml-2 p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full shadow-lg disabled:opacity-50 hover:scale-105 transition"
+          <div ref={sortRef} className="flex-1 relative">
+            <button
+              onClick={() => setSortOpen(o => !o)}
+              className="w-full py-3 flex items-center justify-center space-x-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <Plus size={20} weight="bold" />
-            </Button>
+              <Sliders size={20} />
+              <span className="text-sm">Sort</span>
+            </button>
+            {sortOpen && (
+              <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-4 shadow-lg border-t border-gray-200 dark:border-gray-700 z-30">
+                {(["recent", "trending"] as const).map(opt => (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      setSortOption(opt);
+                      setSortOpen(false);
+                    }}
+                    className="block w-full text-left px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {opt[0].toUpperCase() + opt.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
