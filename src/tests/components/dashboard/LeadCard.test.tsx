@@ -6,6 +6,12 @@ import { LeadStatus, LeadUrgency, ContactPreference } from "@/types/dashboard/le
 // Mock the leads service
 jest.mock("@/services/leads.service", () => ({
   createLeadEngagement: jest.fn(),
+  fetchLeadContactInfo: jest.fn(),
+}));
+
+// Mock the auth provider
+jest.mock("@/store/context/Auth.provider", () => ({
+  useAuth: jest.fn(),
 }));
 
 // Mock the phosphor icons
@@ -13,9 +19,14 @@ jest.mock("@phosphor-icons/react", () => ({
   EnvelopeOpen: () => <div data-testid="envelope-icon" />,
 }));
 
-import { createLeadEngagement } from "@/services/leads.service";
+import { createLeadEngagement, checkExistingEngagement } from "@/services/leads.service";
+import { useAuth } from "@/store/context/Auth.provider";
 
 describe("LeadCard", () => {
+  const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+  const mockCheckExistingEngagement = checkExistingEngagement as jest.MockedFunction<
+    typeof checkExistingEngagement
+  >;
   const mockLead = {
     id: "1",
     customerId: "customer1",
@@ -35,6 +46,32 @@ describe("LeadCard", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Mock authenticated user
+    mockUseAuth.mockReturnValue({
+      auth: {
+        user: {
+          id: "test-ca-id",
+          email: "test@example.com",
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          created_at: "2023-01-01T00:00:00Z",
+        } as any,
+        isLoading: false,
+        isAuthenticated: true,
+      },
+      signIn: jest.fn(),
+      signUp: jest.fn(),
+      signOut: jest.fn(),
+      resetPassword: jest.fn(),
+    });
+
+    // Mock no existing engagement by default
+    mockCheckExistingEngagement.mockResolvedValue({
+      exists: false,
+      error: null,
+    });
   });
 
   it("should render the lead card with correct data", () => {
@@ -53,9 +90,9 @@ describe("LeadCard", () => {
     expect(screen.getByText("Tax Filing")).toBeInTheDocument();
     expect(screen.getByText("GST Registration")).toBeInTheDocument();
 
-    // Check contact info
+    // Check contact info (should be hidden initially)
     expect(screen.getByText(/EMAIL:/i)).toBeInTheDocument();
-    expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
+    expect(screen.getByText('Click "View Contact" to see details')).toBeInTheDocument();
 
     // Check notes
     expect(screen.getByText("Test notes")).toBeInTheDocument();
@@ -120,7 +157,7 @@ describe("LeadCard", () => {
 
     // Assert
     await waitFor(() => {
-      expect(mockCreateEngagement).toHaveBeenCalledWith("1", "mock-ca-id");
+      expect(mockCreateEngagement).toHaveBeenCalledWith("1", "test-ca-id");
     });
   });
 
@@ -145,7 +182,7 @@ describe("LeadCard", () => {
 
     // Assert
     await waitFor(() => {
-      expect(mockCreateEngagement).toHaveBeenCalledWith("1", "mock-ca-id");
+      expect(mockCreateEngagement).toHaveBeenCalledWith("1", "test-ca-id");
       expect(consoleSpy).toHaveBeenCalledWith(
         "Error creating engagement:",
         new Error("Failed to create engagement")
@@ -164,5 +201,80 @@ describe("LeadCard", () => {
     render(<LeadCard lead={leadWithEngagements} />);
 
     expect(screen.getByText("3 CAs viewed")).toBeInTheDocument();
+  });
+
+  it("should not create engagement when user is not authenticated", async () => {
+    // Mock unauthenticated user
+    mockUseAuth.mockReturnValue({
+      auth: {
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      },
+      signIn: jest.fn(),
+      signUp: jest.fn(),
+      signOut: jest.fn(),
+      resetPassword: jest.fn(),
+    });
+
+    const mockCreateEngagement = createLeadEngagement as jest.MockedFunction<
+      typeof createLeadEngagement
+    >;
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    render(<LeadCard lead={mockLead} />);
+
+    // Act
+    const viewContactButton = screen.getByText("View Contact");
+    fireEvent.click(viewContactButton);
+
+    // Assert
+    await waitFor(() => {
+      expect(mockCreateEngagement).not.toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith("User not authenticated");
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should show contact info when engagement already exists", async () => {
+    // Mock existing engagement
+    mockCheckExistingEngagement.mockResolvedValue({
+      exists: true,
+      error: null,
+    });
+
+    render(<LeadCard lead={mockLead} />);
+
+    // Wait for useEffect to complete
+    await waitFor(() => {
+      expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
+    });
+
+    // Contact info should be visible
+    expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
+    expect(screen.queryByText('Click "View Contact" to see details')).not.toBeInTheDocument();
+  });
+
+  it("should handle duplicate engagement creation gracefully", async () => {
+    const mockCreateEngagement = createLeadEngagement as jest.MockedFunction<
+      typeof createLeadEngagement
+    >;
+    mockCreateEngagement.mockResolvedValue({
+      data: null,
+      error: { message: "Engagement already exists for this CA and lead" },
+    });
+
+    render(<LeadCard lead={mockLead} />);
+
+    // Act
+    const viewContactButton = screen.getByText("View Contact");
+    fireEvent.click(viewContactButton);
+
+    // Assert - should handle duplicate gracefully and show contact info
+    await waitFor(() => {
+      expect(mockCreateEngagement).toHaveBeenCalledWith("1", "test-ca-id");
+      expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
+    });
   });
 });

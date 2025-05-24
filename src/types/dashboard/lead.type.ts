@@ -64,6 +64,7 @@ export interface Lead {
   timestamp: string; // When the lead was submitted
   status: `${LeadStatus}`; // Using enum values
   engagementCount?: number; // Number of CAs who have viewed this lead
+  hasEngagement?: boolean; // Whether current CA has engaged with this lead
 }
 
 /**
