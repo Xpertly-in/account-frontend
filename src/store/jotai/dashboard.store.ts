@@ -8,6 +8,7 @@ import {
 import { Lead, LeadSortField, SortDirection } from "@/types/dashboard/lead.type";
 import { ContactRequest } from "@/types/dashboard/contact-request.type";
 import { DASHBOARD_PAGINATION } from "@/constants/dashboard.constants";
+import { fetchLeads } from "@/services/leads.service";
 
 /**
  * Initial dashboard state
@@ -108,6 +109,50 @@ export const leadsDataAtom = atom(
     });
   }
 );
+
+/**
+ * Leads error atom
+ */
+export const leadsErrorAtom = atom(
+  get => get(dashboardStateAtom).leads.error,
+  (get, set, error: string | null) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      leads: {
+        ...current.leads,
+        error,
+        isLoading: false,
+      },
+    });
+  }
+);
+
+/**
+ * Fetch leads atom - action to fetch leads from Supabase
+ */
+export const fetchLeadsAtom = atom(null, async (get, set, caId?: string) => {
+  // Set loading state
+  set(leadsLoadingAtom, true);
+
+  try {
+    const { data, error } = await fetchLeads(caId);
+
+    if (error) {
+      set(leadsErrorAtom, error.message || "Failed to fetch leads");
+      set(leadsDataAtom, []);
+    } else {
+      set(leadsDataAtom, data || []);
+      set(leadsErrorAtom, null);
+    }
+  } catch (error) {
+    console.error("Error in fetchLeadsAtom:", error);
+    set(leadsErrorAtom, "An unexpected error occurred");
+    set(leadsDataAtom, []);
+  } finally {
+    set(leadsLoadingAtom, false);
+  }
+});
 
 /**
  * Contact requests loading atom

@@ -1,19 +1,28 @@
 // src/app/forum/new/page.tsx
 "use client";
 
-import React, { useEffect, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, Suspense, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { supabase } from "@/helper/supabase.helper";
 import { useAuth } from "@/store/context/Auth.provider";
 import { CaretLeft } from "@phosphor-icons/react";
 import { Container } from "@/components/layout/Container.component";
 import { CreatePost } from "@/components/features/forum/CreatePost.component";
-import { useSearchParams } from "next/navigation";
 
-function NewPostContent() {
+function EditPostContent() {
   const router = useRouter();
+  const { id } = useParams();
   const { auth } = useAuth();
-  const searchParams = useSearchParams();
-  const initialContent = searchParams.get("initialContent") ?? "";
+  const [post, setPost] = useState<any>(null);
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("posts")
+      .select("id, title, content, category, tags, images, author_id")
+      .eq("id", id)
+      .single()
+      .then(({ data }) => setPost(data));
+  }, [id]);
 
   // Redirect to login if unauthenticated
   useEffect(() => {
@@ -23,7 +32,16 @@ function NewPostContent() {
     }
   }, [auth.user, auth.isLoading, router]);
 
-  if (auth.isLoading || !auth.user) {
+  // Prevent non-authors from editing
+  useEffect(() => {
+    if (!auth.isLoading && auth.user && post) {
+      if (post.author_id !== auth.user.id) {
+        router.push("/forum");
+      }
+    }
+  }, [auth.isLoading, auth.user, post, router]);
+
+  if (auth.isLoading || !auth.user || !post) {
     return null;
   }
 
@@ -36,21 +54,29 @@ function NewPostContent() {
           className="flex items-center gap-2 text-primary hover:underline mb-2"
         >
           <CaretLeft size={20} weight="bold" />
-          Back to Feed
+          Back to Forum
         </button>
         {/* Form Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-4">
-          <CreatePost initialContent={initialContent ?? ""} onPostCreated={() => router.push("/forum")} />
+          <CreatePost
+            postId={id!.toString()}
+            initialTitle={post.title}
+            initialContent={post.content}
+            initialCategory={post.category}
+            initialTags={post.tags}
+            initialImages={post.images}
+            onPostUpdated={() => router.push("/forum")}
+          />
         </div>
       </Container>
     </div>
   );
 }
 
-export default function NewPostPage() {
+export default function EditPostPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <NewPostContent />
+      <EditPostContent />
     </Suspense>
   );
 }

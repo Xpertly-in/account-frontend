@@ -12,7 +12,7 @@ interface SearchBarProps {
   onSearch?: (location: string) => void;
 }
 
-export default function SearchBar({ onSearch }: SearchBarProps) {
+export const SearchBar = ({ onSearch }: SearchBarProps) => {
   const router = useRouter();
   const [location, setLocation] = useState("");
   const { trackEvent, trackUserInteraction } = useAnalytics();
@@ -100,14 +100,6 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
             type="button"
             variant="outline"
             className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
-            onClick={() => handleQuickLocation("Bangalore")}
-          >
-            Bangalore
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-full py-1.5 px-4 sm:px-5 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 hover:border-blue-300 transition-all dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-800/40 dark:hover:border-blue-700 dark:hover:text-blue-200 text-sm sm:text-base"
             onClick={() => handleQuickLocation("Chennai")}
           >
             Chennai
@@ -116,4 +108,4 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
       </form>
     </div>
   );
-}
+};

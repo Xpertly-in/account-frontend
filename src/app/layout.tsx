@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import 'react-quill/dist/quill.snow.css';
 import { Header } from "@/components/layout/Header.component";
-import { Footer } from "@/components/layout/Footer.component";
+import { FooterWrapper } from "@/components/layout/FooterWrapper.component";
 import { Providers } from "@/store/Providers";
 import { Toaster } from "sonner";
 
@@ -25,7 +26,7 @@ export default function RootLayout({
           <div className="flex min-h-screen flex-col">
             <Header />
             <main className="flex-1">{children}</main>
-            <Footer />
+            <FooterWrapper />
           </div>
           <Toaster position="top-center" richColors expand closeButton />
         </Providers>

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Lead } from "@/types/dashboard/lead.type";
 import { Badge } from "@/ui/Badge.ui";
 import { Button } from "@/ui/Button.ui";
@@ -9,12 +10,41 @@ import {
   CardHeader,
   CardTitle,
 } from "@/ui/Card.ui";
+import { createLeadEngagement, fetchLeadContactInfo } from "@/services/leads.service";
+import { useAuth } from "@/store/context/Auth.provider";
 
 interface LeadCardProps {
   lead: Lead;
+  onLeadUpdate?: () => void; // Callback to refresh leads data
 }
 
-export const LeadCard = ({ lead }: LeadCardProps) => {
+export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
+  const { auth } = useAuth();
+  const [isCreatingEngagement, setIsCreatingEngagement] = useState(false);
+  const [contactInfo, setContactInfo] = useState<string>("");
+  const [showContactInfo, setShowContactInfo] = useState(false);
+
+  // Check if current user has already engaged with this lead
+  useEffect(() => {
+    const checkEngagement = async () => {
+      if (!auth.user) return;
+
+      // Use the hasEngagement field from the lead data
+      const hasEngagement = lead.hasEngagement || false;
+      setShowContactInfo(hasEngagement);
+
+      // If already engaged, fetch contact info
+      if (hasEngagement && !contactInfo) {
+        const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
+        if (fetchedContactInfo) {
+          setContactInfo(fetchedContactInfo);
+        }
+      }
+    };
+
+    checkEngagement();
+  }, [auth.user, lead.id, lead.hasEngagement, contactInfo]);
+
   // Helper to format date
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -55,6 +85,60 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
         return "inline-flex rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800";
       default:
         return "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800";
+    }
+  };
+
+  // Handle View Contact button click
+  const handleViewContact = async () => {
+    if (!auth.user) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    const hasEngagement = lead.hasEngagement || false;
+
+    if (hasEngagement) {
+      // If already engaged, just show contact info
+      setShowContactInfo(true);
+      return;
+    }
+
+    setIsCreatingEngagement(true);
+    try {
+      // Use the authenticated user's ID as the CA ID
+      const caId = auth.user.id;
+      const { data, error } = await createLeadEngagement(lead.id, caId);
+
+      if (error) {
+        if (error.message?.includes("already exists")) {
+          // Engagement already exists, fetch contact info
+          const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
+          if (fetchedContactInfo) {
+            setContactInfo(fetchedContactInfo);
+            setShowContactInfo(true);
+          }
+        } else {
+          console.error("Error creating engagement:", error);
+        }
+      } else if (data) {
+        // Engagement created successfully, fetch contact info
+        const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
+        if (fetchedContactInfo) {
+          setContactInfo(fetchedContactInfo);
+          setShowContactInfo(true);
+        }
+
+        // Refresh leads data to show updated status
+        if (onLeadUpdate) {
+          onLeadUpdate();
+        }
+
+        console.log("Engagement created successfully");
+      }
+    } catch (error) {
+      console.error("Error creating engagement:", error);
+    } finally {
+      setIsCreatingEngagement(false);
     }
   };
 
@@ -103,9 +187,15 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
               {lead.contactPreference}:{" "}
-              <span className="font-medium text-gray-900 dark:text-gray-200">
-                {lead.contactInfo}
-              </span>
+              {showContactInfo ? (
+                <span className="font-medium text-gray-900 dark:text-gray-200">
+                  {contactInfo || lead.contactInfo}
+                </span>
+              ) : (
+                <span className="font-medium text-gray-500 dark:text-gray-400">
+                  Click "View Contact" to see details
+                </span>
+              )}
             </div>
           </div>
           {lead.notes && (
@@ -114,6 +204,13 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
                 Notes:
               </div>
               <div className="text-sm italic text-gray-600 dark:text-gray-400">{lead.notes}</div>
+            </div>
+          )}
+          {lead.engagementCount !== undefined && lead.engagementCount > 0 && (
+            <div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {lead.engagementCount} CAs viewed
+              </div>
             </div>
           )}
         </div>
@@ -130,12 +227,16 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
           >
             Archive
           </Button>
-          <Button
-            size="sm"
-            className="h-9 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-          >
-            Contact
-          </Button>
+          {!showContactInfo && (
+            <Button
+              size="sm"
+              className="h-9 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+              onClick={handleViewContact}
+              disabled={isCreatingEngagement}
+            >
+              {isCreatingEngagement ? "Loading..." : "View Contact"}
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>

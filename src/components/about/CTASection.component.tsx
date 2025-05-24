@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Container } from "@/components/layout/Container.component";
 import { Button } from "@/ui/Button.ui";
 
-export default function CTASection() {
+export const CTASection = () => {
   return (
     <div className="bg-gradient-to-br from-primary via-blue-700 to-blue-600 dark:from-blue-800 dark:via-blue-700 dark:to-blue-600 relative overflow-hidden">
       <div className="absolute inset-0 bg-pattern opacity-10" />
@@ -38,4 +38,4 @@ export default function CTASection() {
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-30" />
     </div>
   );
-}
+};
