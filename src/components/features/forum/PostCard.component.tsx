@@ -23,6 +23,7 @@ import { useAuth } from "@/store/context/Auth.provider";
 export interface PostCardProps {
   id: number;
   updated_at: string;
+  title: string;
   content: string;
   author_id: string;
   author_name: string;
@@ -45,6 +46,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   author_id,
   author_name = "",
   author_avatar,
+  title,
   content,
   images,
   tags,
@@ -116,7 +118,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   return (
     <div className="rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center p-3">
+      <div className="flex items-center p-2">
         {/* Left: avatar + author info */}
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
@@ -183,7 +185,9 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {/* Body & Image Carousel */}
-      <div className="px-3 pb-3 space-y-2">
+      <div className="px-3 pb-3 space-y-1">
+        {/* Display the post title */}
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
         <div
           ref={contentRef}
           className={`prose text-sm text-gray-700 dark:prose-invert dark:text-gray-300 max-w-none ${
@@ -196,6 +200,20 @@ export const PostCard: React.FC<PostCardProps> = ({
           <button onClick={() => setExpanded(prev => !prev)} className="text-primary text-sm mt-1">
             {expanded ? "Show less" : "Read more"}
           </button>
+        )}
+        {/* Tags (clickable) */}
+        {tags?.length > 0 && (
+          <div className="px-3 py-1 flex flex-wrap gap-1">
+            {tags.map(tag => (
+              <span
+                key={tag}
+                onClick={() => onTagClick?.(tag)}
+                className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
         )}
         {images?.length > 0 && (
           <div
@@ -252,23 +270,8 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/* Tags (clickable) */}
-      {tags?.length > 0 && (
-        <div className="px-3 py-1 flex flex-wrap gap-1">
-          {tags.map(tag => (
-            <span
-              key={tag}
-              onClick={() => onTagClick?.(tag)}
-              className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-
       {/* Actions */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-3 py-2 flex justify-between text-gray-600 dark:text-gray-400">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-2 py-2 flex justify-between text-gray-600 dark:text-gray-400">
         <button className="flex items-center gap-1 hover:text-primary">
           <ThumbsUp size={18} />
           <span className="text-sm"> {likes_count} Likes</span>

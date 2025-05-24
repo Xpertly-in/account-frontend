@@ -17,6 +17,7 @@ export default function Home() {
         .from("posts")
         .select(`
             id,
+            title,
             content,
             category,
             tags,
@@ -39,6 +40,7 @@ export default function Home() {
           data.map(p => ({
             id: p.id,
             updated_at: p.updated_at,
+            title: p.title,
             content: p.content,
             author_id: p.author_id,
             author_name: p.profiles.name,
