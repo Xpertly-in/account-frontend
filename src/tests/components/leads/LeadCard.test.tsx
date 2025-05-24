@@ -125,7 +125,7 @@ describe("LeadCard Component - TDD Implementation", () => {
     test("should render contact preference", () => {
       render(<LeadCard {...defaultProps} />);
 
-      expect(screen.getByText(/Email:/)).toBeInTheDocument();
+      expect(screen.getByText("Email")).toBeInTheDocument();
     });
 
     test("should render notes when present", () => {

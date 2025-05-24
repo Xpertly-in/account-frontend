@@ -64,6 +64,7 @@ export const fetchLeads = async (
           id: lead.id,
           customerId: lead.customer_id,
           customerName: lead.profiles?.name || "Unknown Customer",
+          profilePicture: lead.profiles?.profile_picture || undefined,
           services: lead.services || [],
           urgency: lead.urgency,
           location: {
@@ -115,11 +116,12 @@ export const fetchLeads = async (
     // Calculate pagination metadata
     const actualCount = transformedData.length;
     const currentPage = pagination?.page || 1;
-    const pageSize = pagination?.pageSize || actualCount;
+    const pageSize = pagination?.pageSize || 5; // Default to 5 leads per page
 
     // Apply pagination to transformed data
     let paginatedData = transformedData;
-    if (pagination) {
+    if (pagination || actualCount > 5) {
+      // Apply pagination if specified or if more than 5 leads
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize;
       paginatedData = transformedData.slice(from, to);

@@ -52,6 +52,7 @@ export interface Lead {
   id: string;
   customerId: string; // Reference to customer profile
   customerName: string; // For display purposes
+  profilePicture?: string; // Customer profile picture URL
   services: string[]; // Array of requested services
   urgency: `${LeadUrgency}`; // Using enum values
   location: {

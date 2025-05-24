@@ -14,7 +14,7 @@ export const LeadsComponent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentFilter, setCurrentFilter] = useState<LeadFilter>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5); // Set to 5 leads per page
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Local state
@@ -129,7 +129,7 @@ export const LeadsComponent = () => {
 
       {/* Leads content */}
       {isLoading ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-4">
           {Array.from({ length: pageSize }).map((_, index) => (
             <LeadSkeleton key={index} />
           ))}
@@ -138,26 +138,31 @@ export const LeadsComponent = () => {
         <LeadEmptyState searchTerm={searchTerm} />
       ) : (
         <>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Single column layout for better focus */}
+          <div className="space-y-4">
             {leads.map((lead: Lead) => (
               <LeadCard key={lead.id} lead={lead} onLeadUpdate={handleLeadUpdate} />
             ))}
           </div>
 
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalCount={totalCount}
-            hasNextPage={hasNextPage}
-            hasPreviousPage={hasPreviousPage}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            onNextPage={handleNextPage}
-            onPreviousPage={handlePreviousPage}
-            isLoading={isLoading}
-          />
+          {/* Prominent Pagination - Show when there are leads */}
+          {leads.length > 0 && (
+            <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-700">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalCount={totalCount}
+                hasNextPage={hasNextPage}
+                hasPreviousPage={hasPreviousPage}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                onNextPage={handleNextPage}
+                onPreviousPage={handlePreviousPage}
+                isLoading={isLoading}
+              />
+            </div>
+          )}
         </>
       )}
     </div>
