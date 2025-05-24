@@ -8,6 +8,53 @@ import Link from "next/link";
 import { ForumFeed } from "@/components/features/forum/ForumFeed.component";
 
 export default function Home() {
+  const [latestPosts, setLatestPosts] = useState<PostCardProps[]>([]);
+  useEffect(() => {
+    const fetchLatest = async () => {
+      const { data, error } = await supabase
+        .from("posts")
+        .select(`
+            id,
+            title,
+            content,
+            category,
+            tags,
+            images,
+            likes_count,
+            comment_count,
+            updated_at,
+            is_deleted,
+            author_id,
+            profiles (
+              name,
+              profile_picture
+            )
+          `)
+        .eq("is_deleted", false)
+        .order("updated_at", { ascending: false })
+        .limit(3);
+      if (!error && data) {
+        setLatestPosts(
+          data.map(p => ({
+            id: p.id,
+            updated_at: p.updated_at,
+            title: p.title,
+            content: p.content,
+            author_id: p.author_id,
+            author_name: p.profiles.name,
+            author_avatar: p.profiles.profile_picture,
+            category: p.category,
+            tags: p.tags,
+            images: p.images,
+            likes_count: p.likes_count,
+            comment_count: p.comment_count,
+            is_deleted: p.is_deleted,
+          }))
+        );
+      }
+    };
+    fetchLatest();
+  }, []);
   return (
     <>
       {/* Hero Section with Gradient Background */}
