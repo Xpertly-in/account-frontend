@@ -1,11 +1,28 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { SearchBar } from "@/components/features/search";
 import { Container } from "@/components/layout/Container.component";
 import { Button } from "@/ui/Button.ui";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
 import Link from "next/link";
 import { ForumFeed } from "@/components/features/forum/ForumFeed.component";
+import { supabase } from "@/lib/supabase";
+
+interface PostCardProps {
+  id: string;
+  updated_at: string;
+  title: string;
+  content: string;
+  author_id: string;
+  author_name: string;
+  author_avatar: string | null;
+  category: string;
+  tags: string[];
+  images: string[];
+  reaction_counts: Record<string, number>;
+  is_deleted: boolean;
+}
 
 export default function Home() {
 
@@ -37,7 +54,7 @@ export default function Home() {
         .limit(3);
       if (!error && data) {
         setLatestPosts(
-          data.map(p => ({
+          data.map((p: any) => ({
             id: p.id,
             updated_at: p.updated_at,
             title: p.title,
