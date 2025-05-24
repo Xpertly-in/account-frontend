@@ -1,12 +1,19 @@
 /// <reference types="@testing-library/jest-dom" />
-import { render, screen } from "@/tests/test-utils";
+import { render, screen, fireEvent, waitFor } from "@/tests/test-utils";
 import { LeadCard } from "@/components/leads/LeadCard.component";
 import { LeadStatus, LeadUrgency, ContactPreference } from "@/types/dashboard/lead.type";
+
+// Mock the leads service
+jest.mock("@/services/leads.service", () => ({
+  createLeadEngagement: jest.fn(),
+}));
 
 // Mock the phosphor icons
 jest.mock("@phosphor-icons/react", () => ({
   EnvelopeOpen: () => <div data-testid="envelope-icon" />,
 }));
+
+import { createLeadEngagement } from "@/services/leads.service";
 
 describe("LeadCard", () => {
   const mockLead = {
@@ -25,6 +32,10 @@ describe("LeadCard", () => {
     contactInfo: "john.doe@example.com",
     notes: "Test notes",
   };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it("should render the lead card with correct data", () => {
     render(<LeadCard lead={mockLead} />);
@@ -54,7 +65,7 @@ describe("LeadCard", () => {
 
     // Check action buttons
     expect(screen.getByText("Archive")).toBeInTheDocument();
-    expect(screen.getByText("Contact")).toBeInTheDocument();
+    expect(screen.getByText("View Contact")).toBeInTheDocument();
   });
 
   it("should not display notes section when no notes are provided", () => {
@@ -84,5 +95,74 @@ describe("LeadCard", () => {
     const statusBadge = screen.getByText("New");
     expect(statusBadge).toHaveClass("bg-blue-100");
     expect(statusBadge).toHaveClass("text-blue-800");
+  });
+
+  it("should handle View Contact button click and create engagement", async () => {
+    // Arrange
+    const mockCreateEngagement = createLeadEngagement as jest.MockedFunction<
+      typeof createLeadEngagement
+    >;
+    mockCreateEngagement.mockResolvedValue({
+      data: {
+        id: "engagement-1",
+        leadId: "1",
+        caId: "ca-1",
+        viewedAt: new Date().toISOString(),
+      },
+      error: null,
+    });
+
+    render(<LeadCard lead={mockLead} />);
+
+    // Act
+    const viewContactButton = screen.getByText("View Contact");
+    fireEvent.click(viewContactButton);
+
+    // Assert
+    await waitFor(() => {
+      expect(mockCreateEngagement).toHaveBeenCalledWith("1", "mock-ca-id");
+    });
+  });
+
+  it("should handle View Contact button click error", async () => {
+    // Arrange
+    const mockCreateEngagement = createLeadEngagement as jest.MockedFunction<
+      typeof createLeadEngagement
+    >;
+    mockCreateEngagement.mockResolvedValue({
+      data: null,
+      error: new Error("Failed to create engagement"),
+    });
+
+    // Mock console.error to avoid test output noise
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    render(<LeadCard lead={mockLead} />);
+
+    // Act
+    const viewContactButton = screen.getByText("View Contact");
+    fireEvent.click(viewContactButton);
+
+    // Assert
+    await waitFor(() => {
+      expect(mockCreateEngagement).toHaveBeenCalledWith("1", "mock-ca-id");
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Error creating engagement:",
+        new Error("Failed to create engagement")
+      );
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should show engagement count when provided", () => {
+    const leadWithEngagements = {
+      ...mockLead,
+      engagementCount: 3,
+    };
+
+    render(<LeadCard lead={leadWithEngagements} />);
+
+    expect(screen.getByText("3 CAs viewed")).toBeInTheDocument();
   });
 });

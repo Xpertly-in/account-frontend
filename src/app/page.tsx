@@ -1,13 +1,11 @@
 "use client";
 
 import { SearchBar } from "@/components/features/search";
-import { useState, useEffect } from "react";
-import { supabase } from "@/helper/supabase.helper";
-import { PostCard, PostCardProps } from "@/components/features/forum/PostCard.component";
 import { Container } from "@/components/layout/Container.component";
 import { Button } from "@/ui/Button.ui";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
 import Link from "next/link";
+import { ForumFeed } from "@/components/features/forum/ForumFeed.component";
 
 export default function Home() {
   const [latestPosts, setLatestPosts] = useState<PostCardProps[]>([]);
@@ -57,7 +55,6 @@ export default function Home() {
     };
     fetchLatest();
   }, []);
-
   return (
     <>
       {/* Hero Section with Gradient Background */}
@@ -100,30 +97,8 @@ export default function Home() {
         </Container>
       </div>
 
-      {/* Features and CTA moved to About page */}
-      {/* See /about for these sections */}
       {/* Forum Feed Section */}
-      {/* Community Preview Section */}
-      <Container className="space-y-12 !max-w-2xl">
-        <div className="space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-              Community Forum
-            </h2>
-            <div className="mt-2 h-1 w-20 bg-primary mx-auto rounded-full" />
-          </div>
-          <div className="space-y-6">
-            {latestPosts.map(post => (
-              <PostCard key={post.id} {...post} />
-            ))}
-          </div>
-          <div className="text-center">
-            <Link href="/forum">
-              <Button className="bg-primary text-white">See more posts</Button>
-            </Link>
-          </div>
-        </div>
-      </Container>
+      <ForumFeed />
 
       {/* Features Section */}
       <Container className="py-16 md:py-24">

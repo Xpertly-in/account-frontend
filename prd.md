@@ -85,17 +85,86 @@ src/
   │   ├── layout/    # Layout components (Header, Footer, etc.)
   │   ├── leads/     # Lead management components
   │   ├── features/  # Feature-specific components
-  │   ├── about/     # Components related to the About page
   │   └── [domain]/  # Domain-specific components grouped by business functionality
   ├── ui/            # Base UI components (buttons, inputs, etc.)
+  ├── services/      # Data fetching and API communication layer
   ├── store/         # State management
   │   ├── context/   # Context-based state providers
   │   └── jotai/     # Jotai state management
-  ├── helper/        # Helper functions and utilities
+  ├── helper/        # Helper functions and utilities (NO data fetching)
   ├── constants/     # Constants and configuration values
   ├── types/         # TypeScript interfaces and types
+  ├── tests/         # Test files following domain-based structure
   └── mock/          # Mock data for development
 ```
+
+### Services Layer Architecture
+
+The project implements a clear separation between helper functions and data fetching operations:
+
+#### Services Layer (`/services`)
+
+- **Purpose**: Handle all data fetching, API communication, and external service integration
+- **Naming Convention**: `entityName.service.ts` (camelCase)
+- **Responsibilities**:
+  - Database queries and mutations
+  - API calls to external services
+  - Data transformation between external and internal formats
+  - Error handling for data operations
+- **Examples**: `leads.service.ts`, `auth.service.ts`, `profile.service.ts`
+
+#### Helper Layer (`/helper`)
+
+- **Purpose**: Provide utility functions and common operations (NO data fetching)
+- **Naming Convention**: `entityName.helper.ts` (camelCase)
+- **Responsibilities**:
+  - Pure utility functions
+  - Data formatting and validation
+  - Common calculations
+  - Client-side operations
+- **Examples**: `tw.helper.ts`, `date.helper.ts`, `validation.helper.ts`
+
+#### Key Architectural Rules
+
+1. **Services handle data, helpers handle utilities**
+2. **No data fetching operations in helper files**
+3. **Services should be the only layer communicating with external APIs/databases**
+4. **Helpers should contain pure functions without side effects**
+5. **Both services and helpers should have comprehensive test coverage**
+
+### Testing Structure
+
+Tests follow the same domain-based organization as the source code:
+
+#### Test Organization
+
+- **Component Tests**: Mirror the component structure
+
+  - `src/components/leads/LeadCard.component.tsx` → `src/tests/components/leads/LeadCard.test.tsx`
+  - `src/components/features/auth/LoginForm.component.tsx` → `src/tests/components/features/auth/LoginForm.test.tsx`
+
+- **Service Tests**: Test data fetching and API operations
+
+  - `src/services/leads.service.ts` → `src/tests/services/leads.test.ts`
+  - `src/services/auth.service.ts` → `src/tests/services/auth.test.ts`
+
+- **Helper Tests**: Test utility functions
+  - `src/helper/date.helper.ts` → `src/tests/helper/date.test.ts`
+  - `src/helper/validation.helper.ts` → `src/tests/helper/validation.test.ts`
+
+#### Test Naming Conventions
+
+- Component tests: `ComponentName.test.tsx`
+- Service tests: `serviceName.test.ts`
+- Helper tests: `helperName.test.ts`
+- Store tests: `storeName.test.ts`
+
+#### Test Coverage Requirements
+
+- **Services**: 100% coverage (critical for data integrity)
+- **Components**: 90%+ coverage (UI reliability)
+- **Helpers**: 100% coverage (utility function reliability)
+- **Store**: 90%+ coverage (state management reliability)
 
 ---
 
@@ -478,7 +547,6 @@ The codebase is organized by business domain rather than technical function, whi
   - `/components/leads/` - Components related to lead management
   - `/components/auth/` - Authentication-related components
   - `/components/forum/` - Forum and community components
-  - `/components/about/` - Components related to the About page
 
 #### Migration Example
 
@@ -496,7 +564,7 @@ The project recently migrated from a technical organization (`/components/dashbo
 - **UI Components:**
   - `Button.ui.tsx`, `Input.ui.tsx`, `Card.ui.tsx`, `Avatar.ui.tsx`, `Checkbox.ui.tsx`, `Logo.ui.tsx`, `ThemeToggle.ui.tsx`, `DecorativeElements.ui.tsx`, `CheckboxGroup.ui.tsx`, `FileUpload.ui.tsx`, `Switch.ui.tsx`, `Textarea.ui.tsx`, `Select.ui.tsx`, `AuthDivider.ui.tsx`, `GoogleButton.ui.tsx`, `BackButton.ui.tsx`
 - **Feature Components:**
-  - `LoginForm.component.tsx`, `LoginFormFields.component.tsx`, `LoginFormSecurity.component.tsx`, `SignUpForm.component.tsx`, `SignUpFormContent.component.tsx`, `CAAuthTabs.component.tsx`, `SearchBar.component.tsx`, `CACard.component.tsx`, `Leads.component.tsx`, `LeadCard.component.tsx`, `LeadFilter.component.tsx`, `LeadSkeleton.component.tsx`, `LeadEmptyState.component.tsx`, `RoleSelection.component.tsx`, `UserOnboardingForm.component.tsx`, `ForumFeed.component.tsx`, `PostCard.component.tsx`, `ReactionSystem.component.tsx`, `CommentThread.component.tsx`, `CreatePost.component.tsx`, `SearchAndFilter.component.tsx`, `FeaturesSection.component.tsx`, `CTASection.component.tsx`, `DashboardLayout.component.tsx`
+  - `LoginForm.component.tsx`, `LoginFormFields.component.tsx`, `LoginFormSecurity.component.tsx`, `SignUpForm.component.tsx`, `SignUpFormContent.component.tsx`, `CAAuthTabs.component.tsx`, `SearchBar.component.tsx`, `CACard.component.tsx`, `Leads.component.tsx`, `LeadCard.component.tsx`, `LeadFilter.component.tsx`, `LeadSkeleton.component.tsx`, `LeadEmptyState.component.tsx`, `RoleSelection.component.tsx`, `UserOnboardingForm.component.tsx`, `ForumFeed.component.tsx`, `PostCard.component.tsx`, `ReactionSystem.component.tsx`, `CommentThread.component.tsx`, `CreatePost.component.tsx`, `SearchAndFilter.component.tsx`, `DashboardLayout.component.tsx`
 
 #### Best Practices
 
@@ -1464,6 +1532,4 @@ For backward compatibility, all mock functions are re-exported from `jestMock.he
 - [ ] CommentThread (`src/components/features/forum/CommentThread.component.tsx`)
 - [ ] CreatePost (`src/components/features/forum/CreatePost.component.tsx`)
 - [ ] SearchAndFilter (`src/components/features/forum/SearchAndFilter.component.tsx`)
-- [ ] FeaturesSection (`src/components/features/about/FeaturesSection.component.tsx`)
-- [ ] CTASection (`src/components/features/about/CTASection.component.tsx`)
 - [ ] DashboardLayout (`src/components/features/dashboard/DashboardLayout.component.tsx`)

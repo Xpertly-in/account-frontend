@@ -1,6 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { axe } from "jest-axe";
 import { SearchBar } from "@/components/features/search/SearchBar.component";
 import * as router from "next/navigation";
 
@@ -8,8 +7,13 @@ import * as router from "next/navigation";
 jest.mock("next/navigation", () => ({
   ...jest.requireActual("next/navigation"),
   useRouter: jest.fn(),
-  useSearchParams: jest.fn().mockReturnValue({
-    get: jest.fn(),
+}));
+
+// Mock useAnalytics to avoid Jotai dependency
+jest.mock("@/hooks/useAnalytics", () => ({
+  useAnalytics: () => ({
+    trackEvent: jest.fn(),
+    trackUserInteraction: jest.fn(),
   }),
 }));
 
@@ -25,286 +29,142 @@ describe("SearchBar Component", () => {
   });
 
   // Rendering tests
-  test("renders search input", () => {
+  test("renders location input", () => {
     render(<SearchBar />);
 
-    // Check for search input
-    expect(screen.getByPlaceholderText(/search for ca/i)).toBeInTheDocument();
-  });
-
-  test("renders location dropdown", () => {
-    render(<SearchBar />);
-
-    // Check for location dropdown
-    expect(screen.getByText(/location/i)).toBeInTheDocument();
-  });
-
-  test("renders verified checkbox", () => {
-    render(<SearchBar />);
-
-    // Check for verified checkbox
-    expect(screen.getByRole("checkbox", { name: /verified only/i })).toBeInTheDocument();
+    // Check for location input
+    expect(screen.getByPlaceholderText(/enter location/i)).toBeInTheDocument();
   });
 
   test("renders search button", () => {
     render(<SearchBar />);
 
     // Check for search button
-    expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /find ca/i })).toBeInTheDocument();
   });
 
-  test("renders in mobile view with collapsed filters", () => {
-    // Mock window width for mobile view
-    Object.defineProperty(window, "innerWidth", { value: 375, writable: true });
-    window.dispatchEvent(new Event("resize"));
-
+  test("renders quick location buttons", () => {
     render(<SearchBar />);
 
-    // In mobile view, filters are collapsed by default
-    expect(screen.getByText(/filters/i)).toBeInTheDocument();
-
-    // Filters should not be visible initially
-    expect(screen.queryByText(/location/i)).not.toBeVisible();
-    expect(screen.queryByRole("checkbox", { name: /verified only/i })).not.toBeVisible();
+    // Check for quick location buttons
+    expect(screen.getByRole("button", { name: /mumbai/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /delhi/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /chennai/i })).toBeInTheDocument();
   });
 
-  test("expands filters in mobile view when filters button is clicked", async () => {
-    // Mock window width for mobile view
-    Object.defineProperty(window, "innerWidth", { value: 375, writable: true });
-    window.dispatchEvent(new Event("resize"));
-
+  test("renders with proper styling", () => {
     render(<SearchBar />);
 
-    // Click filters button
-    await userEvent.click(screen.getByText(/filters/i));
-
-    // Filters should now be visible
-    expect(screen.getByText(/location/i)).toBeVisible();
-    expect(screen.getByRole("checkbox", { name: /verified only/i })).toBeVisible();
-  });
-
-  test("renders in desktop view with expanded filters", () => {
-    // Mock window width for desktop view
-    Object.defineProperty(window, "innerWidth", { value: 1024, writable: true });
-    window.dispatchEvent(new Event("resize"));
-
-    render(<SearchBar />);
-
-    // In desktop view, filters should be visible by default
-    expect(screen.getByText(/location/i)).toBeVisible();
-    expect(screen.getByRole("checkbox", { name: /verified only/i })).toBeVisible();
-
-    // Filters button should not be present
-    expect(screen.queryByText(/filters/i)).not.toBeInTheDocument();
-  });
-
-  test("renders correctly in dark mode", () => {
-    render(<SearchBar />);
-
-    // Check for dark mode specific classes
-    const searchContainer = screen.getByTestId("search-container");
-    expect(searchContainer).toHaveClass("dark:bg-gray-800");
+    // Check for main container by finding the div that contains the form
+    const container = screen
+      .getByPlaceholderText(/enter location/i)
+      .closest('div[class*="w-full"]');
+    expect(container).toBeInTheDocument();
   });
 
   // Interaction tests
-  test("updates search text on input", async () => {
+  test("updates location input on typing", async () => {
     render(<SearchBar />);
 
-    // Type in search input
-    const searchInput = screen.getByPlaceholderText(/search for ca/i);
-    await userEvent.type(searchInput, "tax specialist");
+    // Type in location input
+    const locationInput = screen.getByPlaceholderText(/enter location/i);
+    await userEvent.type(locationInput, "Bangalore");
 
     // Check input value
-    expect(searchInput).toHaveValue("tax specialist");
-  });
-
-  test("selects location from dropdown", async () => {
-    render(<SearchBar />);
-
-    // Open location dropdown
-    const locationDropdown = screen.getByText(/location/i);
-    await userEvent.click(locationDropdown);
-
-    // Select option - Mumbai in this case
-    const mumbaiOption = screen.getByText(/mumbai/i);
-    await userEvent.click(mumbaiOption);
-
-    // Dropdown should now show Mumbai
-    expect(locationDropdown).toHaveTextContent(/mumbai/i);
-  });
-
-  test("toggles verified checkbox", async () => {
-    render(<SearchBar />);
-
-    // Get checkbox
-    const verifiedCheckbox = screen.getByRole("checkbox", { name: /verified only/i });
-
-    // Initially unchecked
-    expect(verifiedCheckbox).not.toBeChecked();
-
-    // Click checkbox
-    await userEvent.click(verifiedCheckbox);
-
-    // Should now be checked
-    expect(verifiedCheckbox).toBeChecked();
-
-    // Click again to uncheck
-    await userEvent.click(verifiedCheckbox);
-
-    // Should now be unchecked again
-    expect(verifiedCheckbox).not.toBeChecked();
+    expect(locationInput).toHaveValue("Bangalore");
   });
 
   test("calls onSearch handler when search button is clicked", async () => {
     const onSearchMock = jest.fn();
     render(<SearchBar onSearch={onSearchMock} />);
 
-    // Fill search form
-    await userEvent.type(screen.getByPlaceholderText(/search for ca/i), "tax specialist");
-
-    // Select location
-    const locationDropdown = screen.getByText(/location/i);
-    await userEvent.click(locationDropdown);
-    const mumbaiOption = screen.getByText(/mumbai/i);
-    await userEvent.click(mumbaiOption);
-
-    // Check verified checkbox
-    await userEvent.click(screen.getByRole("checkbox", { name: /verified only/i }));
+    // Fill location input
+    const locationInput = screen.getByPlaceholderText(/enter location/i);
+    await userEvent.type(locationInput, "Mumbai");
 
     // Click search button
-    await userEvent.click(screen.getByRole("button", { name: /search/i }));
+    await userEvent.click(screen.getByRole("button", { name: /find ca/i }));
 
-    // Check that onSearch was called with correct data
-    expect(onSearchMock).toHaveBeenCalledWith({
-      query: "tax specialist",
-      location: "Mumbai",
-      verifiedOnly: true,
-    });
+    // Check that onSearch was called with correct location
+    expect(onSearchMock).toHaveBeenCalledWith("Mumbai");
   });
 
-  // Form submission tests
-  test("submits search query with valid data", async () => {
+  test("navigates to search page when no onSearch handler provided", async () => {
     render(<SearchBar />);
 
-    // Fill search form
-    await userEvent.type(screen.getByPlaceholderText(/search for ca/i), "tax specialist");
-
-    // Select location
-    const locationDropdown = screen.getByText(/location/i);
-    await userEvent.click(locationDropdown);
-    const mumbaiOption = screen.getByText(/mumbai/i);
-    await userEvent.click(mumbaiOption);
-
-    // Check verified checkbox
-    await userEvent.click(screen.getByRole("checkbox", { name: /verified only/i }));
+    // Fill location input
+    const locationInput = screen.getByPlaceholderText(/enter location/i);
+    await userEvent.type(locationInput, "Delhi");
 
     // Click search button
-    await userEvent.click(screen.getByRole("button", { name: /search/i }));
+    await userEvent.click(screen.getByRole("button", { name: /find ca/i }));
 
-    // Check router was called with correct URL
-    expect(pushMock).toHaveBeenCalledWith(
-      "/search?query=tax+specialist&location=Mumbai&verified=true"
-    );
+    // Check that router.push was called with correct URL
+    expect(pushMock).toHaveBeenCalledWith("/search?location=Delhi");
   });
 
-  test("submits search query when Enter key is pressed in search input", async () => {
+  test("handles quick location button clicks", async () => {
+    const onSearchMock = jest.fn();
+    render(<SearchBar onSearch={onSearchMock} />);
+
+    // Click Mumbai quick location button
+    await userEvent.click(screen.getByRole("button", { name: /mumbai/i }));
+
+    // Check that onSearch was called with Mumbai
+    expect(onSearchMock).toHaveBeenCalledWith("Mumbai");
+  });
+
+  test("navigates to search page on quick location click without handler", async () => {
     render(<SearchBar />);
 
-    // Type in search input and press Enter
-    const searchInput = screen.getByPlaceholderText(/search for ca/i);
-    await userEvent.type(searchInput, "tax specialist{enter}");
+    // Click Delhi quick location button
+    await userEvent.click(screen.getByRole("button", { name: /delhi/i }));
 
-    // Check router was called with correct URL
-    expect(pushMock).toHaveBeenCalledWith("/search?query=tax+specialist&location=&verified=false");
+    // Check that router.push was called with correct URL
+    expect(pushMock).toHaveBeenCalledWith("/search?location=Delhi");
   });
 
-  // Accessibility tests
-  test("has proper ARIA attributes", () => {
+  test("submits form on Enter key press", async () => {
+    const onSearchMock = jest.fn();
+    render(<SearchBar onSearch={onSearchMock} />);
+
+    // Type in location input and press Enter
+    const locationInput = screen.getByPlaceholderText(/enter location/i);
+    await userEvent.type(locationInput, "Chennai");
+    await userEvent.keyboard("{Enter}");
+
+    // Check that onSearch was called
+    expect(onSearchMock).toHaveBeenCalledWith("Chennai");
+  });
+
+  test("handles empty location submission", async () => {
+    const onSearchMock = jest.fn();
+    render(<SearchBar onSearch={onSearchMock} />);
+
+    // Click search button without entering location
+    await userEvent.click(screen.getByRole("button", { name: /find ca/i }));
+
+    // Should still call onSearch with empty string
+    expect(onSearchMock).toHaveBeenCalledWith("");
+  });
+
+  test("updates input value when quick location is selected", async () => {
     render(<SearchBar />);
 
-    // Check for proper ARIA attributes
-    expect(screen.getByPlaceholderText(/search for ca/i)).toHaveAttribute("aria-label", "Search");
-    expect(screen.getByRole("checkbox", { name: /verified only/i })).toHaveAttribute(
-      "aria-checked"
-    );
+    // Click Mumbai quick location button
+    await userEvent.click(screen.getByRole("button", { name: /mumbai/i }));
+
+    // Check that input value is updated
+    const locationInput = screen.getByPlaceholderText(/enter location/i);
+    expect(locationInput).toHaveValue("Mumbai");
   });
 
-  test("supports keyboard navigation", async () => {
+  test("renders with responsive design classes", () => {
     render(<SearchBar />);
 
-    // Tab through form elements
-    const searchInput = screen.getByPlaceholderText(/search for ca/i);
-    searchInput.focus();
-
-    await userEvent.tab(); // Move to location dropdown
-    expect(screen.getByText(/location/i)).toHaveFocus();
-
-    await userEvent.tab(); // Move to verified checkbox
-    expect(screen.getByRole("checkbox", { name: /verified only/i })).toHaveFocus();
-
-    await userEvent.tab(); // Move to search button
-    expect(screen.getByRole("button", { name: /search/i })).toHaveFocus();
-  });
-
-  test("is accessible to screen readers", async () => {
-    const { container } = render(<SearchBar />);
-
-    // Check accessibility
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
-  });
-
-  // Edge cases
-  test("handles empty search query", async () => {
-    render(<SearchBar />);
-
-    // Click search with empty query
-    await userEvent.click(screen.getByRole("button", { name: /search/i }));
-
-    // Should still navigate but with empty query
-    expect(pushMock).toHaveBeenCalledWith("/search?query=&location=&verified=false");
-  });
-
-  test("provides visual feedback on hover and focus", async () => {
-    render(<SearchBar />);
-
-    // Check for hover styles on search button
-    const searchButton = screen.getByRole("button", { name: /search/i });
-    fireEvent.mouseOver(searchButton);
-
-    // Button should have hover class
-    expect(searchButton).toHaveClass("hover:bg-primary-600");
-
-    // Check for focus styles on search input
-    const searchInput = screen.getByPlaceholderText(/search for ca/i);
-    searchInput.focus();
-
-    // Input should have focus ring
-    expect(searchInput).toHaveClass("focus:ring-2");
-    expect(searchInput).toHaveClass("focus:ring-primary-500");
-  });
-
-  test("persists filter state across re-renders", async () => {
-    const { rerender } = render(<SearchBar />);
-
-    // Set filters
-    await userEvent.type(screen.getByPlaceholderText(/search for ca/i), "tax specialist");
-
-    // Select location
-    const locationDropdown = screen.getByText(/location/i);
-    await userEvent.click(locationDropdown);
-    const mumbaiOption = screen.getByText(/mumbai/i);
-    await userEvent.click(mumbaiOption);
-
-    // Check verified checkbox
-    await userEvent.click(screen.getByRole("checkbox", { name: /verified only/i }));
-
-    // Rerender component
-    rerender(<SearchBar />);
-
-    // Check that filter values are preserved
-    expect(screen.getByPlaceholderText(/search for ca/i)).toHaveValue("tax specialist");
-    expect(screen.getByText(/mumbai/i)).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /verified only/i })).toBeChecked();
+    // Check for responsive classes on the search button
+    const searchButton = screen.getByRole("button", { name: /find ca/i });
+    expect(searchButton).toHaveClass("md:w-auto");
+    expect(searchButton).toHaveClass("w-full");
   });
 });

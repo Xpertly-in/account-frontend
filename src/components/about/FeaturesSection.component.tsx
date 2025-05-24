@@ -3,7 +3,7 @@
 import { Container } from "@/components/layout/Container.component";
 import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
 
-export default function FeaturesSection() {
+export const FeaturesSection = () => {
   return (
     <Container className="py-16 md:py-24">
       <section>
@@ -65,4 +65,4 @@ export default function FeaturesSection() {
       </section>
     </Container>
   );
-}
+};

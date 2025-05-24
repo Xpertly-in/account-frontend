@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import FeaturesSection from "@/components/about/FeaturesSection.component";
-import CTASection from "@/components/about/CTASection.component";
+import { FeaturesSection } from "@/components/about/FeaturesSection.component";
+import { CTASection } from "@/components/about/CTASection.component";
 
 export const metadata: Metadata = {
   title: "About | Xpertly",
