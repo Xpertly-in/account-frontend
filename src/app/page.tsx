@@ -15,15 +15,15 @@ export default function Home() {
     const fetchLatest = async () => {
       const { data, error } = await supabase
         .from("posts")
-        .select(`
+        .select(
+          `
             id,
             title,
             content,
             category,
             tags,
             images,
-            likes_count,
-            comment_count,
+            reaction_counts,
             updated_at,
             is_deleted,
             author_id,
@@ -31,7 +31,8 @@ export default function Home() {
               name,
               profile_picture
             )
-          `)
+          `
+        )
         .eq("is_deleted", false)
         .order("updated_at", { ascending: false })
         .limit(3);
@@ -48,8 +49,7 @@ export default function Home() {
             category: p.category,
             tags: p.tags,
             images: p.images,
-            likes_count: p.likes_count,
-            comment_count: p.comment_count,
+            reaction_counts: p.reaction_counts,
             is_deleted: p.is_deleted,
           }))
         );

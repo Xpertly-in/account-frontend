@@ -2,15 +2,13 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
-import { Card } from "@/ui/Card.ui";
+import { ReactionSystem } from "./ReactionSystem.component";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import {
   ThumbsUp,
   ChatCircle,
   ShareNetwork,
-  PaperPlaneRight,
   DotsThree,
   PencilSimple,
   TrashSimple,
@@ -31,8 +29,7 @@ export interface PostCardProps {
   category?: string;
   tags: string[];
   images: string[];
-  likes_count?: number;
-  comment_count?: number;
+  reaction_counts?: Record<string, number>;
   is_deleted?: boolean;
   onCategoryClick?: (category: string) => void;
   onTagClick?: (tag: string) => void;
@@ -51,8 +48,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   images,
   tags,
   updated_at,
-  likes_count = 0,
-  comment_count = 0,
+  reaction_counts = {},
   onCategoryClick,
   onTagClick,
   onEdit,
@@ -271,14 +267,11 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-2 py-2 flex justify-between text-gray-600 dark:text-gray-400">
-        <button className="flex items-center gap-1 hover:text-primary">
-          <ThumbsUp size={18} />
-          <span className="text-sm"> {likes_count} Likes</span>
-        </button>
+      <div className="border-t ... flex justify-between">
+        <ReactionSystem targetType="post" targetId={id} />
         <button className="flex items-center gap-1 hover:text-primary">
           <ChatCircle size={18} />
-          <span className="text-sm"> {comment_count} Comments</span>
+          <span className="text-sm">Comments</span>
         </button>
         <button className="flex items-center gap-1 hover:text-primary">
           <ShareNetwork size={18} />
