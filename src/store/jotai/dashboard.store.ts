@@ -5,7 +5,13 @@ import {
   DashboardState,
   PostComposerState,
 } from "@/types/dashboard/dashboard.type";
-import { Lead, LeadSortField, SortDirection } from "@/types/dashboard/lead.type";
+import {
+  Lead,
+  LeadSortField,
+  SortDirection,
+  LeadFilter,
+  PaginationParams,
+} from "@/types/dashboard/lead.type";
 import { ContactRequest } from "@/types/dashboard/contact-request.type";
 import { DASHBOARD_PAGINATION } from "@/constants/dashboard.constants";
 import { fetchLeads } from "@/services/leads.service";
@@ -129,30 +135,178 @@ export const leadsErrorAtom = atom(
 );
 
 /**
- * Fetch leads atom - action to fetch leads from Supabase
+ * Pagination atoms for leads
  */
-export const fetchLeadsAtom = atom(null, async (get, set, caId?: string) => {
-  // Set loading state
-  set(leadsLoadingAtom, true);
+export const leadsPageAtom = atom(
+  get => get(dashboardStateAtom).leads.page,
+  (get, set, page: number) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      leads: {
+        ...current.leads,
+        page,
+      },
+    });
+  }
+);
 
-  try {
-    const { data, error } = await fetchLeads(caId);
+export const leadsPageSizeAtom = atom(
+  get => get(dashboardStateAtom).leads.pageSize,
+  (get, set, pageSize: number) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      leads: {
+        ...current.leads,
+        pageSize,
+        page: 1, // Reset to first page when changing page size
+      },
+    });
+  }
+);
 
-    if (error) {
-      set(leadsErrorAtom, error.message || "Failed to fetch leads");
-      set(leadsDataAtom, []);
-    } else {
-      set(leadsDataAtom, data || []);
-      set(leadsErrorAtom, null);
-    }
-  } catch (error) {
-    console.error("Error in fetchLeadsAtom:", error);
-    set(leadsErrorAtom, "An unexpected error occurred");
-    set(leadsDataAtom, []);
-  } finally {
-    set(leadsLoadingAtom, false);
+export const leadsTotalCountAtom = atom(
+  get => get(dashboardStateAtom).leads.totalCount,
+  (get, set, totalCount: number) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      leads: {
+        ...current.leads,
+        totalCount,
+      },
+    });
+  }
+);
+
+/**
+ * Computed pagination metadata atoms
+ */
+export const leadsTotalPagesAtom = atom(get => {
+  const { totalCount, pageSize } = get(dashboardStateAtom).leads;
+  return pageSize > 0 ? Math.ceil(totalCount / pageSize) : 1;
+});
+
+export const leadsHasNextPageAtom = atom(get => {
+  const { page } = get(dashboardStateAtom).leads;
+  const totalPages = get(leadsTotalPagesAtom);
+  return page < totalPages;
+});
+
+export const leadsHasPreviousPageAtom = atom(get => {
+  const { page } = get(dashboardStateAtom).leads;
+  return page > 1;
+});
+
+/**
+ * Pagination action atoms
+ */
+export const leadsNextPageAtom = atom(null, (get, set) => {
+  const hasNext = get(leadsHasNextPageAtom);
+  if (hasNext) {
+    const currentPage = get(leadsPageAtom);
+    set(leadsPageAtom, currentPage + 1);
   }
 });
+
+export const leadsPreviousPageAtom = atom(null, (get, set) => {
+  const hasPrevious = get(leadsHasPreviousPageAtom);
+  if (hasPrevious) {
+    const currentPage = get(leadsPageAtom);
+    set(leadsPageAtom, currentPage - 1);
+  }
+});
+
+export const leadsGoToPageAtom = atom(null, (get, set, page: number) => {
+  const totalPages = get(leadsTotalPagesAtom);
+  if (page >= 1 && page <= totalPages) {
+    set(leadsPageAtom, page);
+  }
+});
+
+/**
+ * Search atoms for leads
+ */
+export const leadsSearchAtom = atom(
+  get => get(dashboardStateAtom).leads.filter.search || "",
+  (get, set, search: string) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      leads: {
+        ...current.leads,
+        filter: {
+          ...current.leads.filter,
+          search,
+        },
+        page: 1, // Reset to first page when search changes
+      },
+    });
+  }
+);
+
+/**
+ * Filter atoms for leads
+ */
+export const leadsFilterAtom = atom(
+  get => get(dashboardStateAtom).leads.filter,
+  (get, set, filter: LeadFilter) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      leads: {
+        ...current.leads,
+        filter,
+        page: 1, // Reset to first page when filter changes
+      },
+    });
+  }
+);
+
+/**
+ * Updated fetch leads atom with pagination support
+ */
+export const fetchLeadsAtom = atom(
+  null,
+  async (get, set, caId?: string, filter?: LeadFilter, pagination?: PaginationParams) => {
+    // Set loading state
+    set(leadsLoadingAtom, true);
+
+    try {
+      // Use provided pagination or get from store
+      const paginationParams = pagination || {
+        page: get(leadsPageAtom),
+        pageSize: get(leadsPageSizeAtom),
+      };
+
+      const result = await fetchLeads(caId, filter, paginationParams);
+
+      if (result.error) {
+        set(leadsErrorAtom, result.error.message || "Failed to fetch leads");
+        set(leadsDataAtom, []);
+        set(leadsTotalCountAtom, 0);
+      } else {
+        set(leadsDataAtom, result.data || []);
+        set(leadsErrorAtom, null);
+        set(leadsTotalCountAtom, result.totalCount);
+
+        // Update pagination state if it was provided
+        if (pagination) {
+          set(leadsPageAtom, pagination.page);
+          set(leadsPageSizeAtom, pagination.pageSize);
+        }
+      }
+    } catch (error) {
+      console.error("Error in fetchLeadsAtom:", error);
+      set(leadsErrorAtom, "An unexpected error occurred");
+      set(leadsDataAtom, []);
+      set(leadsTotalCountAtom, 0);
+    } finally {
+      set(leadsLoadingAtom, false);
+    }
+  }
+);
 
 /**
  * Contact requests loading atom

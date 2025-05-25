@@ -37,12 +37,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Always return minimal structure until client is mounted
-  // This prevents hydration mismatches
-  if (!mounted) {
-    return <div className="min-h-screen bg-transparent">{children}</div>;
-  }
-
+  // Provide QueryClient immediately but delay analytics components
   return (
     <ThemeProvider>
       <QueryProvider>
@@ -50,9 +45,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <AuthProvider>
             <GoogleAuthProvider>
               {children}
-              <GoogleAnalytics />
-              {/* hide privacy toggle on forum pages */}
-              {!pathname.startsWith("/forum") && <AnalyticsOptOut />}
+              {mounted && (
+                <>
+                  <GoogleAnalytics />
+                  {/* hide privacy toggle on forum pages */}
+                  {pathname && !pathname.startsWith("/forum") && <AnalyticsOptOut />}
+                </>
+              )}
             </GoogleAuthProvider>
           </AuthProvider>
         </JotaiProvider>

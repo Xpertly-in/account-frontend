@@ -2,16 +2,10 @@ import { useState, useEffect } from "react";
 import { Lead } from "@/types/dashboard/lead.type";
 import { Badge } from "@/ui/Badge.ui";
 import { Button } from "@/ui/Button.ui";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/ui/Card.ui";
-import { createLeadEngagement, fetchLeadContactInfo } from "@/services/leads.service";
+import { Card } from "@/ui/Card.ui";
+import { useCreateEngagement, useHideLead } from "@/services/leads.service";
 import { useAuth } from "@/store/context/Auth.provider";
+import { Avatar } from "@/ui/Avatar.ui";
 
 interface LeadCardProps {
   lead: Lead;
@@ -20,7 +14,8 @@ interface LeadCardProps {
 
 export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
   const { auth } = useAuth();
-  const [isCreatingEngagement, setIsCreatingEngagement] = useState(false);
+  const { createEngagement, isLoading: isCreatingEngagement } = useCreateEngagement();
+  const { hideLead, unhideLead, isHiding, isUnhiding } = useHideLead();
   const [contactInfo, setContactInfo] = useState<string>("");
   const [showContactInfo, setShowContactInfo] = useState(false);
 
@@ -33,17 +28,14 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
       const hasEngagement = lead.hasEngagement || false;
       setShowContactInfo(hasEngagement);
 
-      // If already engaged, fetch contact info
-      if (hasEngagement && !contactInfo) {
-        const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
-        if (fetchedContactInfo) {
-          setContactInfo(fetchedContactInfo);
-        }
+      // If already engaged, show contact info from lead data
+      if (hasEngagement && lead.contactInfo) {
+        setContactInfo(lead.contactInfo);
       }
     };
 
     checkEngagement();
-  }, [auth.user, lead.id, lead.hasEngagement, contactInfo]);
+  }, [auth.user, lead.id, lead.hasEngagement, lead.contactInfo]);
 
   // Helper to format date
   const formatDate = (dateString: string) => {
@@ -76,15 +68,15 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
   const getStatusStyle = (status: Lead["status"]) => {
     switch (status) {
       case "new":
-        return "inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800";
+        return "inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400";
       case "contacted":
-        return "inline-flex rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-800";
+        return "inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
       case "closed":
-        return "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800";
+        return "inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
       case "archived":
-        return "inline-flex rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800";
+        return "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/20 dark:text-amber-400";
       default:
-        return "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800";
+        return "inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
     }
   };
 
@@ -103,70 +95,134 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
       return;
     }
 
-    setIsCreatingEngagement(true);
     try {
-      // Use the authenticated user's ID as the CA ID
-      const caId = auth.user.id;
-      const { data, error } = await createLeadEngagement(lead.id, caId);
-
-      if (error) {
-        if (error.message?.includes("already exists")) {
-          // Engagement already exists, fetch contact info
-          const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
-          if (fetchedContactInfo) {
-            setContactInfo(fetchedContactInfo);
+      // Use the mutation to create engagement
+      createEngagement(lead.id, {
+        onSuccess: () => {
+          // Show contact info from lead data
+          if (lead.contactInfo) {
+            setContactInfo(lead.contactInfo);
             setShowContactInfo(true);
           }
-        } else {
-          console.error("Error creating engagement:", error);
-        }
-      } else if (data) {
-        // Engagement created successfully, fetch contact info
-        const { contactInfo: fetchedContactInfo } = await fetchLeadContactInfo(lead.id);
-        if (fetchedContactInfo) {
-          setContactInfo(fetchedContactInfo);
-          setShowContactInfo(true);
-        }
 
-        // Refresh leads data to show updated status
-        if (onLeadUpdate) {
-          onLeadUpdate();
-        }
+          // Refresh leads data to show updated status
+          if (onLeadUpdate) {
+            onLeadUpdate();
+          }
 
-        console.log("Engagement created successfully");
-      }
+          console.log("Engagement created successfully");
+        },
+        onError: (error: any) => {
+          if (error.message?.includes("already exists")) {
+            // Engagement already exists, show contact info
+            if (lead.contactInfo) {
+              setContactInfo(lead.contactInfo);
+              setShowContactInfo(true);
+            }
+          } else {
+            console.error("Error creating engagement:", error);
+          }
+        },
+      });
     } catch (error) {
       console.error("Error creating engagement:", error);
-    } finally {
-      setIsCreatingEngagement(false);
     }
   };
 
+  // Handle Archive/Unarchive button click
+  const handleArchiveToggle = async () => {
+    if (!auth.user) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    try {
+      const isArchived = !!lead.hiddenAt;
+
+      if (isArchived) {
+        // Unarchive the lead
+        unhideLead(lead.id, {
+          onSuccess: () => {
+            console.log("Lead unarchived successfully");
+            if (onLeadUpdate) {
+              onLeadUpdate();
+            }
+          },
+          onError: error => {
+            console.error("Error unarchiving lead:", error);
+          },
+        });
+      } else {
+        // Archive the lead
+        hideLead(lead.id, {
+          onSuccess: () => {
+            console.log("Lead archived successfully");
+            if (onLeadUpdate) {
+              onLeadUpdate();
+            }
+          },
+          onError: error => {
+            console.error("Error archiving lead:", error);
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling archive status:", error);
+    }
+  };
+
+  const isArchived = !!lead.hiddenAt;
+
   return (
-    <Card className="flex min-h-[280px] flex-col overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-      <CardHeader className="border-b border-gray-100 pb-3 pt-4 dark:border-gray-700">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {lead.customerName}
-            </CardTitle>
-            <CardDescription className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-              {lead.location.city}, {lead.location.state} • {formatDate(lead.timestamp)}
-            </CardDescription>
+    <Card
+      className={`overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800 ${
+        isArchived ? "opacity-75" : ""
+      }`}
+    >
+      <div className="p-6">
+        {/* Header with customer info, avatar, and urgency */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-4">
+              {/* Customer Avatar */}
+              <Avatar
+                size="lg"
+                src={lead.profilePicture}
+                alt={lead.customerName}
+                name={lead.customerName}
+              />
+
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {lead.customerName}
+                    {isArchived && (
+                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                        (Archived)
+                      </span>
+                    )}
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {lead.location.city}, {lead.location.state} • {formatDate(lead.timestamp)}
+                </p>
+              </div>
+            </div>
           </div>
           <Badge
-            className={`rounded-full px-3 py-1 text-xs font-medium ${getUrgencyColor(
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${getUrgencyColor(
               lead.urgency
             )}`}
           >
             {lead.urgency}
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 pt-4">
-        <div className="space-y-3">
+
+        {/* Content in horizontal layout */}
+        <div className="mt-6 space-y-4">
+          {/* Services */}
           <div>
-            <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               Services Needed:
             </div>
             <div className="flex flex-wrap gap-1">
@@ -181,64 +237,88 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
               ))}
             </div>
           </div>
-          <div>
-            <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Preferred Contact:
+
+          {/* Contact Info */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                Preferred Contact:
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="font-medium text-gray-700 dark:text-gray-300">
+                  {lead.contactPreference}
+                </div>
+                {showContactInfo ? (
+                  <div className="mt-1 font-medium text-gray-900 dark:text-gray-200">
+                    {contactInfo || lead.contactInfo}
+                  </div>
+                ) : (
+                  <div className="mt-1 text-gray-500 dark:text-gray-400">
+                    Click "View Contact" to see details
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {lead.contactPreference}:{" "}
-              {showContactInfo ? (
-                <span className="font-medium text-gray-900 dark:text-gray-200">
-                  {contactInfo || lead.contactInfo}
-                </span>
-              ) : (
-                <span className="font-medium text-gray-500 dark:text-gray-400">
-                  Click "View Contact" to see details
-                </span>
-              )}
-            </div>
+
+            {/* Engagement Count */}
+            {lead.engagementCount !== undefined && lead.engagementCount > 0 && (
+              <div>
+                <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Interest Level:
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {lead.engagementCount} CAs viewed
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Notes - Expanded section for 200-250 characters */}
           {lead.notes && (
             <div>
-              <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Notes:
+              <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                Customer Notes:
               </div>
-              <div className="text-sm italic text-gray-600 dark:text-gray-400">{lead.notes}</div>
-            </div>
-          )}
-          {lead.engagementCount !== undefined && lead.engagementCount > 0 && (
-            <div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                {lead.engagementCount} CAs viewed
+              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50">
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed min-h-[60px]">
+                  {lead.notes}
+                </p>
               </div>
             </div>
           )}
         </div>
-      </CardContent>
-      <CardFooter className="mt-auto flex h-[60px] items-center justify-between border-t border-gray-100 bg-gray-50 px-6 dark:border-gray-700 dark:bg-gray-800/50">
-        <div className={getStatusStyle(lead.status)}>
-          {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 rounded-lg border-gray-200 text-sm dark:border-gray-700"
-          >
-            Archive
-          </Button>
-          {!showContactInfo && (
+
+        {/* Footer with actions */}
+        <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-700">
+          <div className="flex items-center gap-4">
+            {/* Status Badge */}
+            <div className={getStatusStyle(lead.status)}>
+              {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
+            </div>
+          </div>
+          <div className="flex gap-2">
             <Button
               size="sm"
-              className="h-9 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-              onClick={handleViewContact}
-              disabled={isCreatingEngagement}
+              variant="outline"
+              className="h-9 rounded-lg border-gray-200 text-sm dark:border-gray-700"
+              onClick={handleArchiveToggle}
+              disabled={isHiding || isUnhiding}
             >
-              {isCreatingEngagement ? "Loading..." : "View Contact"}
+              {isHiding || isUnhiding ? "Loading..." : isArchived ? "Unarchive" : "Archive"}
             </Button>
-          )}
+            {!showContactInfo && !isArchived && (
+              <Button
+                size="sm"
+                className="h-9 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                onClick={handleViewContact}
+                disabled={isCreatingEngagement}
+              >
+                {isCreatingEngagement ? "Loading..." : "View Contact"}
+              </Button>
+            )}
+          </div>
         </div>
-      </CardFooter>
+      </div>
     </Card>
   );
 };

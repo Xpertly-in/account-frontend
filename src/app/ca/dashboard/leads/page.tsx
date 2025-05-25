@@ -4,14 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { LeadsComponent } from "@/components/leads/Leads.component";
-import { useAtom } from "jotai/react";
-import { fetchLeadsAtom } from "@/store/jotai/dashboard.store";
 import { BackButton } from "@/ui/BackButton.ui";
 
 export default function LeadsPage() {
   const router = useRouter();
   const { auth } = useAuth();
-  const [, fetchLeads] = useAtom(fetchLeadsAtom);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -20,12 +17,7 @@ export default function LeadsPage() {
       router.push("/login/ca");
       return;
     }
-
-    // Fetch real leads data from Supabase
-    if (auth.isAuthenticated) {
-      fetchLeads();
-    }
-  }, [auth.isAuthenticated, router, fetchLeads, isLoaded]);
+  }, [auth.isAuthenticated, router, isLoaded]);
 
   useEffect(() => {
     // Set isLoaded after checking auth state

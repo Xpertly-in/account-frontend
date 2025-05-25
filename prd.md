@@ -47,6 +47,148 @@
 
 **✅ RESULT**: All critical database integration and leads functionality is working perfectly. The platform is ready for user testing.
 
+## 2.1 Immediate Tasks (Next Priority) - Leads System Enhancements
+
+### Production-Ready Leads Management 🚧
+
+**Objective**: Enhance the leads system with production-ready features including archive functionality, server-side pagination, search, and filtering.
+
+- [ ] **Task 1: Archive Functionality**
+
+  - [ ] **Database Schema Updates**
+
+    - [ ] Add `archived_at` timestamp field to leads table
+    - [ ] Create database migration script for archive field
+    - [ ] Update RLS policies to handle archived leads
+    - [ ] Add indexes for archive queries
+
+  - [ ] **Service Layer Updates**
+
+    - [ ] Add `archiveLead()` function to leads service
+    - [ ] Add `unarchiveLead()` function to leads service
+    - [ ] Update `fetchLeads()` to exclude archived leads by default
+    - [ ] Add `fetchArchivedLeads()` function for archive view
+    - [ ] Add comprehensive error handling for archive operations
+
+  - [ ] **Type System Updates**
+
+    - [ ] Update Lead interface to include `archivedAt?: string` field
+    - [ ] Add archive-related enums and constants
+    - [ ] Update LeadFilter interface to include archive status
+
+  - [ ] **Component Updates**
+
+    - [ ] Update LeadCard component to handle archive/unarchive actions
+    - [ ] Add confirmation dialog for archive actions
+    - [ ] Add archive filter to LeadFilter component
+    - [ ] Add archived leads view to dashboard
+    - [ ] Update loading and error states for archive operations
+
+  - [ ] **Testing Implementation**
+    - [ ] Write tests for archive service functions
+    - [ ] Test archive/unarchive UI interactions
+    - [ ] Test archive filtering functionality
+    - [ ] Test error scenarios and edge cases
+
+- [ ] **Task 2: Server-Side Pagination**
+
+  - [ ] **Service Layer Implementation**
+
+    - [ ] Update `fetchLeads()` to accept pagination parameters (page, pageSize)
+    - [ ] Implement Supabase range queries for pagination
+    - [ ] Add total count query for pagination metadata
+    - [ ] Add pagination response interface with data and metadata
+
+  - [ ] **State Management Updates**
+
+    - [ ] Update dashboard store to handle pagination state
+    - [ ] Add pagination atoms (currentPage, pageSize, totalCount, hasNextPage)
+    - [ ] Implement pagination actions (nextPage, prevPage, goToPage)
+    - [ ] Add pagination loading states
+
+  - [ ] **Component Implementation**
+
+    - [ ] Create Pagination component with navigation controls
+    - [ ] Update Leads component to use pagination
+    - [ ] Add page size selector (10, 25, 50 records per page)
+    - [ ] Implement infinite scroll as alternative option
+    - [ ] Add pagination loading states and skeleton loaders
+
+  - [ ] **Testing Implementation**
+    - [ ] Test pagination service functions
+    - [ ] Test pagination component interactions
+    - [ ] Test edge cases (empty pages, last page, first page)
+    - [ ] Test pagination state management
+
+- [ ] **Task 3: Server-Side Search with Debouncing**
+
+  - [ ] **Service Layer Implementation**
+
+    - [ ] Update `fetchLeads()` to accept search parameters
+    - [ ] Implement full-text search across customer names, services, locations
+    - [ ] Add search highlighting in results
+    - [ ] Optimize search queries with proper indexing
+
+  - [ ] **Debouncing Implementation**
+
+    - [ ] Create custom useDebounce hook (300ms delay)
+    - [ ] Implement search state management with debouncing
+    - [ ] Add search loading indicators
+    - [ ] Handle search cancellation for rapid typing
+
+  - [ ] **Component Updates**
+
+    - [ ] Update search input with debounced server requests
+    - [ ] Add search suggestions/autocomplete
+    - [ ] Add search result highlighting
+    - [ ] Implement search history and saved searches
+
+  - [ ] **Testing Implementation**
+    - [ ] Test search service functions
+    - [ ] Test debouncing behavior
+    - [ ] Test search result accuracy
+    - [ ] Test search performance and edge cases
+
+- [ ] **Task 4: Server-Side Filtering**
+
+  - [ ] **Service Layer Implementation**
+
+    - [ ] Update `fetchLeads()` to accept comprehensive filter parameters
+    - [ ] Implement filtering by urgency, services, status, date ranges
+    - [ ] Add location-based filtering (city, state, radius)
+    - [ ] Optimize filter queries with proper indexing
+
+  - [ ] **Filter State Management**
+
+    - [ ] Update filter state in dashboard store
+    - [ ] Implement filter persistence in URL parameters
+    - [ ] Add filter presets and saved filters
+    - [ ] Handle complex filter combinations
+
+  - [ ] **Component Updates**
+
+    - [ ] Update LeadFilter component to trigger server requests
+    - [ ] Add advanced filter options (date pickers, multi-select)
+    - [ ] Implement filter chips for active filters
+    - [ ] Add filter reset and clear all functionality
+
+  - [ ] **Testing Implementation**
+    - [ ] Test all filter combinations
+    - [ ] Test filter persistence and URL state
+    - [ ] Test filter performance with large datasets
+    - [ ] Test filter edge cases and validation
+
+### Implementation Guidelines
+
+- **TDD Approach**: Write failing tests first, implement minimal code to pass, then refactor
+- **Performance**: Optimize all database queries with proper indexing
+- **User Experience**: Maintain responsive UI with proper loading states
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Accessibility**: Ensure all new components meet WCAG AA standards
+- **Mobile-First**: All components must work seamlessly on mobile devices
+- **Component Size**: Keep all components under 200 lines of code
+- **Type Safety**: Full TypeScript coverage for all new functionality
+
 ---
 
 ## 3. Goals & Objectives

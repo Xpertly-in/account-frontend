@@ -1,378 +1,321 @@
 import { supabase } from "@/helper/supabase.helper";
-import { Lead, LeadEngagement } from "@/types/dashboard/lead.type";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/store/context/Auth.provider";
+import {
+  Lead,
+  LeadFilter,
+  PaginationParams,
+  PaginatedLeadsResponse,
+} from "@/types/dashboard/lead.type";
+
+// ============================================================================
+// CORE SERVICE FUNCTIONS
+// ============================================================================
 
 /**
- * Interface for creating a new lead (matches database schema)
+ * Fetches leads from the database with pagination support and CA-specific preferences
  */
-interface CreateLeadData {
-  customer_id: string;
-  services: string[];
-  urgency: string;
-  contact_preference: string;
-  status?: string;
-  location_city: string;
-  location_state: string;
-  contact_info: string;
-  notes?: string;
-}
-
-/**
- * Creates a new lead in the database
- * @param leadData - The lead data to create
- * @returns Promise with created lead data or error
- */
-export const createLead = async (
-  leadData: CreateLeadData
-): Promise<{ data: Lead | null; error: any }> => {
+export const fetchLeads = async (
+  caId?: string,
+  filter?: LeadFilter,
+  pagination?: PaginationParams
+): Promise<PaginatedLeadsResponse> => {
   try {
-    const { data, error } = await supabase
-      .from("leads")
-      .insert({
-        ...leadData,
-        status: leadData.status || "new",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select(
-        `
+    // Build a simple query without complex joins for search
+    let query = supabase.from("leads").select(`
         *,
-        profiles!customer_id (
-          name
+        profiles!leads_customer_id_fkey(name),
+        lead_engagements!left(
+          ca_id,
+          viewed_at,
+          is_hidden,
+          hidden_at,
+          notes,
+          updated_at
         )
-      `
-      )
-      .single();
+      `);
 
-    if (error) throw error;
-
-    // Transform database response to match our TypeScript interface
-    const transformedData: Lead = {
-      id: data.id,
-      customerId: data.customer_id,
-      customerName: data.profiles?.name || "Unknown Customer",
-      services: data.services || [],
-      urgency: data.urgency,
-      location: {
-        city: data.location_city,
-        state: data.location_state,
-      },
-      contactPreference: data.contact_preference,
-      contactInfo: data.contact_info,
-      notes: data.notes,
-      timestamp: data.created_at,
-      status: data.status,
-    };
-
-    return { data: transformedData, error: null };
-  } catch (error) {
-    console.error("Error creating lead:", error);
-    return { data: null, error };
-  }
-};
-
-/**
- * Updates an existing lead in the database
- * @param leadId - The ID of the lead to update
- * @param updates - The fields to update
- * @returns Promise with updated lead data or error
- */
-export const updateLead = async (
-  leadId: string,
-  updates: Partial<CreateLeadData>
-): Promise<{ data: Lead | null; error: any }> => {
-  try {
-    const { data, error } = await supabase
-      .from("leads")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", leadId)
-      .select(
-        `
-        *,
-        profiles!customer_id (
-          name
-        )
-      `
-      )
-      .single();
-
-    if (error) throw error;
-
-    // Transform database response to match our TypeScript interface
-    const transformedData: Lead = {
-      id: data.id,
-      customerId: data.customer_id,
-      customerName: data.profiles?.name || "Unknown Customer",
-      services: data.services || [],
-      urgency: data.urgency,
-      location: {
-        city: data.location_city,
-        state: data.location_state,
-      },
-      contactPreference: data.contact_preference,
-      contactInfo: data.contact_info,
-      notes: data.notes,
-      timestamp: data.created_at,
-      status: data.status,
-    };
-
-    return { data: transformedData, error: null };
-  } catch (error) {
-    console.error("Error updating lead:", error);
-    return { data: null, error };
-  }
-};
-
-/**
- * Fetches all leads from the database (WITHOUT contact info for security)
- * @param caId - The ID of the current CA to check engagements
- * @returns Promise with leads data or error
- */
-export const fetchLeads = async (caId?: string): Promise<{ data: Lead[] | null; error: any }> => {
-  try {
-    // First, get all leads WITHOUT contact info
-    const { data: leadsData, error: leadsError } = await supabase
-      .from("leads")
-      .select(
-        `
-        id,
-        customer_id,
-        services,
-        urgency,
-        location_city,
-        location_state,
-        contact_preference,
-        notes,
-        status,
-        created_at,
-        updated_at,
-        profiles!customer_id (
-          name
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
-
-    if (leadsError) throw leadsError;
-
-    let engagementsMap = new Map<string, boolean>();
-
-    // If CA ID provided, fetch their engagements in one query
-    if (caId) {
-      const { data: engagements, error: engError } = await supabase
-        .from("lead_engagements")
-        .select("lead_id")
-        .eq("ca_id", caId);
-
-      if (engError) {
-        console.warn("Error fetching engagements:", engError);
-      } else {
-        engagements?.forEach(eng => {
-          engagementsMap.set(eng.lead_id, true);
-        });
-      }
+    // Apply basic filters first (these work fine with joins)
+    if (filter?.urgency && filter.urgency.length > 0) {
+      query = query.in("urgency", filter.urgency);
+    }
+    if (filter?.services && filter.services.length > 0) {
+      query = query.overlaps("services", filter.services);
+    }
+    if (filter?.status && filter.status.length > 0) {
+      query = query.in("status", filter.status);
+    }
+    if (filter?.dateRange) {
+      query = query.gte("created_at", filter.dateRange.from).lte("created_at", filter.dateRange.to);
     }
 
-    // Transform database response to match our TypeScript interface
-    const transformedData: Lead[] =
-      leadsData?.map(item => ({
-        id: item.id,
-        customerId: item.customer_id,
-        customerName: (item.profiles as any)?.name || "Unknown Customer",
-        services: item.services || [],
-        urgency: item.urgency,
-        location: {
-          city: item.location_city,
-          state: item.location_state,
-        },
-        contactPreference: item.contact_preference,
-        contactInfo: "", // NEVER send contact info in initial fetch
-        notes: item.notes,
-        timestamp: item.created_at,
-        status: item.status,
-        hasEngagement: engagementsMap.has(item.id), // Track if CA has engaged
-      })) || [];
+    // For search, we'll apply it after fetching the data to avoid Supabase join issues
+    // Execute main query (no search at DB level to avoid join conflicts)
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw error;
 
-    return { data: transformedData, error: null };
+    // Transform data and apply CA-specific filtering
+    let transformedData =
+      data?.map((lead: any) => {
+        // Find engagement for this specific CA
+        const engagement = lead.lead_engagements?.find((eng: any) => eng.ca_id === caId);
+
+        return {
+          id: lead.id,
+          customerId: lead.customer_id,
+          customerName: lead.profiles?.name || "Unknown Customer",
+          profilePicture: lead.profiles?.profile_picture || undefined,
+          services: lead.services || [],
+          urgency: lead.urgency,
+          location: {
+            city: lead.location_city || "",
+            state: lead.location_state || "",
+          },
+          contactPreference: lead.contact_preference,
+          contactInfo: lead.contact_info,
+          notes: lead.notes,
+          timestamp: lead.created_at,
+          status: lead.status,
+          engagementCount: 0,
+          hasEngagement: !!engagement,
+          isHidden: engagement?.is_hidden || false,
+          hiddenAt: engagement?.hidden_at,
+          caNotes: engagement?.notes,
+        };
+      }) || [];
+
+    // Apply CA-specific filtering after transformation
+    if (caId && !filter?.includeHidden) {
+      transformedData = transformedData.filter(lead => !lead.isHidden);
+    }
+
+    // Apply search filtering in JavaScript (to avoid Supabase join issues)
+    if (filter?.search && filter.search.trim()) {
+      const searchTerm = filter.search.trim().toLowerCase();
+
+      transformedData = transformedData.filter(lead => {
+        // Search across all relevant fields
+        const searchableText = [
+          lead.customerName,
+          lead.location.city,
+          lead.location.state,
+          lead.contactInfo,
+          lead.notes,
+          lead.urgency,
+          lead.status,
+          lead.contactPreference,
+          ...(lead.services || []),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return searchableText.includes(searchTerm);
+      });
+    }
+
+    // Calculate pagination metadata
+    const actualCount = transformedData.length;
+    const currentPage = pagination?.page || 1;
+    const pageSize = pagination?.pageSize || 5; // Default to 5 leads per page
+
+    // Apply pagination to transformed data
+    let paginatedData = transformedData;
+    if (pagination || actualCount > 5) {
+      // Apply pagination if specified or if more than 5 leads
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize;
+      paginatedData = transformedData.slice(from, to);
+    }
+
+    const totalPages = Math.ceil(actualCount / pageSize);
+    const hasNextPage = currentPage < totalPages;
+    const hasPreviousPage = currentPage > 1;
+
+    return {
+      data: paginatedData,
+      error: null,
+      totalCount: actualCount,
+      hasNextPage,
+      hasPreviousPage,
+      currentPage,
+      pageSize,
+      totalPages,
+    };
   } catch (error) {
     console.error("Error fetching leads:", error);
-    return { data: null, error };
-  }
-};
-
-/**
- * Fetches contact info for a specific lead (only after engagement)
- * @param leadId - The ID of the lead
- * @returns Promise with contact info or error
- */
-export const fetchLeadContactInfo = async (
-  leadId: string
-): Promise<{ contactInfo: string | null; error: any }> => {
-  try {
-    const { data, error } = await supabase
-      .from("leads")
-      .select("contact_info")
-      .eq("id", leadId)
-      .single();
-
-    if (error) throw error;
-
-    return { contactInfo: data.contact_info, error: null };
-  } catch (error) {
-    console.error("Error fetching lead contact info:", error);
-    return { contactInfo: null, error };
-  }
-};
-
-/**
- * Checks if a CA has already engaged with a specific lead
- * @param leadId - The ID of the lead
- * @param caId - The ID of the CA
- * @returns Promise with boolean indicating if engagement exists
- */
-export const checkExistingEngagement = async (
-  leadId: string,
-  caId: string
-): Promise<{ exists: boolean; error: any }> => {
-  try {
-    const { data, error } = await supabase
-      .from("lead_engagements")
-      .select("lead_id")
-      .eq("lead_id", leadId)
-      .eq("ca_id", caId)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 is "not found" error, which is expected when no engagement exists
-      throw error;
-    }
-
-    return { exists: !!data, error: null };
-  } catch (error) {
-    console.error("Error checking existing engagement:", error);
-    return { exists: false, error };
-  }
-};
-
-/**
- * Creates a new lead engagement record and updates lead status
- * @param leadId - The ID of the lead being engaged with
- * @param caId - The ID of the CA engaging with the lead
- * @returns Promise with engagement data or error
- */
-export const createLeadEngagement = async (
-  leadId: string,
-  caId: string
-): Promise<{ data: LeadEngagement | null; error: any }> => {
-  try {
-    // Check if engagement already exists
-    const { exists, error: checkError } = await checkExistingEngagement(leadId, caId);
-    if (checkError) throw checkError;
-
-    if (exists) {
-      return {
-        data: null,
-        error: { message: "Engagement already exists for this CA and lead" },
-      };
-    }
-
-    const engagement = {
-      lead_id: leadId,
-      ca_id: caId,
-      viewed_at: new Date().toISOString(),
+    return {
+      data: [],
+      error,
+      totalCount: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      currentPage: 1,
+      pageSize: pagination?.pageSize || 10,
+      totalPages: 0,
     };
+  }
+};
 
-    const { data, error } = await supabase
-      .from("lead_engagements")
-      .insert(engagement)
-      .select()
-      .single();
+/**
+ * Creates a new lead engagement record
+ */
+const createLeadEngagement = async (leadId: string, caId: string) => {
+  const engagement = {
+    lead_id: leadId,
+    ca_id: caId,
+    viewed_at: new Date().toISOString(),
+    is_hidden: false,
+    updated_at: new Date().toISOString(),
+  };
 
-    if (error) throw error;
+  const { data, error } = await supabase
+    .from("lead_engagements")
+    .insert(engagement)
+    .select()
+    .single();
 
-    // Update lead status to "contacted" if it's currently "new"
-    const { error: updateError } = await supabase
-      .from("leads")
-      .update({
-        status: "contacted",
+  if (error) throw error;
+
+  // Update lead status to "contacted"
+  await supabase
+    .from("leads")
+    .update({ status: "contacted", updated_at: new Date().toISOString() })
+    .eq("id", leadId)
+    .eq("status", "new");
+
+  return data;
+};
+
+/**
+ * Hides a lead for a specific CA
+ */
+const hideLead = async (leadId: string, caId: string) => {
+  const { data, error } = await supabase
+    .from("lead_engagements")
+    .upsert(
+      {
+        lead_id: leadId,
+        ca_id: caId,
+        is_hidden: true,
+        hidden_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", leadId)
-      .eq("status", "new"); // Only update if status is currently "new"
+      },
+      { onConflict: "lead_id,ca_id" }
+    )
+    .select()
+    .single();
 
-    if (updateError) {
-      console.warn("Error updating lead status:", updateError);
-      // Don't fail the engagement creation if status update fails
-    }
-
-    // Transform database response to match our interface (no id field in new schema)
-    const transformedData: LeadEngagement = {
-      id: `${data.lead_id}-${data.ca_id}`, // Create composite ID for compatibility
-      leadId: data.lead_id,
-      caId: data.ca_id,
-      viewedAt: data.viewed_at,
-    };
-
-    return { data: transformedData, error: null };
-  } catch (error) {
-    console.error("Error creating lead engagement:", error);
-    return { data: null, error };
-  }
+  if (error) throw error;
+  return data;
 };
 
 /**
- * Gets all engagements for a specific lead
- * @param leadId - The ID of the lead
- * @returns Promise with engagements data or error
+ * Unhides a lead for a specific CA
  */
-export const getLeadEngagements = async (
-  leadId: string
-): Promise<{ data: LeadEngagement[] | null; error: any }> => {
-  try {
-    const { data, error } = await supabase
-      .from("lead_engagements")
-      .select("*")
-      .eq("lead_id", leadId);
+const unhideLead = async (leadId: string, caId: string) => {
+  const { data, error } = await supabase
+    .from("lead_engagements")
+    .upsert(
+      {
+        lead_id: leadId,
+        ca_id: caId,
+        is_hidden: false,
+        hidden_at: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "lead_id,ca_id" }
+    )
+    .select()
+    .single();
 
-    if (error) throw error;
+  if (error) throw error;
+  return data;
+};
 
-    // Transform database response to match our interface
-    const transformedData: LeadEngagement[] =
-      data?.map(item => ({
-        id: `${item.lead_id}-${item.ca_id}`, // Create composite ID for compatibility
-        leadId: item.lead_id,
-        caId: item.ca_id,
-        viewedAt: item.viewed_at,
-      })) || [];
+// ============================================================================
+// TANSTACK QUERY HOOKS
+// ============================================================================
 
-    return { data: transformedData, error: null };
-  } catch (error) {
-    console.error("Error fetching lead engagements:", error);
-    return { data: null, error };
-  }
+/**
+ * Hook to fetch leads with TanStack Query
+ */
+export const useLeads = (filter?: LeadFilter, pagination?: PaginationParams) => {
+  const { auth } = useAuth();
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["leads", auth.user?.id, filter, pagination],
+    queryFn: () => fetchLeads(auth.user?.id, filter, pagination),
+    enabled: !!auth.user?.id,
+    staleTime: 0, // Always refetch when query key changes
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    leads: data?.data || [],
+    totalCount: data?.totalCount || 0,
+    hasNextPage: data?.hasNextPage || false,
+    hasPreviousPage: data?.hasPreviousPage || false,
+    currentPage: data?.currentPage || 1,
+    pageSize: data?.pageSize || 10,
+    totalPages: data?.totalPages || 0,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  };
 };
 
 /**
- * Gets the count of engagements for a specific lead
- * @param leadId - The ID of the lead
- * @returns Promise with engagement count or error
+ * Hook to create lead engagement
  */
-export const getLeadEngagementCount = async (
-  leadId: string
-): Promise<{ count: number | null; error: any }> => {
-  try {
-    const { count, error } = await supabase
-      .from("lead_engagements")
-      .select("*", { count: "exact", head: true })
-      .eq("lead_id", leadId);
+export const useCreateEngagement = () => {
+  const { auth } = useAuth();
+  const queryClient = useQueryClient();
 
-    if (error) throw error;
+  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
+    mutationFn: (leadId: string) => createLeadEngagement(leadId, auth.user?.id || ""),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
 
-    return { count, error: null };
-  } catch (error) {
-    console.error("Error getting lead engagement count:", error);
-    return { count: null, error };
-  }
+  return {
+    data,
+    isLoading: isPending,
+    isSuccess,
+    isError,
+    error,
+    createEngagement: mutate,
+  };
+};
+
+/**
+ * Hook to hide/unhide leads
+ */
+export const useHideLead = () => {
+  const { auth } = useAuth();
+  const queryClient = useQueryClient();
+
+  const hideMutation = useMutation({
+    mutationFn: (leadId: string) => hideLead(leadId, auth.user?.id || ""),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+
+  const unhideMutation = useMutation({
+    mutationFn: (leadId: string) => unhideLead(leadId, auth.user?.id || ""),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+
+  return {
+    hideLead: hideMutation.mutate,
+    unhideLead: unhideMutation.mutate,
+    isHiding: hideMutation.isPending,
+    isUnhiding: unhideMutation.isPending,
+    hideError: hideMutation.error,
+    unhideError: unhideMutation.error,
+  };
 };
