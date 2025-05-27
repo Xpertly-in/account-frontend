@@ -273,7 +273,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="border-t ... flex justify-between">
+      <div className="border-t ... pt-1 flex justify-between">
         <ReactionButton targetType="post" targetId={id} onReactComplete={() => setReactionVersion(v => v + 1)} />
         <button
           type="button"
@@ -284,7 +284,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         </button>
         <button
           type="button"
-          className="flex items-center gap-1 hover:text-primary"
+          className="flex items-center gap-1 hover:text-primary mr-2"
         >
           <ShareNetwork size={18} />
           <span className="text-sm">Share</span>

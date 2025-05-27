@@ -92,7 +92,7 @@ export function ReactionSummary({
         {top3.map((type, idx) => {
           const reaction = REACTIONS.find(r => r.type === type)!;
           // higher z-index for earlier icons
-          const zClasses = ["z-30", "z-20", "z-10"];
+          const zClasses = ["z-10", "z-20", "z-30"];
           return (
             <div key={type} className={`${idx > 0 ? "-ml-2" : ""} ${zClasses[idx]}`}>
               <button
