@@ -45,7 +45,7 @@ export const LeadsComponent = () => {
     isError,
     error,
     refetch,
-  } = useLeads(filterWithSearch, paginationParams);
+  } = useLeads(filterWithSearch, paginationParams, currentSort);
 
   // Handle pagination actions
   const handlePageChange = useCallback((page: number) => {

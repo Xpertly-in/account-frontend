@@ -24,7 +24,6 @@ export enum LeadUrgency {
 export enum LeadSortField {
   TIMESTAMP = "timestamp",
   URGENCY = "urgency",
-  LOCATION_CITY = "location.city",
 }
 
 /**
@@ -84,6 +83,7 @@ export interface LeadFilter {
     to: string;
   };
   status?: `${LeadStatus}`[];
+  location?: string[]; // Filter by specific cities
   includeHidden?: boolean; // Whether to include leads hidden by current CA
   search?: string; // Search term for customer names, services, and locations
 }
@@ -129,4 +129,22 @@ export interface LeadEngagement {
   hiddenAt?: string;
   notes?: string;
   updatedAt: string;
+}
+
+/**
+ * Filter option interface for dynamic dropdowns
+ */
+export interface FilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
+/**
+ * Location filter option with nested structure
+ */
+export interface LocationOption {
+  state: string;
+  cities: FilterOption[];
+  totalCount: number;
 }
