@@ -15,9 +15,11 @@ const REACTIONS = [
 export function ReactionButton({
   targetType,
   targetId,
+  onReactComplete,
 }: {
   targetType: "post" | "comment";
   targetId: number;
+  onReactComplete?: () => void;
 }) {
   const { auth } = useAuth();
   const userId = auth.user?.id;
@@ -82,6 +84,7 @@ export function ReactionButton({
         reaction_type: type,
         increment: false,
       });
+      onReactComplete?.();
       return;
     }
 
@@ -102,6 +105,7 @@ export function ReactionButton({
         increment: true,
       });
       setMyReaction(type);
+      onReactComplete?.();
       return;
     }
 
@@ -115,6 +119,7 @@ export function ReactionButton({
       reaction_type: type,
       increment: true,
     });
+    onReactComplete?.();
   };
 
   // show / hide picker

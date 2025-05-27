@@ -15,9 +15,11 @@ const REACTIONS = [
 export function ReactionSummary({
   targetType,
   targetId,
+  version,
 }: {
   targetType: "post" | "comment";
   targetId: number;
+  version: number;
 }) {
   const { auth } = useAuth();
   const userId = auth.user?.id;
@@ -60,7 +62,7 @@ export function ReactionSummary({
       }
     }
     load();
-  }, [targetType, targetId, userId]);
+  }, [targetType, targetId, userId, version]);
 
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const top3 = Object.entries(counts)

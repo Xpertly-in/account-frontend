@@ -61,6 +61,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reactionVersion, setReactionVersion] = useState(0);
 
   const initials = useMemo(() => {
     return author_name
@@ -268,12 +269,12 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Above the actions, show the summary */}
       <div className="flex justify-left">
-        <ReactionSummary targetType="post" targetId={id} />
+        <ReactionSummary targetType="post" targetId={id} version={reactionVersion}/>
       </div>
 
       {/* Actions */}
       <div className="border-t ... flex justify-between">
-        <ReactionButton targetType="post" targetId={id} />
+        <ReactionButton targetType="post" targetId={id} onReactComplete={() => setReactionVersion(v => v + 1)} />
         <button
           type="button"
           className="flex items-center gap-1 hover:text-primary"
