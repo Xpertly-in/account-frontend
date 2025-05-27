@@ -141,7 +141,7 @@ export function ReactionButton({
 
   return (
     <div
-      className="relative inline-block"
+      className="relative inline-block ml-1"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
@@ -151,7 +151,7 @@ export function ReactionButton({
         onClick={() => onReact("like")}
         className={`flex items-center space-x-1 text-sm rounded-full px-2 py-1 transition ${
           myReaction
-            ? `${REACTIONS.find(r => r.type === myReaction)!.bg} ${
+            ? `${
                 REACTIONS.find(r => r.type === myReaction)!.fg
               }`
             : "text-gray-500 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -183,7 +183,7 @@ export function ReactionButton({
                 setPickerVisible(false);
               }}
               className={`rounded-full p-1 shadow-md hover:scale-110 transition ${bg} ${fg} ${
-                myReaction === type ? `ring-2 ring-primary ${bg} ${fg}` : ""
+                myReaction === type ? `ring-2 ring-primary ${fg}` : ""
               }`}
               style={{ animationDelay: `${i * 50}ms` }}
             >

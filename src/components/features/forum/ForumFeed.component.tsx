@@ -7,7 +7,7 @@ import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
 import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for button elements
-import { MagnifyingGlass, Funnel, Sliders, Plus, X, Tag } from "@phosphor-icons/react";
+import { MagnifyingGlass, Funnel, Sliders, Plus, X, CaretDown } from "@phosphor-icons/react";
 import { PostCard, PostCardProps } from "./PostCard.component";
 import { Container } from "@/components/layout/Container.component";
 import { useAuth } from "@/store/context/Auth.provider";
@@ -29,7 +29,7 @@ export const ForumFeed: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [sortOpen, setSortOpen] = useState(false);
-  const [sortOption, setSortOption] = useState<"recent" | "trending">("recent");
+  const [sortOption, setSortOption] = useState<"recent" | "top">("recent");
 
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [tagsList, setTagsList] = useState<string[]>([]);
@@ -109,9 +109,9 @@ export const ForumFeed: React.FC = () => {
         query = query.or(`content.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`);
       }
       if (filterCategory) query = query.eq("category", filterCategory);
-      if (filterTags.length) query = query.contains("tags", filterTags);
+      if (filterTags.length) query = query.overlaps("tags", filterTags);
 
-      const sortCol = sortOption === "trending" ? "likes_count" : "updated_at";
+      const sortCol = sortOption === "top" ? "likes_count" : "updated_at";
       query = query.order(sortCol, { ascending: false });
 
       const from = pageNumber * PAGE_SIZE;
@@ -198,12 +198,12 @@ export const ForumFeed: React.FC = () => {
   // };
 
   return (
-    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-2">
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-6">
       {/* Decorative Blobs */}
       <div className="pointer-events-none absolute -top-32 -left-32 w-72 h-72 rounded-full bg-gradient-to-tr from-purple-300 to-indigo-300 blur-2xl opacity-30 dark:opacity-20" />
       <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-pink-300 to-yellow-300 blur-2xl opacity-30 dark:opacity-20" />
 
-      <Container className="max-w-3xl space-y-2">
+      <Container className="max-w-3xl space-y-4">
         {/* Simplified Search & Filters */}
         <div className="flex items-center mb-4 space-x-3">
           <div className="relative flex-1 bg-white rounded-full">
@@ -228,146 +228,130 @@ export const ForumFeed: React.FC = () => {
           </Button>{" "}
         </div>
 
-        {/* Active filters & sort */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {searchTerm && (
-            <div className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full">
-              <span>Search: {searchTerm}</span>
-              <button onClick={() => setSearchTerm("")} className="ml-1">
-                <X size={12} />
-              </button>
-            </div>
-          )}
-          {filterCategory && (
-            <div className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full">
-              <span>Category: {filterCategory}</span>
-              <button onClick={() => setFilterCategory("")} className="ml-1">
-                <X size={12} />
-              </button>
-            </div>
-          )}
-          {filterTags.map(tag => (
-            <div
-              key={tag}
-              className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full"
-            >
-              <span>#{tag}</span>
+        {/* Category, Tags, Sort dropdowns */}
+        <div className="flex items-center mb-4">
+          {/* horizontal line */}
+          <div className="flex-1 border-t border-gray-400 dark:border-gray-700" />
+          <div className="flex items-center space-x-4 pl-4">
+            {/* Category dropdown */}
+            <div ref={filterRef} className="relative">
               <button
-                onClick={() => setFilterTags(ts => ts.filter(t => t !== tag))}
-                className="ml-1"
+                onClick={() => setFilterOpen(o => !o)}
+                className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-primary"
               >
-                <X size={12} />
+                {/* lighter label */}
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Category:</span>
+                {/* bolder value */}
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">
+                  {filterCategory || "All"}
+                </span>
+                <CaretDown size={16} />
               </button>
-            </div>
-          ))}
-          <div className="flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full">
-            <span>Sort: {sortOption[0].toUpperCase() + sortOption.slice(1)}</span>
-            <button onClick={() => setSortOption("recent")} className="ml-1">
-              <X size={12} />
-            </button>
-          </div>
-          {(searchTerm || filterCategory || filterTags.length > 0 || sortOption !== "recent") && (
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setFilterCategory("");
-                setFilterTags([]);
-                setSortOption("recent");
-              }}
-              className="text-xs text-primary hover:underline ml-2"
-            >
-              Clear All
-            </button>
-          )}
-        </div>
-
-        {/* Bottom fixed Filter & Sort bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex z-20">
-          <div ref={filterRef} className="flex-1 relative">
-            <button
-              onClick={() => setFilterOpen(o => !o)}
-              className="w-full py-3 flex items-center justify-center space-x-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Funnel size={20} />
-              <span className="text-sm">Filter</span>
-            </button>
-            {filterOpen && (
-              <div className="absolute bottom-12 left-0 right-0 bg-white dark:bg-gray-800 p-4 shadow-lg border-t border-gray-200 dark:border-gray-700 z-30">
-                {/* Category */}
-                <div className="mb-4">
-                  <label className="text-sm font-medium">Category</label>
-                  <select
-                    value={filterCategory}
-                    onChange={e => setFilterCategory(e.target.value)}
-                    className={`w-full mt-1 px-2 py-1 rounded focus:outline-none ${
-                      filterCategory
-                        ? "border-primary text-primary"
-                        : "border-gray-300 dark:border-gray-600"
-                    }`}
-                  >
-                    <option value="">All Categories</option>
-                    {categoriesList.map(c => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {/* Tags */}
-                <div>
-                  <label className="text-sm font-medium">Tags</label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {tagsList.map(tag => (
+              {filterOpen && (
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 p-2 shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                  <ul className="text-sm">
+                    <li>
                       <button
-                        key={tag}
-                        onClick={() =>
+                        onClick={() => {
+                          setFilterCategory("");
+                          setFilterOpen(false);
+                        }}
+                        className={`block w-full text-left px-2 py-1 ${
+                          !filterCategory ? "font-semibold text-primary" : ""
+                        }`}
+                      >
+                        All
+                      </button>
+                    </li>
+                    {categoriesList.map(c => (
+                      <li key={c}>
+                        <button
+                          onClick={() => {
+                            setFilterCategory(c);
+                            setFilterOpen(false);
+                          }}
+                          className={`block w-full text-left px-2 py-1 ${
+                            filterCategory === c ? "font-semibold text-primary" : ""
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            {/* Tags dropdown */}
+            <div ref={tagsRef} className="relative">
+              <button
+                onClick={() => setTagsOpen(o => !o)}
+                className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-primary"
+              >
+                {/* lighter label */}
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Tags:</span>
+                {/* bolder value */}
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">
+                  {filterTags.length > 0 ? filterTags.join(", ") : "All"}
+                </span>
+                <CaretDown size={16} />
+              </button>
+              {tagsOpen && (
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 p-2 shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-60 overflow-y-auto">
+                  {tagsList.map(tag => (
+                    <label
+                      key={tag}
+                      className="flex items-center space-x-2 px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filterTags.includes(tag)}
+                        onChange={() =>
                           setFilterTags(ts =>
                             ts.includes(tag) ? ts.filter(t => t !== tag) : [...ts, tag]
                           )
                         }
-                        className={`px-2 py-1 rounded-full text-sm border ${
-                          filterTags.includes(tag)
-                            ? "bg-primary text-white"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
+                        className="h-4 w-4 text-primary border-gray-300 rounded"
+                      />
+                      <span>{tag}</span>
+                    </label>
+                  ))}
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div ref={sortRef} className="flex-1 relative">
-            <button
-              onClick={() => setSortOpen(o => !o)}
-              className="w-full py-3 flex items-center justify-center space-x-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Sliders size={20} />
-              <span className="text-sm">Sort</span>
-            </button>
-            {sortOpen && (
-              <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-4 shadow-lg border-t border-gray-200 dark:border-gray-700 z-30">
-                {(["recent", "trending"] as const).map(opt => (
-                  <button
-                    key={opt}
-                    onClick={() => {
-                      setSortOption(opt);
-                      setSortOpen(false);
-                    }}
-                    className={`block w-full text-left px-2 py-1 text-sm ${
-                      sortOption === opt
-                        ? "bg-primary text-white"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {opt[0].toUpperCase() + opt.slice(1)}
-                  </button>
-                ))}
-              </div>
-            )}
+              )}
+            </div>
+            {/* Sort by dropdown */}
+            <div ref={sortRef} className="relative">
+              <button
+                onClick={() => setSortOpen(o => !o)}
+                className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-primary"
+              >
+                {/* lighter label */}
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Sort by:</span>
+                {/* bolder value */}
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">
+                  {sortOption[0].toUpperCase() + sortOption.slice(1)}
+                </span>
+                <CaretDown size={16} />
+              </button>
+              {sortOpen && (
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 p-2 shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                  {(["recent", "top"] as const).map(opt => (
+                    <button
+                      key={opt}
+                      onClick={() => {
+                        setSortOption(opt);
+                        setSortOpen(false);
+                      }}
+                      className={`block w-full text-left px-2 py-1 text-sm ${
+                        sortOption === opt ? "font-semibold text-primary" : ""
+                      }`}
+                    >
+                      {opt[0].toUpperCase() + opt.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
