@@ -42,7 +42,7 @@ export function ReactionButton({
         picker.style.left = '0';
         picker.style.transform = 'translateX(0)';
       } else {
-        picker.style.left = '100%';
+        picker.style.left = '150%';
         picker.style.transform = 'translateX(-50%)';
       }
     }
