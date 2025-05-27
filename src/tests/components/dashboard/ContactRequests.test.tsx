@@ -1,7 +1,5 @@
 /// <reference types="@testing-library/jest-dom" />
-import { screen, fireEvent, waitFor } from "@testing-library/react";
 import * as React from "react";
-import { render, renderWithTheme, checkA11y } from "@/tests/test-utils";
 import { ContactRequestStatus } from "@/types/dashboard/contact-request.type";
 
 // Mock imports before component import to ensure proper mocking
