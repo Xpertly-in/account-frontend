@@ -1,3 +1,5 @@
+import { SortDirection, ContactPreference, DateRangeFilter, Location } from "@/types/common.type";
+
 /**
  * Lead status enum
  */
@@ -27,23 +29,6 @@ export enum LeadSortField {
 }
 
 /**
- * Sort direction enum
- */
-export enum SortDirection {
-  ASC = "asc",
-  DESC = "desc",
-}
-
-/**
- * Contact preference enum
- */
-export enum ContactPreference {
-  PHONE = "Phone",
-  WHATSAPP = "WhatsApp",
-  EMAIL = "Email",
-}
-
-/**
  * Lead type definition for CA Dashboard
  * Represents leads submitted by users through the customer onboarding flow
  */
@@ -54,10 +39,7 @@ export interface Lead {
   profilePicture?: string; // Customer profile picture URL
   services: string[]; // Array of requested services
   urgency: `${LeadUrgency}`; // Using enum values
-  location: {
-    city: string;
-    state: string;
-  };
+  location: Location;
   contactPreference: `${ContactPreference}`; // Using enum values
   contactInfo: string; // Phone number or email based on preference
   notes?: string; // Additional notes provided by customer
@@ -78,10 +60,7 @@ export interface Lead {
 export interface LeadFilter {
   urgency?: `${LeadUrgency}`[];
   services?: string[];
-  dateRange?: {
-    from: string;
-    to: string;
-  };
+  dateRange?: DateRangeFilter;
   status?: `${LeadStatus}`[];
   location?: string[]; // Filter by specific cities
   includeHidden?: boolean; // Whether to include leads hidden by current CA
@@ -95,14 +74,6 @@ export type LeadSort = {
   field: `${LeadSortField}`;
   direction: `${SortDirection}`;
 };
-
-/**
- * Pagination parameters for lead queries
- */
-export interface PaginationParams {
-  page: number;
-  pageSize: number;
-}
 
 /**
  * Paginated response interface for leads
@@ -129,22 +100,4 @@ export interface LeadEngagement {
   hiddenAt?: string;
   notes?: string;
   updatedAt: string;
-}
-
-/**
- * Filter option interface for dynamic dropdowns
- */
-export interface FilterOption {
-  value: string;
-  label: string;
-  count: number;
-}
-
-/**
- * Location filter option with nested structure
- */
-export interface LocationOption {
-  state: string;
-  cities: FilterOption[];
-  totalCount: number;
 }

@@ -5,14 +5,9 @@ import {
   DashboardState,
   PostComposerState,
 } from "@/types/dashboard/dashboard.type";
-import {
-  Lead,
-  LeadSortField,
-  SortDirection,
-  LeadFilter,
-  PaginationParams,
-} from "@/types/dashboard/lead.type";
-import { ContactRequest } from "@/types/dashboard/contact-request.type";
+import { Lead, LeadSortField, LeadFilter } from "@/types/dashboard/lead.type";
+import { ContactRequest, ContactRequestSortField } from "@/types/dashboard/contact-request.type";
+import { SortDirection, PaginationParams } from "@/types/common.type";
 import { DASHBOARD_PAGINATION } from "@/constants/dashboard.constants";
 import { fetchLeads } from "@/services/leads.service";
 
@@ -37,7 +32,7 @@ const initialDashboardState: DashboardState = {
     error: null,
     totalCount: 0,
     filter: {},
-    sort: { field: "timestamp", direction: "desc" },
+    sort: { field: ContactRequestSortField.CREATED_AT, direction: SortDirection.DESC },
     page: DASHBOARD_PAGINATION.INITIAL_PAGE,
     pageSize: DASHBOARD_PAGINATION.DEFAULT_PAGE_SIZE,
   },
