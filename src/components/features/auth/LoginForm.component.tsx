@@ -131,7 +131,11 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
       }
 
       // If both role exists and onboarding is completed, go to dashboard
-      router.push("/ca/dashboard");
+      if (profile.role === UserRole.ACCOUNTANT) {
+        router.push("/ca/dashboard");
+      } else {
+        router.push("/user/dashboard");
+      }
     } catch (error) {
       // Track login error
       trackFormSubmission("login_form", false, {

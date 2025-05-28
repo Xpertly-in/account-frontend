@@ -10,25 +10,37 @@ import { ThemeToggle } from "@/ui/ThemeToggle.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { User, SignOut, List, X, Briefcase } from "@phosphor-icons/react";
 import { supabase } from "@/helper/supabase.helper";
+import { UserRole } from "@/types/onboarding.type";
 
 export function Header() {
   const { auth, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [hasSession, setHasSession] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   // Wait for hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Check for Supabase session
+  // Check for Supabase session and user role
   useEffect(() => {
     const checkSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setHasSession(!!session?.user);
+
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .single();
+        
+        setUserRole(profile?.role || null);
+      }
     };
     checkSession();
   }, []);
@@ -40,6 +52,7 @@ export function Header() {
 
   const isLoggedIn = mounted && (auth.user || hasSession);
   const pathname = usePathname();
+  const dashboardPath = userRole === UserRole.ACCOUNTANT ? "/ca/dashboard" : "/user/dashboard";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/50 dark:bg-background/90">
@@ -106,12 +119,12 @@ export function Header() {
           </button>
 
           {/* Desktop menu */}
-          <div className="hidden items-center space-x-6 md:flex">
+          <div className="hidden items-center space-x-4 md:flex">
             <ThemeToggle />
 
             {isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <Link href="/ca/dashboard">
+                <Link href={dashboardPath}>
                   <Button
                     variant="outline"
                     className="rounded-lg border-primary/20 px-4 py-2 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
@@ -177,7 +190,7 @@ export function Header() {
 
             {isLoggedIn ? (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/ca/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Link href={dashboardPath} onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="outline"
                     className="w-full justify-start rounded-lg border-primary/20 px-4 py-2.5 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"

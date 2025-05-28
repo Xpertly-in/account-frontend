@@ -4,6 +4,7 @@ import { Input } from "@/ui/Input.ui";
 import { Select } from "@/ui/Select.ui";
 import { Textarea } from "@/ui/Textarea.ui";
 import { Camera } from "@phosphor-icons/react";
+import { toast } from "react-hot-toast";
 
 const USER_TYPES = [
   "Individual",
@@ -30,11 +31,41 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-export default function CustomerPersonalDetailsForm({ formData, setFormData, errors, setErrors }: any) {
+interface CustomerPersonalDetailsFormProps {
+  formData: {
+    name?: string;
+    gender?: string;
+    mobile?: string;
+    userType?: string;
+    about?: string;
+    profilePhoto?: File | null;
+    profile_picture?: string | null;
+  };
+  setFormData: (data: any) => void;
+  errors: {
+    name?: string;
+    gender?: string;
+    mobile?: string;
+    userType?: string;
+    about?: string;
+  };
+  setErrors: (errors: any) => void;
+  onProfileImageChange: (file: File | null) => Promise<void>;
+  imageUploading: boolean;
+}
+
+export default function CustomerPersonalDetailsForm({ 
+  formData, 
+  setFormData, 
+  errors, 
+  setErrors,
+  onProfileImageChange,
+  imageUploading 
+}: CustomerPersonalDetailsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profilePhoto = formData.profilePhoto;
   const initials = getInitials(formData.name || "User");
-  const photoUrl = profilePhoto ? URL.createObjectURL(profilePhoto) : null;
+  const photoUrl = profilePhoto ? URL.createObjectURL(profilePhoto) : formData.profile_picture;
 
   return (
     <div className="flex flex-col gap-6">
@@ -50,18 +81,46 @@ export default function CustomerPersonalDetailsForm({ formData, setFormData, err
           </div>
           <button
             type="button"
-            className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 shadow-lg border-2 border-white hover:bg-primary/90 transition"
+            className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 shadow-lg border-2 border-white hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => fileInputRef.current?.click()}
             aria-label="Upload profile photo"
+            disabled={imageUploading}
           >
-            <Camera size={20} />
+            {imageUploading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Camera size={20} />
+            )}
           </button>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={e => setFormData((f: any) => ({ ...f, profilePhoto: e.target.files?.[0] }))}
+            onChange={async (e) => {
+              const file = e.target.files?.[0] || null;
+              if (file) {
+                try {
+                  if (typeof onProfileImageChange === 'function') {
+                    await onProfileImageChange(file);
+                  } else {
+                    console.error('onProfileImageChange is not a function');
+                    toast.error('Image upload functionality is not available');
+                    // Clear the file input
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                  }
+                } catch (err) {
+                  console.error('Error uploading image:', err);
+                  toast.error('Failed to upload image');
+                  // Clear the file input
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                  }
+                }
+              }
+            }}
           />
         </div>
         {/* Fields Grid */}
@@ -72,25 +131,23 @@ export default function CustomerPersonalDetailsForm({ formData, setFormData, err
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-foreground block mb-0.5">Full Name <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-foreground block mb-0.5">Full Name</label>
               <Input
                 name="name"
                 type="text"
                 placeholder="Enter your full name"
                 value={formData.name || ""}
                 onChange={e => setFormData((f: any) => ({ ...f, name: e.target.value }))}
-                required
                 className={errors.name ? "border-red-500" : ""}
               />
               {errors.name && <p className="text-xs text-red-500 mt-0.5">{errors.name}</p>}
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground block mb-0.5">Gender <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-foreground block mb-0.5">Gender</label>
               <Select
                 name="gender"
                 value={formData.gender || ""}
                 onChange={e => setFormData((f: any) => ({ ...f, gender: e.target.value }))}
-                required
                 className={errors.gender ? "border-red-500" : ""}
               >
                 {GENDER_OPTIONS.map(opt => (
@@ -100,25 +157,23 @@ export default function CustomerPersonalDetailsForm({ formData, setFormData, err
               {errors.gender && <p className="text-xs text-red-500 mt-0.5">{errors.gender}</p>}
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground block mb-0.5">Phone Number <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-foreground block mb-0.5">Phone Number</label>
               <Input
                 name="mobile"
                 type="tel"
                 placeholder="Enter your phone number"
                 value={formData.mobile || ""}
                 onChange={e => setFormData((f: any) => ({ ...f, mobile: e.target.value }))}
-                required
                 className={errors.mobile ? "border-red-500" : ""}
               />
               {errors.mobile && <p className="text-xs text-red-500 mt-0.5">{errors.mobile}</p>}
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground block mb-0.5">Type of User <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-foreground block mb-0.5">Type of User</label>
               <Select
                 name="userType"
                 value={formData.userType || ""}
                 onChange={e => setFormData((f: any) => ({ ...f, userType: e.target.value }))}
-                required
                 className={errors.userType ? "border-red-500" : ""}
               >
                 <option value="">Select type</option>
@@ -133,13 +188,12 @@ export default function CustomerPersonalDetailsForm({ formData, setFormData, err
       </div>
       {/* About Section */}
       <div>
-        <label className="text-sm font-medium text-foreground block mb-0.5">About <span className="text-red-500">*</span></label>
+        <label className="text-sm font-medium text-foreground block mb-0.5">About</label>
         <Textarea
           name="about"
           placeholder="Share your expertise, experience, and what makes you unique as a professional."
           value={formData.about || ""}
           onChange={e => setFormData((f: any) => ({ ...f, about: e.target.value }))}
-          required
           className={`w-full min-h-[80px] ${errors.about ? "border-red-500" : ""}`}
         />
         {errors.about && <p className="text-xs text-red-500 mt-0.5">{errors.about}</p>}
