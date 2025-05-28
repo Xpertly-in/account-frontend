@@ -132,16 +132,16 @@ export function ReactionSummary({
             <h2 className="text-lg font-semibold mb-4">Reactions</h2>
 
             {/* ← New: Tab navigation */}
-            <div className="flex space-x-4 border-b pb-2 mb-4">
+            <div className="flex space-x-4 border-b mb-4">
               {REACTIONS.filter(r => counts[r.type] > 0).map(r => (
                 <button
                   key={r.type}
                   onClick={() => setSelectedTab(r.type)}
                   className={`flex items-center space-x-1 text-sm pb-1 ${
                     selectedTab === r.type
-                      ? "border-b-2 border-primary text-primary"
+                      ? "border-b-4 border-primary text-primary"
                       : "text-gray-500 dark:text-gray-400"
-                  }`}
+                  } ${r.fg}`}
                 >
                   {React.cloneElement(r.icon as any, { size: 20, weight: "fill" })}
                   <span>{counts[r.type]}</span>
@@ -150,7 +150,7 @@ export function ReactionSummary({
             </div>
 
             {/* ← Filtered list */}
-            <ul className="space-y-2 max-h-64 overflow-y-auto">
+            <ul className="space-y-4 max-h-64 overflow-y-auto">
               {allReactions
                 .filter(r => r.type === selectedTab)
                 .map((r, i) => (

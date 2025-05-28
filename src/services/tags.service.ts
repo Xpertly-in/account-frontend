@@ -1,6 +1,6 @@
 // src/services/forum.service.ts
 import { supabase } from "@/helper/supabase.helper";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // fetch all tag names
 export async function fetchTags(): Promise<string[]> {
@@ -14,5 +14,20 @@ export function useTags() {
     queryFn: fetchTags,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+  });
+}
+
+// upsert a tag
+export async function upsertTag(name: string): Promise<void> {
+  const { error } = await supabase.from("tags").upsert({ name });
+  if (error) throw error;
+}
+
+/** Mutation hook to create/update a tag */
+export function useUpsertTag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: upsertTag,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tags"] }),
   });
 }

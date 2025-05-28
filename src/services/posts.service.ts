@@ -18,6 +18,32 @@ export interface PostsPage {
   hasNextPage: boolean;
 }
 
+// --------------------------------------------------------------------------
+// CREATE / UPDATE POST SERVICE
+// --------------------------------------------------------------------------
+export interface PostPayload {
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  images: string[];
+  author_id: string;
+}
+
+/** insert a new post */
+export async function createPost(p: PostPayload) {
+  const { data, error } = await supabase.from("posts").insert([p]);
+  if (error) throw error;
+  return data;
+}
+
+/** update an existing post */
+export async function updatePost(id: string, p: PostPayload) {
+  const { data, error } = await supabase.from("posts").update(p).eq("id", id);
+  if (error) throw error;
+  return data;
+}
+
 /**
  * Fetch a single page of posts with filters & pagination
  */

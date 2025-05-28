@@ -4,8 +4,11 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation"; // added
-import { supabase } from "@/helper/supabase.helper";
-import { Card } from "@/ui/Card.ui";
+import { createPost, updatePost, PostPayload } from "@/services/posts.service";
+import { useCategories, useUpsertCategory } from "@/services/categories.service";
+import { useTags, useUpsertTag } from "@/services/tags.service";
+import { uploadImages } from "@/services/storage.service";
+import { useMutation } from "@tanstack/react-query";
 import { Input } from "@/ui/Input.ui";
 import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
@@ -54,10 +57,16 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // enum lists & helpers
-  const [categoriesList, setCategoriesList] = useState<string[]>([]);
-  const [tagsOptions, setTagsOptions] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
+
+  // replace manual effect+state with React-Query hooks:
+  const { data: categoriesList = [] } = useCategories();
+  const { data: tagsList = [] } = useTags();
+
+  // category/tag mutations
+  const upsertCategoryMutation = useUpsertCategory();
+  const upsertTagMutation = useUpsertTag();
 
   // --- Load draft if no initialContent ---
   useEffect(() => {
@@ -72,17 +81,6 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       }
     }
   }, [initialContent]);
-
-  // --- Fetch categories & tags once ---
-  useEffect(() => {
-    (async () => {
-      const { data: catData } = await supabase.from("categories").select("name");
-      setCategoriesList(catData?.map(c => c.name) || []);
-
-      const { data: tagData } = await supabase.from("tags").select("name");
-      setTagsOptions(tagData?.map(t => t.name) || []);
-    })();
-  }, []);
 
   // --- Save draft on every change ---
   useEffect(() => {
@@ -103,9 +101,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       const newTag = tagInput.trim();
       if (!tags.includes(newTag)) {
         // upsert tag
-        if (!tagsOptions.includes(newTag)) {
-          await supabase.from("tags").insert({ name: newTag });
-          setTagsOptions(prev => [...prev, newTag]);
+        if (!tagsList.includes(newTag)) {
+          await upsertTagMutation.mutateAsync(newTag);
         }
         setTags([...tags, newTag]);
       }
@@ -131,27 +128,15 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     let finalCategory = category;
     if (creatingCategory && newCategory.trim()) {
       const name = newCategory.trim();
-      await supabase.from("categories").insert({ name });
-      setCategoriesList(prev => [...prev, name]);
+      await upsertCategoryMutation.mutateAsync(name);
       finalCategory = name;
     }
 
     // upload new files & gather URLs
     const newFiles = allImages.filter(img => img instanceof File) as File[];
     const existingUrls = allImages.filter(img => typeof img === "string") as string[];
-    const newUrls = await Promise.all(
-      newFiles.map(async file => {
-        const ts = Date.now();
-        const ext = file.name.split(".").pop();
-        const path = `${ts}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("images")
-          .upload(path, file, { cacheControl: "3600" });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("images").getPublicUrl(path);
-        return data.publicUrl;
-      })
-    );
+    // delegate uploads to service
+    const newUrls = await uploadImages(newFiles);
     const imageUrls = [...existingUrls, ...newUrls];
     const authorId = auth.user?.id;
 
@@ -167,21 +152,27 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       reaction_counts: 0,
     };
 
-    let error;
+    const postPayload: PostPayload = {
+      title,
+      content,
+      category: finalCategory,
+      tags,
+      images: imageUrls,
+      author_id: authorId!,
+    };
+
     if (postId) {
-      ({ error } = await supabase.from("posts").update(payload).eq("id", postId));
-      if (!error) onPostUpdated?.();
+      await updatePost(postId, postPayload);
+      onPostUpdated?.();
     } else {
-      ({ error } = await supabase.from("posts").insert([payload]));
-      if (!error) {
-        // clear after successful post
-        setTitle(""); // added
-        setContent("");
-        setTags([]);
-        setAllImages([]);
-        localStorage.removeItem("create-post-draft");
-        onPostCreated?.();
-      }
+      await createPost(postPayload);
+      // clear draft & UI
+      setTitle("");
+      setContent("");
+      setTags([]);
+      setAllImages([]);
+      localStorage.removeItem("create-post-draft");
+      onPostCreated?.();
     }
 
     setIsSubmitting(false);
@@ -209,7 +200,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
               className="w-full rounded border px-3 py-2 focus:ring-primary focus:border-primary"
               maxLength={185}
             />
-            <p className="text-xs text-gray-500">{title.length}/185 characters</p>
+            <p className="text-xs text-gray-500">{title?.length}/185 characters</p>
           </div>
 
           {/* Content */}
@@ -238,8 +229,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
                 if (e.key === "Enter" && creatingCategory && newCategory.trim()) {
                   e.preventDefault();
                   const name = newCategory.trim();
-                  await supabase.from("categories").upsert({ name });
-                  setCategoriesList(prev => Array.from(new Set([...prev, name])));
+                  await upsertCategoryMutation.mutateAsync(name);
                   setCategory(name);
                   setNewCategory("");
                   setCreatingCategory(false);
@@ -285,7 +275,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
               onKeyDown={handleAddTag}
             />
             <datalist id="tags-list">
-              {tagsOptions.map(t => (
+              {tagsList.map(t => (
                 <option key={t} value={t} />
               ))}
             </datalist>
