@@ -33,7 +33,12 @@ export function usePostAuthRedirect() {
         }
         return;
       }
-      // else: user has role and completed onboarding, allow normal navigation
+      // else: user has role and completed onboarding, redirect to appropriate dashboard
+      if (data.role === UserRole.ACCOUNTANT) {
+        router.push("/ca/dashboard");
+      } else {
+        router.push("/user/dashboard");
+      }
     };
     checkProfile();
   }, [auth.user, pathname]);

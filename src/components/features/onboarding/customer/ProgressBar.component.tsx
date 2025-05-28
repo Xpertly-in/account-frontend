@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { Check } from "@phosphor-icons/react";
 
 interface ProgressBarProps {
-  steps: { label: string }[];
+  steps: { label: string; subtitle?: string }[];
   currentStep: number;
   onStepClick?: (step: number) => void;
   errorSteps?: number[];
@@ -10,41 +10,55 @@ interface ProgressBarProps {
 
 export function ProgressBar({ steps, currentStep, onStepClick, errorSteps = [] }: ProgressBarProps) {
   return (
-    <div className="w-full p-4 sticky top-8">
-      <div className="space-y-4">
+    <div className="w-full p-6 sticky top-8">
+      <div className="space-y-6">
         {steps.map((step, index) => {
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
           const hasError = errorSteps.includes(index);
+          
           return (
             <div
               key={step.label}
               className={cn(
-                "relative flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all duration-200",
-                isCurrent && "bg-gradient-to-r from-primary/10 to-secondary/10",
-                isCompleted && "bg-gradient-to-r from-primary/5 to-secondary/5",
-                hasError && "bg-red-500/10",
-                "hover:bg-gradient-to-r hover:from-primary/20 hover:to-secondary/20"
+                "relative flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all duration-300",
+                "border border-border/50",
+                isCurrent && "bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border-primary/30 shadow-md",
+                isCompleted && "bg-gradient-to-br from-primary/5 via-secondary/5 to-transparent border-primary/20",
+                hasError && "bg-red-500/5 border-red-500/30",
+                "dark:border-blue-800/30 dark:bg-gray-900/95",
+                "z-10"
               )}
               onClick={() => onStepClick?.(index)}
             >
-              {/* Step Number */}
+              {/* Step Number Circle */}
               <div
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all duration-200",
-                  isCurrent && "bg-gradient-to-r from-primary to-secondary text-white",
-                  isCompleted && "bg-gradient-to-r from-primary to-secondary text-white",
-                  !isCurrent && !isCompleted && "bg-muted text-muted-foreground",
-                  hasError && "bg-red-500 text-white"
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium transition-all duration-300",
+                  "ring-4 ring-background",
+                  isCurrent && "bg-gradient-to-br from-primary to-secondary text-white ring-primary/20",
+                  isCompleted && "bg-gradient-to-br from-primary to-secondary text-white ring-primary/20",
+                  !isCurrent && !isCompleted && "bg-muted text-muted-foreground ring-muted/20",
+                  hasError && "bg-red-500 text-white ring-red-500/20"
                 )}
               >
-                {isCompleted ? <Check size={16} weight="bold" /> : index + 1}
+                {isCompleted ? (
+                  <Check size={18} weight="bold" className="animate-in fade-in zoom-in" />
+                ) : (
+                  <span className={cn(
+                    "animate-in fade-in",
+                    isCurrent && "text-white font-semibold"
+                  )}>
+                    {index + 1}
+                  </span>
+                )}
               </div>
-              {/* Step Label */}
-              <div className="flex flex-col">
+
+              {/* Step Content */}
+              <div className="flex flex-col gap-1">
                 <span
                   className={cn(
-                    "text-sm font-medium",
+                    "text-sm font-semibold transition-colors duration-200",
                     isCurrent && "text-primary",
                     isCompleted && "text-primary",
                     !isCurrent && !isCompleted && "text-muted-foreground",
@@ -53,8 +67,21 @@ export function ProgressBar({ steps, currentStep, onStepClick, errorSteps = [] }
                 >
                   {step.label}
                 </span>
+                {step.subtitle && (
+                  <span className={cn(
+                    "text-xs transition-colors duration-200",
+                    isCurrent && "text-primary/80",
+                    isCompleted && "text-primary/70",
+                    !isCurrent && !isCompleted && "text-muted-foreground/70",
+                    hasError && "text-red-500/80"
+                  )}>
+                    {step.subtitle}
+                  </span>
+                )}
                 {hasError && (
-                  <span className="text-xs text-red-500 mt-1">Please fix errors in this step</span>
+                  <span className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-bottom-1">
+                    Please fix errors in this step
+                  </span>
                 )}
               </div>
             </div>

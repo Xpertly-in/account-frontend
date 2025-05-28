@@ -71,7 +71,11 @@ export default function AuthCallback() {
           }
 
           // If both role exists and onboarding is completed, go to dashboard
-          router.push("/ca/dashboard");
+          if (profile.role === "ACCOUNTANT") {
+            router.push("/ca/dashboard");
+          } else {
+            router.push("/user/dashboard");
+          }
         } else {
           console.log("[AuthCallback] No user in session");
           throw new Error("No user in session");
