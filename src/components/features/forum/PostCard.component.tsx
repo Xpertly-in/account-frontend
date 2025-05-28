@@ -2,11 +2,11 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ReactionSystem } from "./ReactionSystem.component";
+import { ReactionButton } from "./ReactionButton.component";
+import { ReactionSummary } from "./ReactionSummary.component";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import {
-  ThumbsUp,
   ChatCircle,
   ShareNetwork,
   DotsThree,
@@ -61,6 +61,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reactionVersion, setReactionVersion] = useState(0);
 
   const initials = useMemo(() => {
     return author_name
@@ -266,18 +267,30 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
+      {/* Above the actions, show the summary */}
+      <div className="flex justify-left">
+        <ReactionSummary targetType="post" targetId={id} version={reactionVersion}/>
+      </div>
+
       {/* Actions */}
-      <div className="border-t ... flex justify-between">
-        <ReactionSystem targetType="post" targetId={id} />
-        <button className="flex items-center gap-1 hover:text-primary">
+      <div className="border-t ... pt-1 flex justify-between">
+        <ReactionButton targetType="post" targetId={id} onReactComplete={() => setReactionVersion(v => v + 1)} />
+        <button
+          type="button"
+          className="flex items-center gap-1 hover:text-primary"
+        >
           <ChatCircle size={18} />
           <span className="text-sm">Comments</span>
         </button>
-        <button className="flex items-center gap-1 hover:text-primary">
+        <button
+          type="button"
+          className="flex items-center gap-1 hover:text-primary mr-2"
+        >
           <ShareNetwork size={18} />
           <span className="text-sm">Share</span>
         </button>
       </div>
+
       {/* Image preview modal */}
       {isPreviewOpen &&
         createPortal(
