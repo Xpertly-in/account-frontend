@@ -1,27 +1,23 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-import { supabase } from "@/helper/supabase.helper";
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
 import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for button elements
-import { MagnifyingGlass, Funnel, Sliders, Plus, X, CaretDown } from "@phosphor-icons/react";
-import { PostCard, PostCardProps } from "./PostCard.component";
+import { MagnifyingGlass, Plus, CaretDown, TrashSimple } from "@phosphor-icons/react";
+import { PostCard } from "./PostCard.component";
 import { Container } from "@/components/layout/Container.component";
+import { usePosts, PostFilter, useDeletePost } from "@/services/posts.service";
+import { useCategories } from "@/services/categories.service";
+import { useTags } from "@/services/tags.service";
 import { useAuth } from "@/store/context/Auth.provider";
 
 export const ForumFeed: React.FC = () => {
   const router = useRouter();
-  const [posts, setPosts] = useState<PostCardProps[]>([]);
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
-  const [isLoading, setIsLoading] = useState(true);
-
-  const PAGE_SIZE = 10;
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -30,32 +26,28 @@ export const ForumFeed: React.FC = () => {
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [sortOpen, setSortOpen] = useState(false);
   const [sortOption, setSortOption] = useState<"recent" | "top">("recent");
-
-  const [categoriesList, setCategoriesList] = useState<string[]>([]);
-  const [tagsList, setTagsList] = useState<string[]>([]);
+  // deletion mutation
+  const deletePostMutation = useDeletePost();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   // const [newThread, setNewThread] = useState("");
   const filterRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
   const tagsRef = useRef<HTMLDivElement>(null);
-  // // dynamic placeholder messages for the “Start a new thread” input
-  // const threadPlaceholders = [
-  //   "Start a new thread…",
-  //   "Ask your accounting question here…",
-  //   "Share your audit tips…",
-  //   "Discuss tax strategies…",
-  //   "Post your bookkeeping challenge…",
-  // ];
-  // const [threadPlaceholder, setThreadPlaceholder] = useState(
-  //   threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)]
-  // );
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     const next = threadPlaceholders[Math.floor(Math.random() * threadPlaceholders.length)];
-  //     setThreadPlaceholder(next);
-  //   }, 3000); // rotate every 8s
-  //   return () => clearInterval(interval);
-  // }, []);
+
+  // replace manual state + fetch with React-Query hook
+  const filterOpts: PostFilter = {
+    searchTerm,
+    category: filterCategory,
+    tags: filterTags,
+    sortOption,
+  };
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts(
+    filterOpts,
+    10
+  );
+  const posts = data?.pages.flatMap(p => p.data) || [];
 
   // Click-outside to close dropdowns
   useEffect(() => {
@@ -77,109 +69,24 @@ export const ForumFeed: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, [sortOpen]);
 
-  // Fetch posts from Supabase
-  const fetchPosts = useCallback(
-    async (pageNumber = 0) => {
-      setIsLoading(true);
-
-      // join profiles so we get the user’s display name
-      let query = supabase
-        .from("posts")
-        .select(
-          `
-          id,
-          title,
-          content,
-          category,
-          tags,
-          images,
-          reaction_counts,
-          updated_at,
-          is_deleted,
-          author_id,
-          profiles (
-            name,
-            profile_picture
-          )
-          `
-        )
-        .eq("is_deleted", false);
-
-      if (searchTerm) {
-        query = query.or(`content.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`);
-      }
-      if (filterCategory) query = query.eq("category", filterCategory);
-      if (filterTags.length) query = query.overlaps("tags", filterTags);
-
-      const sortCol = sortOption === "top" ? "likes_count" : "updated_at";
-      query = query.order(sortCol, { ascending: false });
-
-      const from = pageNumber * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      query = query.range(from, to);
-
-      const { data, error } = await query;
-      if (!error && data) {
-        const mapped = data.map(p => ({
-          id: p.id,
-          updated_at: p.updated_at,
-          title: p.title,
-          content: p.content,
-          author_id: p.author_id,
-          author_name: p.profiles.name,
-          author_avatar: p.profiles.profile_picture,
-          category: p.category,
-          tags: p.tags,
-          images: p.images,
-          reaction_counts: p.reaction_counts,
-          is_deleted: p.is_deleted,
-        }));
-        setPosts(prev => (pageNumber === 0 ? mapped : [...prev, ...mapped]));
-        setHasMore(mapped.length === PAGE_SIZE);
-      }
-      setIsLoading(false);
-    },
-    [searchTerm, filterCategory, filterTags, sortOption]
-  );
-
-  // Reset when filters change
-  useEffect(() => {
-    setPage(0);
-    setHasMore(true);
-    setPosts([]);
-  }, [searchTerm, filterCategory, filterTags, sortOption]);
-
-  // Initial & paginated fetch
-  useEffect(() => {
-    fetchPosts(page);
-  }, [fetchPosts, page]);
-
-  // Infinite scroll
+  // Infinite scroll triggers next page via React-Query
   useEffect(() => {
     const onScroll = () => {
       if (
         window.innerHeight + window.scrollY + 100 >= document.documentElement.offsetHeight &&
-        !isLoading &&
-        hasMore
+        hasNextPage &&
+        !isFetchingNextPage
       ) {
-        setPage(p => p + 1);
+        fetchNextPage();
       }
     };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isLoading, hasMore]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Load category & tag enums
-  useEffect(() => {
-    supabase
-      .from("categories")
-      .select("name")
-      .then(({ data }) => setCategoriesList(data?.map(c => c.name) ?? []));
-    supabase
-      .from("tags")
-      .select("name")
-      .then(({ data }) => setTagsList(data?.map(t => t.name) ?? []));
-  }, []);
+  // replace manual effect+state with React-Query hooks:
+  const { data: categoriesList = [] } = useCategories();
+  const { data: tagsList = [] } = useTags();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -190,12 +97,6 @@ export const ForumFeed: React.FC = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [tagsOpen]);
-
-  // const handleAddThread = () => {
-  //   if (newThread.trim()) {
-  //     router.push(`/forum/new?initialContent=${encodeURIComponent(newThread.trim())}`);
-  //   }
-  // };
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-6">
@@ -240,7 +141,9 @@ export const ForumFeed: React.FC = () => {
                 className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-primary"
               >
                 {/* lighter label */}
-                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Category:</span>
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  Category:
+                </span>
                 {/* bolder value */}
                 <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">
                   {filterCategory || "All"}
@@ -326,7 +229,9 @@ export const ForumFeed: React.FC = () => {
                 className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-primary"
               >
                 {/* lighter label */}
-                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Sort by:</span>
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  Sort by:
+                </span>
                 {/* bolder value */}
                 <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">
                   {sortOption[0].toUpperCase() + sortOption.slice(1)}
@@ -367,25 +272,54 @@ export const ForumFeed: React.FC = () => {
                 onCategoryClick={cat => setFilterCategory(cat)}
                 onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
                 onEdit={id => router.push(`/forum/${id}/edit`)}
-                onDelete={async id => {
+                onDelete={id => {
                   // guard: only the post’s author may delete
                   if (!currentUserId || currentUserId !== post.author_id) {
                     alert("You are not authorized to delete this post");
                     return;
                   }
-                  if (!confirm("Delete this post?")) return;
-                  await supabase.from("posts").update({ is_deleted: true }).eq("id", id);
-                  setPosts(prev => prev.filter(p => p.id !== id));
+                  // open confirmation dialog
+                  setDeleteTarget(id);
+                  setDeleteDialogOpen(true);
                 }}
               />
             </Card>
           ))}
           {isLoading && <p className="text-center text-gray-600 dark:text-gray-400">Loading…</p>}
-          {!hasMore && !isLoading && (
+          {!hasNextPage && !isLoading && (
             <p className="text-center text-gray-600 dark:text-gray-400">No more posts</p>
           )}
         </div>
       </Container>
+      {/* Delete confirmation modal */}
+      {deleteDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-80">
+            <TrashSimple size={24} className="mx-auto text-red-500 mb-2" />
+            <h2 className="text-lg font-semibold text-center mb-2">Confirm Delete Post?</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">
+              Are you sure you want to delete this post? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setDeleteDialogOpen(false)}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteTarget !== null) deletePostMutation.mutate(deleteTarget);
+                  setDeleteDialogOpen(false);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
