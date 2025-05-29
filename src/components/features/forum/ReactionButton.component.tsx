@@ -2,7 +2,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "@/helper/supabase.helper";
+import { fetchMyReaction, toggleReaction } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ThumbsUp, Heart, Smiley, SmileySad, Flame } from "@phosphor-icons/react";
 
@@ -54,14 +54,9 @@ export function ReactionButton({
   // load existing user reaction
   useEffect(() => {
     if (!userId) return;
-    supabase
-      .from("reactions")
-      .select("reaction_type")
-      .eq("user_id", userId)
-      .eq("target_type", targetType)
-      .eq("target_id", targetId)
-      .single()
-      .then(({ data }) => setMyReaction(data?.reaction_type ?? null));
+    fetchMyReaction(userId, targetType, targetId)
+      .then(reaction => setMyReaction(reaction))
+      .catch(console.error);
   }, [userId, targetType, targetId]);
 
   // handle react / un-react
@@ -70,65 +65,13 @@ export function ReactionButton({
       router.push("/login/ca");
       return;
     }
-
-    const { data: existing } = await supabase
-      .from("reactions")
-      .select("reaction_type")
-      .eq("user_id", userId)
-      .eq("target_type", targetType)
-      .eq("target_id", targetId)
-      .single();
-
-    // remove
-    if (existing?.reaction_type === type) {
-      await supabase
-        .from("reactions")
-        .delete()
-        .match({ user_id: userId, target_type: targetType, target_id: targetId });
-      setMyReaction(null);
-      await supabase.rpc("update_reaction_count_jsonb", {
-        post_id: targetId,
-        reaction_type: type,
-        increment: false,
-      });
+    try {
+      const newType = await toggleReaction(userId, targetType, targetId, type);
+      setMyReaction(newType);
       onReactComplete?.();
-      return;
+    } catch (err) {
+      console.error("Failed to toggle reaction", err);
     }
-
-    // change or add
-    if (existing) {
-      await supabase
-        .from("reactions")
-        .update({ reaction_type: type })
-        .match({ user_id: userId, target_type: targetType, target_id: targetId });
-      await supabase.rpc("update_reaction_count_jsonb", {
-        post_id: targetId,
-        reaction_type: existing.reaction_type,
-        increment: false,
-      });
-      await supabase.rpc("update_reaction_count_jsonb", {
-        post_id: targetId,
-        reaction_type: type,
-        increment: true,
-      });
-      setMyReaction(type);
-      onReactComplete?.();
-      return;
-    }
-
-    // brand new
-    await supabase
-      .from("reactions")
-      .insert([
-        { user_id: userId, target_type: targetType, target_id: targetId, reaction_type: type },
-      ]);
-    setMyReaction(type);
-    await supabase.rpc("update_reaction_count_jsonb", {
-      post_id: targetId,
-      reaction_type: type,
-      increment: true,
-    });
-    onReactComplete?.();
   };
 
   // show / hide picker
@@ -151,9 +94,7 @@ export function ReactionButton({
         onClick={() => onReact("like")}
         className={`flex items-center space-x-1 text-sm rounded-full px-2 py-1 transition ${
           myReaction
-            ? `${
-                REACTIONS.find(r => r.type === myReaction)!.fg
-              }`
+            ? `${REACTIONS.find(r => r.type === myReaction)!.fg}`
             : "text-gray-500 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700"
         }`}
       >

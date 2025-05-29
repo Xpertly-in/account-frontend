@@ -31,6 +31,10 @@ export const ForumFeed: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
+  // replace manual effect+state with React-Query hooks:
+  const { data: categoriesList = [] } = useCategories();
+  const { data: tagsList = [] } = useTags();
+
   // const [newThread, setNewThread] = useState("");
   const filterRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
@@ -84,9 +88,7 @@ export const ForumFeed: React.FC = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // replace manual effect+state with React-Query hooks:
-  const { data: categoriesList = [] } = useCategories();
-  const { data: tagsList = [] } = useTags();
+  
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

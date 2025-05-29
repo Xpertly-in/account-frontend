@@ -1,6 +1,6 @@
 // src/components/features/forum/ReactionSummary.component.tsx
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/helper/supabase.helper";
+import { fetchReactions } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ThumbsUp, Heart, Smiley, SmileySad, Flame, X } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
@@ -34,34 +34,25 @@ export function ReactionSummary({
 
   useEffect(() => {
     async function load() {
-      // load counts + full list
-      const { data: rows } = await supabase
-        .from("reactions")
-        .select("reaction_type, user_id, created_at")
-        .eq("target_type", targetType)
-        .eq("target_id", targetId)
-        .order("created_at", { ascending: false });
+      // fetch both reactions and profiles via the service
+      const { rows, profiles } = await fetchReactions(targetType, targetId);
+
+      // build counts
       const newCounts: Record<string, number> = {};
-      rows?.forEach(r => {
+      rows.forEach(r => {
         newCounts[r.reaction_type] = (newCounts[r.reaction_type] ?? 0) + 1;
       });
       setCounts(newCounts);
 
-      // join with profiles
-      const uids = rows?.map(r => r.user_id) || [];
-      const { data: users } = await supabase
-        .from("profiles")
-        .select("user_id, name, profile_picture")
-        .in("user_id", uids);
-      const withNames =
-        rows?.map(r => {
-          const u = users?.find(u => u.user_id === r.user_id);
-          return {
-            name: u?.name || "Unknown",
-            avatar: u?.profile_picture ?? undefined,
-            type: r.reaction_type,
-          };
-        }) || [];
+      // merge profile data into each reaction
+      const withNames = rows.map(r => {
+        const u = profiles.find(p => p.user_id === r.user_id);
+        return {
+          name: u?.name || "Unknown",
+          avatar: u?.profile_picture ?? undefined,
+          type: r.reaction_type,
+        };
+      });
       setAllReactions(withNames);
 
       // default selectedTab to the highest-count reaction
@@ -132,16 +123,16 @@ export function ReactionSummary({
             <h2 className="text-lg font-semibold mb-4">Reactions</h2>
 
             {/* ← New: Tab navigation */}
-            <div className="flex space-x-4 border-b pb-2 mb-4">
+            <div className="flex space-x-4 border-b mb-4">
               {REACTIONS.filter(r => counts[r.type] > 0).map(r => (
                 <button
                   key={r.type}
                   onClick={() => setSelectedTab(r.type)}
                   className={`flex items-center space-x-1 text-sm pb-1 ${
                     selectedTab === r.type
-                      ? "border-b-2 border-primary text-primary"
+                      ? "border-b-4 border-primary text-primary"
                       : "text-gray-500 dark:text-gray-400"
-                  }`}
+                  } ${r.fg}`}
                 >
                   {React.cloneElement(r.icon as any, { size: 20, weight: "fill" })}
                   <span>{counts[r.type]}</span>
@@ -150,7 +141,7 @@ export function ReactionSummary({
             </div>
 
             {/* ← Filtered list */}
-            <ul className="space-y-2 max-h-64 overflow-y-auto">
+            <ul className="space-y-4 max-h-64 overflow-y-auto">
               {allReactions
                 .filter(r => r.type === selectedTab)
                 .map((r, i) => (
