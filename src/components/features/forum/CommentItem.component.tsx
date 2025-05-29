@@ -15,8 +15,8 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply }) => {
   const [reactionVersion, setReactionVersion] = useState(0);
 
   return (
-    <div className="flex space-x-2 py-2">
-      <Avatar className="h-8 w-8">
+    <div className="flex space-x-3 py-3 border-b border-gray-200 dark:border-gray-700">
+      <Avatar className="h-10 w-10">
         {comment.author_avatar ? (
           <AvatarImage src={comment.author_avatar} alt={comment.author_name} />
         ) : (
@@ -24,27 +24,38 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply }) => {
         )}
       </Avatar>
       <div className="flex-1">
-        <div className="flex justify-between text-sm">
-          <span className="font-medium">{comment.author_name}</span>
-          <span className="text-gray-500">{formatRelativeTime(comment.created_at)}</span>
+        <div className="flex justify-between items-center text-sm">
+          <div>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {comment.author_name}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {formatRelativeTime(comment.created_at)}
+            </span>
+          </div>
+          <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            •••
+          </button>
         </div>
-        <p className="text-sm my-1">{comment.content}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{comment.content}</p>
         {comment.images.length > 0 && (
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 mt-2">
             {comment.images.map((url, i) => (
-              <img key={i} src={url} className="w-16 h-16 object-cover rounded" />
+              <img key={i} src={url} className="w-20 h-20 object-cover rounded-lg shadow-sm" />
             ))}
           </div>
         )}
-        <div className="flex items-center space-x-4 text-sm">
+        <div className="flex justify-left">
           <ReactionSummary targetType="comment" targetId={comment.id} version={reactionVersion} />
+        </div>
+        <div className="flex items-center space-x-4 text-xs">
           <ReactionButton
             targetType="comment"
             targetId={comment.id}
             onReactComplete={() => setReactionVersion(v => v + 1)}
           />
           {onReply && (
-            <button onClick={onReply} className="text-primary text-xs">
+            <button onClick={onReply} className="text-primary hover:underline">
               Reply
             </button>
           )}
