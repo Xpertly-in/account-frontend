@@ -268,6 +268,7 @@ export const ForumFeed: React.FC = () => {
             <Card
               key={post.id}
               className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
+              onClick={() => router.push(`/forum/${post.id}`)}
             >
               <PostCard
                 {...post}
