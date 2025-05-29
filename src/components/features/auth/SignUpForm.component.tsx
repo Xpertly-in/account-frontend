@@ -99,10 +99,10 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
   // Common function to check profile and redirect
   const checkUserProfileAndRedirect = async (userId: string) => {
     try {
-      // Check if user has a role
+      // Check if user has a role and onboarding status
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, onboarding_completed")
         .eq("user_id", userId)
         .single();
 
@@ -117,9 +117,23 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
         return;
       }
 
-      // If role exists, redirect to appropriate onboarding
-      if (profile.role) {
+      // If no role, redirect to role selection
+      if (!profile.role) {
+        router.push("/role-select");
+        return;
+      }
+
+      // If role exists but onboarding is not completed
+      if (!profile.onboarding_completed) {
         router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+        return;
+      }
+
+      // If both role exists and onboarding is completed, go to dashboard
+      if (profile.role === UserRole.ACCOUNTANT) {
+        router.push("/ca/dashboard");
+      } else {
+        router.push("/user/dashboard");
       }
     } catch (error) {
       console.error("Error in checkUserProfileAndRedirect:", error);

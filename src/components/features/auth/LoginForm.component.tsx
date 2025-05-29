@@ -105,21 +105,27 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         return;
       }
 
-      // After successful login, first check role
+      // After successful login, first check role/profile
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("role, onboarding_completed")
         .eq("user_id", user.id)
         .single();
 
-      if (error) {
+      if (error && error.code !== "PGRST116") {
         console.error("Error fetching profile:", error);
         toast.error("An error occurred while checking your profile");
         return;
       }
 
+      // If no profile exists, redirect to role selection
+      if (!profile) {
+        router.push("/role-select");
+        return;
+      }
+
       // If no role is set, redirect to role selection
-      if (!profile?.role) {
+      if (!profile.role) {
         router.push("/role-select");
         return;
       }
@@ -165,7 +171,7 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
     if (auth.user) {
       // Only handle non-Google auth redirects here
       if (!window.location.pathname.includes('/auth/callback')) {
-        checkAndRedirect();
+        // checkAndRedirect(); // Remove this line, logic is now in handleSubmit
       }
     }
   }, [auth.user]);
