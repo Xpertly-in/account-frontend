@@ -6,6 +6,12 @@
 **Description:** A NoBroker-style platform where users can discover, filter, and contact Chartered Accountants (CAs).  
 **Objective:** Build a mobile-first, modular, and maintainable CA listing portal from scratch. Every UI component must be kept under **200 lines of code** and all progress, context, and guidelines must be meticulously tracked via dedicated documents.
 
+**Key Documentation:**
+
+- `prd.md` - This Product Requirements Document (comprehensive project specifications)
+- `progress.md` - Development progress tracking and implementation status
+- `database-schema.md` - Complete database schema documentation and guidelines
+
 ---
 
 ## 2. Immediate Tasks (Critical) ✅ COMPLETED
@@ -1595,6 +1601,64 @@ The project follows these type system standards:
    - Utility files must be named: `entityName.utils.ts` (camelCase)
 
 These standards ensure code consistency, reduce typos in string values, and improve maintainability.
+
+## Database Documentation
+
+### Database Schema Documentation
+
+The project maintains comprehensive database schema documentation in `database-schema.md` which includes:
+
+#### Core Documentation Sections
+
+1. **Complete Table Structures**:
+
+   - `profiles` - User profile information for CAs and customers
+   - `leads` - Customer service requests and requirements
+   - `lead_engagements` - CA interaction tracking with leads
+   - `services` - Available services that CAs can offer
+   - `experiences` - CA work experience and employment history
+   - `social_profile` - CA social media and professional links
+
+2. **Performance Optimization**:
+
+   - Recommended database indexes for filtering operations
+   - Query optimization guidelines for leads filtering
+   - Performance considerations for large datasets
+
+3. **Security & Access Control**:
+
+   - Row Level Security (RLS) policies for all tables
+   - Data access rules for different user roles
+   - Privacy protection for contact information
+
+4. **Data Types & Constraints**:
+
+   - Enum values for status, urgency, and contact preferences
+   - Field validation rules and constraints
+   - Common services list for CA onboarding
+
+5. **Migration & Maintenance**:
+   - Initial schema setup scripts
+   - Schema update migration examples
+   - Backup and maintenance procedures
+   - Regular maintenance task schedules
+
+#### Key Features Documented
+
+- **Dynamic Filter Support**: Schema designed to support dynamic filter options with proper indexing
+- **Engagement Tracking**: Composite primary keys for preventing duplicate CA-lead interactions
+- **Scalability**: Proper indexing strategy for performance with large datasets
+- **Data Integrity**: Foreign key relationships and constraints for data consistency
+- **Audit Trail**: Timestamp tracking for all data modifications
+
+#### Usage Guidelines
+
+- **Development**: Reference for understanding data relationships and constraints
+- **Database Changes**: Follow migration patterns documented in the schema
+- **Performance**: Use recommended indexes for optimal query performance
+- **Security**: Implement RLS policies as documented for proper access control
+
+The database schema documentation serves as the single source of truth for all database-related decisions and should be updated whenever schema changes are made.
 
 ## Testing Infrastructure
 

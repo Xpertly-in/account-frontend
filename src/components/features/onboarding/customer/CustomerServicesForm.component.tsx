@@ -75,7 +75,9 @@ export default function CustomerServicesForm({ formData, setFormData, errors, se
             name="otherService"
             value={formData.otherService || ""}
             onChange={e => setFormData((f: any) => ({ ...f, otherService: e.target.value }))}
+            className={errors.otherService ? "border-red-500" : ""}
           />
+          {errors.otherService && <p className="text-xs text-red-500 mt-1">{errors.otherService}</p>}
         </div>
       )}
       {errors.services && <p className="text-xs text-red-500 mt-1">{errors.services}</p>}

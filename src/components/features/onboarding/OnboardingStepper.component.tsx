@@ -33,12 +33,12 @@ interface OnboardingStepperProps {
 }
 
 const steps = [
-  { label: "Basic Info", component: BasicInfoForm },
-  { label: "Services", component: ServicesForm },
-  { label: "Experience", component: ExperienceForm },
-  { label: "Education", component: EducationForm },
-  { label: "Address", component: AddressForm },
-  { label: "Social", component: SocialForm },
+  { label: "Basic Info", subtitle: "Tell us about yourself.", component: BasicInfoForm },
+  { label: "Services", subtitle: "What services do you offer?", component: ServicesForm },
+  { label: "Experience", subtitle: "Share your professional experience.", component: ExperienceForm },
+  { label: "Education", subtitle: "Add your educational background.", component: EducationForm },
+  { label: "Address", subtitle: "Where is your office located?", component: AddressForm },
+  { label: "Social", subtitle: "Add your professional links.", component: SocialForm },
 ];
 
 export default function OnboardingStepper({

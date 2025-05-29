@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Card } from "@/ui/Card.ui";
@@ -13,6 +13,7 @@ import CustomerCommunicationForm from "@/components/features/onboarding/customer
 import { ProgressBar } from "@/components/features/onboarding/customer/ProgressBar.component";
 import { Button } from "@/ui/Button.ui";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 const steps = [
   {
@@ -45,6 +46,7 @@ interface FormData {
   about: string;
   communication: string;
   profilePhoto: File | null;
+  profile_picture: string | null;
   address: string;
   city: string;
   state: string;
@@ -52,6 +54,52 @@ interface FormData {
   services: string[];
   otherService?: string;
 }
+
+// Calculate completion percentage
+const calculateCompletionPercentage = (formData: FormData) => {
+  const fields = [
+    { key: 'name', weight: 2 }, // Name is more important
+    { key: 'gender', weight: 1 },
+    { key: 'mobile', weight: 1 },
+    { key: 'userType', weight: 1 },
+    { key: 'about', weight: 1 },
+    { key: 'communication', weight: 1 },
+    { key: 'address', weight: 1 },
+    { key: 'city', weight: 1 },
+    { key: 'state', weight: 1 },
+    { key: 'pincode', weight: 1 },
+    { key: 'services', weight: 1 },
+    { key: 'profile_picture', weight: 1 }
+  ];
+
+  let totalWeight = 0;
+  let filledWeight = 0;
+
+  fields.forEach(field => {
+    totalWeight += field.weight;
+    const value = formData[field.key as keyof FormData];
+    
+    if (field.key === 'services') {
+      if (Array.isArray(value) && value.length > 0) {
+        filledWeight += field.weight;
+      }
+    } else if (field.key === 'communication') {
+      // Check if communication is a non-empty string
+      if (typeof value === 'string' && value.trim() !== '') {
+        filledWeight += field.weight;
+      }
+    } else if (field.key === 'profile_picture') {
+      // Check if either profile_picture or profilePhoto exists
+      if (value !== null && value !== '' || formData.profilePhoto !== null) {
+        filledWeight += field.weight;
+      }
+    } else if (value !== undefined && value !== null && value !== '') {
+      filledWeight += field.weight;
+    }
+  });
+  
+  return Math.round((filledWeight / totalWeight) * 100);
+};
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -65,6 +113,7 @@ export default function UserProfilePage() {
     about: "",
     communication: "",
     profilePhoto: null,
+    profile_picture: null,
     address: "",
     city: "",
     state: "",
@@ -75,6 +124,7 @@ export default function UserProfilePage() {
   const [errorSteps, setErrorSteps] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [imageUploading, setImageUploading] = useState(false);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -126,7 +176,8 @@ export default function UserProfilePage() {
             userType: profile.type_of_user || "",
             about: profile.about || "",
             communication: profile.type_of_communication || "",
-            profilePhoto: null, // We'll handle this separately if needed
+            profilePhoto: null,
+            profile_picture: profile.profile_picture || null
           }));
         }
 
@@ -172,6 +223,7 @@ export default function UserProfilePage() {
   }, [auth.user]);
 
   const StepComponent = steps[step].component;
+  const completionPercentage = calculateCompletionPercentage(formData);
 
   // Step-wise validation logic
   const validateCurrentStep = () => {
@@ -221,24 +273,41 @@ export default function UserProfilePage() {
   };
 
   const handleSubmit = async () => {
-    if (!auth.user) {
+    if (!auth.user?.id) {
       toast.error("Not authenticated");
+      return;
+    }
+
+    // Validate name before submission
+    if (!formData.name?.trim()) {
+      toast.error("Name is required");
+      setErrors(prev => ({ ...prev, name: "Full Name is required" }));
+      setStep(0); // Go back to personal details step
       return;
     }
 
     setIsSubmitting(true);
     try {
       const { name, gender, profilePhoto, mobile, about, userType, communication, address, city, state, pincode, services, otherService } = formData;
-      let profile_picture = null;
+      let profile_picture = formData.profile_picture;
 
-      // Upload profile picture if present
-      if (profilePhoto) {
+      // Upload profile picture if present and changed
+      if (profilePhoto && auth.user?.id) {
+        // Generate a unique filename using timestamp and UUID
+        const timestamp = Date.now();
+        const uuid = uuidv4();
         const fileExt = profilePhoto.name.split('.').pop();
-        const filePath = `${auth.user.id}/profile.${fileExt}`;
+        const filePath = `${auth.user.id}/profile_${timestamp}_${uuid}.${fileExt}`;
+
         const { error: uploadError } = await supabase.storage
           .from('images')
-          .upload(filePath, profilePhoto, { upsert: true });
+          .upload(filePath, profilePhoto, { 
+            upsert: true,
+            cacheControl: '3600'
+          });
+
         if (uploadError) throw uploadError;
+
         const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
         profile_picture = publicUrl;
       }
@@ -254,6 +323,7 @@ export default function UserProfilePage() {
         type_of_user: userType,
         type_of_communication: communication,
         onboarding_completed: true,
+        updated_at: new Date().toISOString()
       }, { onConflict: "user_id" });
       if (profileError) throw profileError;
 
@@ -269,25 +339,83 @@ export default function UserProfilePage() {
       if (addressError) throw addressError;
 
       // Upsert services
-      if (Array.isArray(services) && services.length > 0) {
-        // Remove old services for this user
-        await supabase.from("services").delete().eq("ca_id", auth.user.id);
-        // Insert new services
+      if (Array.isArray(services) && services.length > 0 && auth.user?.id) {
+        // First, deactivate all existing services
+        const { error: deactivateError } = await supabase
+          .from("services")
+          .update({ is_active: false })
+          .eq("ca_id", auth.user.id);
+        
+        if (deactivateError) throw deactivateError;
+
+        // Then insert new services
         const serviceRows = services.map((service: string) => ({
           ca_id: auth.user.id,
           service_name: service === "Other" ? otherService : service,
           is_active: true
         }));
-        const { error: serviceError } = await supabase.from("services").insert(serviceRows);
+
+        const { error: serviceError } = await supabase
+          .from("services")
+          .insert(serviceRows);
+
         if (serviceError) throw serviceError;
       }
 
-      toast.success("Profile updated successfully!");
+      toast.success("Profile and onboarding saved successfully!");
       router.push("/user/dashboard");
     } catch (err: any) {
-      toast.error("Failed to update profile", { description: err.message });
+      toast.error("Failed to save onboarding info", { description: err.message });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleProfileImageChange = async (file: File | null) => {
+    if (!file || !auth.user?.id) return;
+
+    try {
+      setImageUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${auth.user.id}-${uuidv4()}.${fileExt}`;
+      const filePath = `profile-images/${fileName}`;
+
+      // Upload image to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, {
+          upsert: true,
+          cacheControl: '3600'
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      // Update profile in database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ profile_picture: publicUrl })
+        .eq('user_id', auth.user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setFormData(prev => ({
+        ...prev,
+        profilePhoto: file,
+        profile_picture: publicUrl
+      }));
+
+      toast.success('Profile image updated successfully');
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast.error('Failed to upload profile image');
+    } finally {
+      setImageUploading(false);
     }
   };
 
@@ -295,16 +423,32 @@ export default function UserProfilePage() {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
+  const photoUrl = formData.profilePhoto ? URL.createObjectURL(formData.profilePhoto) : formData.profile_picture;
+
   return (
     <div className="flex flex-col md:flex-row w-full max-w-5xl mx-auto gap-2">
       {/* ProgressBar Sidebar */}
       <div className="md:w-1/4 w-full md:order-1 order-1 md:min-h-screen md:sticky md:top-0 flex md:items-start items-center md:justify-start justify-center bg-background">
-        <ProgressBar
-          steps={steps}
-          currentStep={step}
-          onStepClick={handleStepClick}
-          errorSteps={errorSteps}
-        />
+        <div className="w-full">
+          <div className="p-6 bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent rounded-xl pb-0">
+            <h3 className="text-lg font-semibold mb-2">Profile Completion</h3>
+            <div className="flex items-center gap-2">
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${completionPercentage}%` }}
+                />
+              </div>
+              <span className="text-sm font-medium">{completionPercentage}%</span>
+            </div>
+          </div>
+          <ProgressBar
+            steps={steps}
+            currentStep={step}
+            onStepClick={handleStepClick}
+            errorSteps={errorSteps}
+          />
+        </div>
       </div>
       {/* Step Content */}
       <div className="flex-1 border-0 order-2 md:order-2 flex justify-center items-start mt-6">
@@ -314,12 +458,20 @@ export default function UserProfilePage() {
             <h2 className="text-xl font-bold text-foreground mb-1">{steps[step].label}</h2>
             <p className="text-sm text-muted-foreground">{steps[step].subtitle}</p>
           </div>
-          <StepComponent formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />
+          {React.createElement(StepComponent, {
+            formData,
+            setFormData,
+            errors,
+            setErrors,
+            onProfileImageChange: handleProfileImageChange,
+            imageUploading,
+            photoUrl
+          })}
           {/* Navigation Buttons */}
           <div className="flex justify-between items-center gap-4 mt-8">
             {step > 0 ? (
               <Button
-                onClick={handlePrev}
+                onClick={() => setStep(s => Math.max(s - 1, 0))}
                 variant="outline"
                 className="min-w-[100px]"
               >
@@ -342,7 +494,7 @@ export default function UserProfilePage() {
                 className="bg-gradient-to-r from-primary to-secondary text-white min-w-[100px]"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Saving..." : "Save Changes"}
+                {isSubmitting ? "Submitting..." : "Submit"}
               </Button>
             )}
           </div>

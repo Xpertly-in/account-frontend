@@ -20,6 +20,7 @@ export * from "./state/context.mock";
 // UI component mocks
 export * from "./ui/shadcn.mock";
 export * from "./ui/phosphor.mock";
+export * from "./ui/scrollIntoView.mock";
 
 // Feature-specific mocks
 export * from "./features/dashboard.mock";
