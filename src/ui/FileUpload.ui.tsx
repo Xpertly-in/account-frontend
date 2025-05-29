@@ -8,7 +8,7 @@ export interface FileUploadProps {
   id: string;
   label: string;
   accept?: string;
-  onChange: (file: File | null) => void;
+  onChange: (file: File[]) => void;
   required?: boolean;
   error?: string;
   description?: string;
@@ -22,14 +22,33 @@ export function FileUpload({
   required = false,
   error,
 }: FileUploadProps) {
+  const MAX_BYTES = 5 * 1024 * 1024;
+  const [files, setFiles] = useState<File[]>([]);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null;
-    setFile(selectedFile);
-    onChange(selectedFile);
+    if (!e.target.files) return;
+    const picked = Array.from(e.target.files);
+    const valids: File[] = [];
+    picked.forEach(f => {
+      if (f.size > MAX_BYTES) {
+        setLocalError("Each file must be under 5 MB");
+        return;
+      }
+      if (!/^(image|video)\//.test(f.type)) {
+        setLocalError("Only images, GIFs, and videos are supported");
+        return;
+      }
+      valids.push(f);
+    });
+    if (!valids.length) return;
+    setLocalError(null);
+    const next = [...files, ...valids];
+    setFiles(next);
+    onChange(next);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -45,23 +64,36 @@ export function FileUpload({
     e.preventDefault();
     setIsDragging(false);
 
-    if (e.dataTransfer.files?.length) {
-      const droppedFile = e.dataTransfer.files[0];
-      setFile(droppedFile);
-      onChange(droppedFile);
-    }
+    if (!e.dataTransfer.files?.length) return;
+    const dropped = Array.from(e.dataTransfer.files);
+    const valids: File[] = [];
+    dropped.forEach(f => {
+      if (f.size > MAX_BYTES) {
+        setLocalError("Each file must be under 5 MB");
+        return;
+      }
+      if (!/^(image|video)\//.test(f.type)) {
+        setLocalError("Only images, GIFs, and videos are supported");
+        return;
+      }
+      valids.push(f);
+    });
+    if (!valids.length) return;
+    setLocalError(null);
+    const next = [...files, ...valids];
+    setFiles(next);
+    onChange(next);
+  };
+
+  const handleRemove = (idx: number) => {
+    const next = files.filter((_, i) => i !== idx);
+    setFiles(next);
+    onChange(next);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleRemoveFile = () => {
-    setFile(null);
-    onChange(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   return (
@@ -70,7 +102,7 @@ export function FileUpload({
         <label htmlFor={id} className="text-sm font-medium text-foreground">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {(error || localError) && <p className="text-xs text-red-500">{error || localError}</p>}
       </div>
 
       <div
@@ -90,27 +122,23 @@ export function FileUpload({
           id={id}
           type="file"
           accept={accept}
+          multiple
           onChange={handleFileChange}
           className="hidden"
           required={required}
         />
 
-        {file ? (
-          <div className="flex w-full flex-col items-center gap-2">
-            <div className="flex w-full max-w-xs items-center overflow-hidden rounded-md bg-background p-2 text-sm">
-              <div className="flex-1 truncate">{file.name}</div>
-              <button
-                type="button"
-                onClick={handleRemoveFile}
-                className="ml-2 flex-shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Remove file"
-              >
-                <X size={16} weight="bold" />
-              </button>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
-            </span>
+        {files.length ? (
+          <div className="flex flex-col gap-2 w-full">
+            {files.map((f, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="truncate">{f.name}</div>
+                <button onClick={() => handleRemove(i)}>
+                  <X size={16} />
+                </button>
+                <span>{(f.size / 1024 / 1024).toFixed(2)} MB</span>
+              </div>
+            ))}
           </div>
         ) : (
           <>
@@ -119,10 +147,10 @@ export function FileUpload({
             </div>
             <div className="mb-2 text-center">
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium">Click to upload</span> or drag and drop
+              <span className="font-medium">Click to upload</span> or drag & drop files
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {accept ? accept.split(",").join(", ") : "Any file format"}
+                Supported: JPEG, PNG, GIF, MP4 (max 5 MB)
               </p>
             </div>
             <Button
@@ -132,7 +160,7 @@ export function FileUpload({
               size="sm"
               className="text-xs"
             >
-              Select File
+              Select Files
             </Button>
           </>
         )}

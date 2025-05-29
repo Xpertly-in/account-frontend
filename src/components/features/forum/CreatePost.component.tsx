@@ -136,7 +136,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     const newFiles = allImages.filter(img => img instanceof File) as File[];
     const existingUrls = allImages.filter(img => typeof img === "string") as string[];
     // delegate uploads to service
-    const newUrls = await uploadImages(newFiles);
+    const newUrls = await uploadImages(newFiles, "forum/post");
     const imageUrls = [...existingUrls, ...newUrls];
     const authorId = auth.user?.id;
 
@@ -285,8 +285,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
           <FileUpload
             id="post-images"
             label="Add images (optional)"
-            accept="image/*"
-            onChange={file => file && setAllImages(p => [...p, file])}
+            accept="image/*,video/*"
+            onChange={files => setAllImages(curr => [...curr, ...files])}
           />
           {allImages.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">

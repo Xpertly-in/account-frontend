@@ -3,6 +3,7 @@ import { supabase } from "@/helper/supabase.helper";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
 import type { PostCardProps } from "@/components/features/forum/PostCard.component";
+import { getSignedUrls } from "./storage.service";
 
 export interface PostFilter {
   searchTerm?: string;
@@ -95,24 +96,27 @@ export async function fetchPosts(
   const { data, error } = await query;
   if (error) throw error;
 
-  const mapped: PostCardProps[] = (data || []).map(p => {
-    // profiles is returned as an array; grab the first profile record
-    const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
-    return {
-      id: p.id,
-      updated_at: p.updated_at,
-      title: p.title,
-      content: p.content,
-      author_id: p.author_id,
-      author_name: profile?.name || "",
-      author_avatar: profile?.profile_picture || undefined,
-      category: p.category,
-      tags: p.tags,
-      images: p.images,
-      reaction_counts: p.reaction_counts,
-      is_deleted: p.is_deleted,
-    };
-  });
+  // await each getSignedUrls so images: string[]
+  const mapped = await Promise.all(
+    (data || []).map(async p => {
+      const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+      const signedImages = await getSignedUrls(p.images);
+      return {
+        id: p.id,
+        updated_at: p.updated_at,
+        title: p.title,
+        content: p.content,
+        author_id: p.author_id,
+        author_name: profile?.name || "",
+        author_avatar: profile?.profile_picture || undefined,
+        category: p.category,
+        tags: p.tags,
+        images: signedImages,
+        reaction_counts: p.reaction_counts,
+        is_deleted: p.is_deleted,
+      } as PostCardProps;
+    })
+  );
 
   return {
     data: mapped,
