@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePost, useSimilarPosts } from "@/services/posts.service";
+import { CommentSection } from "@/components/features/forum/CommentSection.component";
 import { Container } from "@/components/layout/Container.component";
 import { Card } from "@/ui/Card.ui";
 import { PostCard } from "@/components/features/forum/PostCard.component";
@@ -43,6 +44,8 @@ export default function PostPage() {
               /* (Optional) confirm + delete */
             }}
           />
+          {/* comments */}
+          <CommentSection postId={postId} />
         </div>
 
         {/* Similar Posts */}
