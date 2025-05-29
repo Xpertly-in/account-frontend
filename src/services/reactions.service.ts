@@ -65,7 +65,7 @@ export async function toggleReaction(
     .eq("user_id", userId)
     .eq("target_type", targetType)
     .eq("target_id", targetId)
-    .single();
+    .maybeSingle();
   if (exErr) throw exErr;
 
   if (existing?.reaction_type === type) {
