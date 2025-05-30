@@ -19,7 +19,9 @@ import {
   CaretRight,
   X,
 } from "@phosphor-icons/react";
+import { toast } from "sonner";
 import { useAuth } from "@/store/context/Auth.provider";
+import { ShareButton } from "@/ui/ShareButton.ui";
 
 export interface PostCardProps {
   id: number;
@@ -328,17 +330,8 @@ export const PostCard: React.FC<PostCardProps> = ({
           <ChatCircle size={18} />
           <span className="text-sm">Comments</span>
         </button>
-        <button
-          type="button"
-          onClick={e => e.stopPropagation()}
-          className="flex items-center gap-1 hover:text-primary mr-2"
-        >
-          <ShareNetwork size={18} />
-          <span className="text-sm">Share</span>
-        </button>
+        <ShareButton postId={id} title={title} />
       </div>
-
-      
 
       {showCommentsPreview && (
         <div className="px-4 pb-4 space-y-2">
