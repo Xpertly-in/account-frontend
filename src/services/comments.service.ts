@@ -15,6 +15,7 @@ export interface Comment {
   images: string[];
   reaction_counts?: Record<string, number>;
   created_at: string;
+  updated_at: string;
   replies?: Comment[];
 }
 
@@ -26,6 +27,7 @@ const COMMENT_SELECT = `
   images,
   reaction_counts,
   created_at,
+  updated_at,
   author_id,
   profiles ( name, profile_picture )
 `;
@@ -43,6 +45,7 @@ async function normalize(r: any): Promise<Comment> {
     images: await getSignedUrls(r.images || []),
     reaction_counts: r.reaction_counts || {},
     created_at: r.created_at,
+    updated_at: r.updated_at,
   };
 }
 
@@ -128,9 +131,10 @@ export function useDeleteComment() {
 }
 
 export async function updateComment(id: number, content: string): Promise<Comment> {
+  const nowUtc = new Date().toISOString();
   const { data, error } = await supabase
     .from("comments")
-    .update({ content })
+    .update({ content, updated_at: nowUtc })
     .eq("id", id)
     .select(COMMENT_SELECT)
     .single();

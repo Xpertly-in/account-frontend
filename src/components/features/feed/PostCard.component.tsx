@@ -25,6 +25,7 @@ import { ShareButton } from "@/ui/ShareButton.ui";
 
 export interface PostCardProps {
   id: number;
+  created_at: string;
   updated_at: string;
   title: string;
   content: string;
@@ -52,8 +53,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   content,
   images,
   tags,
+  created_at,
   updated_at,
-  reaction_counts = {},
   onCategoryClick,
   onTagClick,
   onEdit,
@@ -79,7 +80,13 @@ export const PostCard: React.FC<PostCardProps> = ({
       .join("")
       .toUpperCase();
   }, [author_name]);
-  const relativeTime = useMemo(() => formatRelativeTime(updated_at), [updated_at]);
+  const displayTime = useMemo(
+    () =>
+      created_at !== updated_at
+        ? `edited ${formatRelativeTime(updated_at)}`
+        : formatRelativeTime(created_at),
+    [created_at, updated_at]
+  );
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -136,7 +143,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           </Avatar>
           <div className="flex flex-col">
             <p className="font-semibold text-gray-900 dark:text-gray-100">{author_name}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
+            <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">{displayTime}</p>
           </div>
         </div>
         {/* Center: category badge */}

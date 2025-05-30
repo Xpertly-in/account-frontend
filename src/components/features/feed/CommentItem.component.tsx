@@ -16,6 +16,10 @@ interface Props {
   onDelete?: (id: number) => void;
 }
 export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelete }) => {
+  const isEdited = comment.updated_at !== comment.created_at;
+  const displayTime = isEdited
+    ? `edited ${formatRelativeTime(comment.updated_at)}`
+    : formatRelativeTime(comment.created_at);
   const [reactionVersion, setReactionVersion] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -47,9 +51,7 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
             <span className="font-semibold text-gray-900 dark:text-gray-100">
               {comment.author_name}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatRelativeTime(comment.created_at)}
-            </span>
+            <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">{displayTime}</span>
           </div>
           {currentUserId === comment.author_id && (
             <div className="relative" ref={wrapperRef}>

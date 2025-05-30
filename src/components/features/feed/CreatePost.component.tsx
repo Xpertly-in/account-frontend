@@ -162,7 +162,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     };
 
     if (postId) {
-      await updatePost(postId, postPayload);
+      const nowUtc = new Date().toISOString();
+      await updatePost(postId, { ...postPayload, updated_at: nowUtc });
       onPostUpdated?.();
     } else {
       await createPost(postPayload);
