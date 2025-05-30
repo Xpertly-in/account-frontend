@@ -112,9 +112,6 @@ export default function Home() {
           </section>
         </Container>
       </div>
-
-      {/* Forum Feed Section */}
-      <Feed />
     </>
   );
 }
