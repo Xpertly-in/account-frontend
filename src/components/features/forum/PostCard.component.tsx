@@ -134,7 +134,10 @@ export const PostCard: React.FC<PostCardProps> = ({
         <div className="flex-1 flex justify-center">
           {category && (
             <span
-              onClick={() => onCategoryClick?.(category)}
+              onClick={e => {
+                e.stopPropagation();
+                onCategoryClick?.(category);
+              }}
               className="bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
             >
               {category}
@@ -146,7 +149,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           {currentUserId === author_id && (
             <div className="relative" ref={wrapperRef}>
               <button
-                onClick={() => setMenuOpen(o => !o)}
+                onClick={(e) => {e.stopPropagation(); setMenuOpen(o => !o);}}
                 aria-label="Open menu"
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
@@ -194,7 +197,13 @@ export const PostCard: React.FC<PostCardProps> = ({
         />
         {/* only show toggle if content overflows */}
         {hasOverflow && (
-          <button onClick={() => setExpanded(prev => !prev)} className="text-primary text-sm mt-1">
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setExpanded(prev => !prev);
+            }}
+            className="text-primary text-sm mt-1"
+          >
             {expanded ? "Show less" : "Read more"}
           </button>
         )}
@@ -204,7 +213,10 @@ export const PostCard: React.FC<PostCardProps> = ({
             {tags.map(tag => (
               <span
                 key={tag}
-                onClick={() => onTagClick?.(tag)}
+                onClick={e => {
+                  e.stopPropagation();
+                  onTagClick?.(tag);
+                }}
                 className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
               >
                 #{tag}
@@ -215,7 +227,8 @@ export const PostCard: React.FC<PostCardProps> = ({
         {images?.length > 0 && (
           <div
             className="relative w-full aspect-video bg-muted overflow-hidden rounded-lg cursor-zoom-in"
-            onClick={() => {
+            onClick={e => {
+              e.stopPropagation();
               setPreviewIndex(currentIndex);
               setIsPreviewOpen(true);
             }}
@@ -256,7 +269,10 @@ export const PostCard: React.FC<PostCardProps> = ({
               {images.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setCurrentIndex(idx)}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setCurrentIndex(idx);
+                  }}
                   className={`w-2 h-2 rounded-full ${
                     idx === currentIndex ? "bg-primary" : "bg-muted-foreground"
                   }`}
@@ -269,21 +285,23 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Above the actions, show the summary */}
       <div className="flex justify-left">
-        <ReactionSummary targetType="post" targetId={id} version={reactionVersion}/>
+        <ReactionSummary targetType="post" targetId={id} version={reactionVersion} />
       </div>
 
       {/* Actions */}
       <div className="border-t ... pt-1 flex justify-between">
-        <ReactionButton targetType="post" targetId={id} onReactComplete={() => setReactionVersion(v => v + 1)} />
-        <button
-          type="button"
-          className="flex items-center gap-1 hover:text-primary"
-        >
+        <ReactionButton
+          targetType="post"
+          targetId={id}
+          onReactComplete={() => setReactionVersion(v => v + 1)}
+        />
+        <button type="button" className="flex items-center gap-1 hover:text-primary">
           <ChatCircle size={18} />
           <span className="text-sm">Comments</span>
         </button>
         <button
           type="button"
+          onClick={e => e.stopPropagation()}
           className="flex items-center gap-1 hover:text-primary mr-2"
         >
           <ShareNetwork size={18} />
@@ -296,11 +314,17 @@ export const PostCard: React.FC<PostCardProps> = ({
         createPortal(
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-            onClick={() => setIsPreviewOpen(false)}
+            onClick={e => {
+              e.stopPropagation();
+              setIsPreviewOpen(false);
+            }}
           >
             <button
               className="absolute top-4 right-4 text-white"
-              onClick={() => setIsPreviewOpen(false)}
+              onClick={e => {
+                e.stopPropagation();
+                setIsPreviewOpen(false);
+              }}
             >
               <X size={32} weight="bold" />
             </button>
