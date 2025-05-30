@@ -56,7 +56,10 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
           {currentUserId === comment.author_id && (
             <div className="relative" ref={wrapperRef}>
               <button
-                onClick={() => setMenuOpen(o => !o)}
+                onClick={e => {
+                  e.stopPropagation();
+                  setMenuOpen(o => !o);
+                }}
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 aria-label="Comment menu"
               >
@@ -65,7 +68,8 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   <button
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
                       setMenuOpen(false);
                       onEdit?.(comment.id);
                     }}
@@ -74,7 +78,8 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
                     <PencilSimple size={14} /> Edit
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
                       setMenuOpen(false);
                       onDelete?.(comment.id);
                     }}
@@ -105,7 +110,13 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
             onReactComplete={() => setReactionVersion(v => v + 1)}
           />
           {onReply && (
-            <button onClick={onReply} className="text-primary hover:underline">
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                onReply();
+              }}
+              className="text-primary hover:underline"
+            >
               Reply
             </button>
           )}

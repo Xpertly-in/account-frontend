@@ -55,7 +55,7 @@ export async function fetchComments(postId: number): Promise<Comment[]> {
     .from("comments")
     .select(COMMENT_SELECT)
     .eq("post_id", postId)
-    .order("created_at", { ascending: true });
+    .order("updated_at", { ascending: true });
   if (error) throw error;
   const flat = await Promise.all((data || []).map(normalize));
   const map = new Map<number, Comment>();
@@ -68,6 +68,14 @@ export async function fetchComments(postId: number): Promise<Comment[]> {
       map.get(c.parent_id)!.replies!.push(c);
     }
   });
+  // sort each comment's replies by most-recently updated first
+  roots.forEach(root => {
+    root.replies?.sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
+  });
+  // then sort top-level comments by most-recently updated first
+  roots.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
   return roots;
 }
 

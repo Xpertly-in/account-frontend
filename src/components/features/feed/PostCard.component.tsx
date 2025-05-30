@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useComments } from "@/services/comments.service";
-import { CommentItem } from "./CommentItem.component";
+import { CommentSection } from "./CommentSection.component";
 import { createPortal } from "react-dom";
 import { ReactionButton } from "./ReactionButton.component";
 import { ReactionSummary } from "./ReactionSummary.component";
@@ -11,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import {
   ChatCircle,
-  ShareNetwork,
   DotsThree,
   PencilSimple,
   TrashSimple,
@@ -19,7 +17,6 @@ import {
   CaretRight,
   X,
 } from "@phosphor-icons/react";
-import { toast } from "sonner";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ShareButton } from "@/ui/ShareButton.ui";
 
@@ -69,7 +66,6 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionVersion, setReactionVersion] = useState(0);
 
-  const router = useRouter();
   const { data: comments = [] } = useComments(id);
   const [showCommentsPreview, setShowCommentsPreview] = useState(false);
 
@@ -341,21 +337,8 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {showCommentsPreview && (
-        <div className="px-4 pb-4 space-y-2">
-          {comments.slice(0, 2).map(c => (
-            <CommentItem key={c.id} comment={c} />
-          ))}
-          {comments.length > 2 && (
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                router.push(`/feed/${id}`);
-              }}
-              className="text-primary text-sm"
-            >
-              Load more comments
-            </button>
-          )}
+        <div className="px-4 pb-4">
+          <CommentSection postId={id} />
         </div>
       )}
 
