@@ -103,9 +103,9 @@ export function ReactionSummary({
             e.stopPropagation();
             setListOpen(true);
           }}
-          className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400 cursor-pointer hover:underline"
+          className="ml-2 text-sm font-medium hover:text-primary cursor-pointer hover:underline "
         >
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm">
             {latestName && `${latestName}`}
             {total - 1 > 0 && ` and ${total - 1} others`}
           </span>

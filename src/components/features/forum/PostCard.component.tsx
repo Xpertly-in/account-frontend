@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useComments } from "@/services/comments.service";
+import { CommentItem } from "./CommentItem.component";
 import { createPortal } from "react-dom";
 import { ReactionButton } from "./ReactionButton.component";
 import { ReactionSummary } from "./ReactionSummary.component";
@@ -62,6 +65,10 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [previewIndex, setPreviewIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionVersion, setReactionVersion] = useState(0);
+
+  const router = useRouter();
+  const { data: comments = [] } = useComments(id);
+  const [showCommentsPreview, setShowCommentsPreview] = useState(false);
 
   const initials = useMemo(() => {
     return author_name
@@ -149,7 +156,10 @@ export const PostCard: React.FC<PostCardProps> = ({
           {currentUserId === author_id && (
             <div className="relative" ref={wrapperRef}>
               <button
-                onClick={(e) => {e.stopPropagation(); setMenuOpen(o => !o);}}
+                onClick={e => {
+                  e.stopPropagation();
+                  setMenuOpen(o => !o);
+                }}
                 aria-label="Open menu"
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
@@ -158,7 +168,8 @@ export const PostCard: React.FC<PostCardProps> = ({
               {menuOpen && onEdit && (
                 <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   <button
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
                       setMenuOpen(false);
                       onEdit(id);
                     }}
@@ -168,7 +179,8 @@ export const PostCard: React.FC<PostCardProps> = ({
                     Edit Post
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
                       setMenuOpen(false);
                       onDelete?.(id);
                     }}
@@ -283,9 +295,19 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/* Above the actions, show the summary */}
-      <div className="flex justify-left">
+      {/* Above the actions, show reactions and comment count */}
+      <div className="flex justify-between items-center px-3 pb-1">
         <ReactionSummary targetType="post" targetId={id} version={reactionVersion} />
+        <button
+          type="button"
+          className="flex items-center gap-1 hover:text-primary cursor-pointer hover:underline"
+          onClick={e => {
+            e.stopPropagation();
+            setShowCommentsPreview(prev => !prev);
+          }}
+        >
+          <span className="text-sm">{comments.length} Comments</span>
+        </button>
       </div>
 
       {/* Actions */}
@@ -295,7 +317,14 @@ export const PostCard: React.FC<PostCardProps> = ({
           targetId={id}
           onReactComplete={() => setReactionVersion(v => v + 1)}
         />
-        <button type="button" className="flex items-center gap-1 hover:text-primary">
+        <button
+          type="button"
+          className="flex items-center gap-1 hover:text-primary"
+          onClick={e => {
+            e.stopPropagation();
+            setShowCommentsPreview(prev => !prev);
+          }}
+        >
           <ChatCircle size={18} />
           <span className="text-sm">Comments</span>
         </button>
@@ -308,6 +337,27 @@ export const PostCard: React.FC<PostCardProps> = ({
           <span className="text-sm">Share</span>
         </button>
       </div>
+
+      
+
+      {showCommentsPreview && (
+        <div className="px-4 pb-4 space-y-2">
+          {comments.slice(0, 2).map(c => (
+            <CommentItem key={c.id} comment={c} />
+          ))}
+          {comments.length > 2 && (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                router.push(`/forum/${id}`);
+              }}
+              className="text-primary text-sm"
+            >
+              Load more comments
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Image preview modal */}
       {isPreviewOpen &&
