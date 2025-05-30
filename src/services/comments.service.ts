@@ -105,12 +105,43 @@ export function useCreateComment() {
   const { auth } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: {
-      post_id: number;
-      parent_id?: number;
-      content: string;
-      images: string[];
-    }) => createComment({ ...p, author_id: auth.user!.id }),
+    mutationFn: (p: { post_id: number; parent_id?: number; content: string; images: string[] }) =>
+      createComment({ ...p, author_id: auth.user!.id }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["comments"] }),
+  });
+}
+
+// comment edit & delete
+export async function deleteComment(id: number): Promise<void> {
+  const { error } = await supabase.from("comments").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export function useDeleteComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteComment,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["comments"] });
+    },
+  });
+}
+
+export async function updateComment(id: number, content: string): Promise<Comment> {
+  const { data, error } = await supabase
+    .from("comments")
+    .update({ content })
+    .eq("id", id)
+    .select(COMMENT_SELECT)
+    .single();
+  if (error) throw error;
+  return normalize(data);
+}
+
+export function useUpdateComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: number; content: string }) => updateComment(vars.id, vars.content),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["comments"] }),
   });
 }
