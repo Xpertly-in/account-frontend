@@ -60,7 +60,7 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 aria-label="Comment menu"
               >
-                <DotsThree size={16} />
+                <DotsThree size={20} />
               </button>
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">

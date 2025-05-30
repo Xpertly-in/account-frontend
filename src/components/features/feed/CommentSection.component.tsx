@@ -7,10 +7,15 @@ import {
   useDeleteComment,
   useUpdateComment,
 } from "@/services/comments.service";
+import { useAuth } from "@/store/context/Auth.provider";
+import { useRouter, usePathname } from "next/navigation";
 import { CommentForm } from "./CommentForm.component";
 import { CommentItem } from "./CommentItem.component";
 
 export const CommentSection: React.FC<{ postId: number }> = ({ postId }) => {
+  const { auth } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const { data: comments = [], isLoading } = useComments(postId);
   const create = useCreateComment();
   const deleteComment = useDeleteComment();
@@ -21,6 +26,12 @@ export const CommentSection: React.FC<{ postId: number }> = ({ postId }) => {
   if (isLoading) return <p>Loading comments…</p>;
 
   const handleSubmit = (parent_id: number | undefined) => async (c: string, a: string[]) => {
+    // redirect to login if not authenticated
+    if (!auth.isLoading && !auth.user) {
+      localStorage.setItem("postLoginRedirect", pathname);
+      router.push("/login/ca");
+      return;
+    }
     await create.mutateAsync({ post_id: postId, parent_id, content: c, images: a });
     setReplyTo(null);
   };

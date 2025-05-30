@@ -8,7 +8,6 @@ import { createPost, updatePost, PostPayload } from "@/services/posts.service";
 import { useCategories, useUpsertCategory } from "@/services/categories.service";
 import { useTags, useUpsertTag } from "@/services/tags.service";
 import { uploadImages } from "@/services/storage.service";
-import { useMutation } from "@tanstack/react-query";
 import { Input } from "@/ui/Input.ui";
 import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
@@ -257,14 +256,14 @@ export const CreatePost: React.FC<CreatePostProps> = ({
                 >
                   <Tag size={12} weight="bold" />
                   <span>{tag}</span>
-                  <button
+                  <Button
                     type="button"
                     aria-label={`Remove tag ${tag}`}
                     className="p-0.5 hover:bg-primary/80 rounded-full"
                     onClick={() => handleRemoveTag(tag)}
                   >
                     <X size={12} weight="bold" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
