@@ -1,4 +1,4 @@
-// src/components/features/forum/CommentItem.component.tsx
+// src/components/features/feed/CommentItem.component.tsx
 "use client";
 import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";

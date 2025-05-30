@@ -1,4 +1,4 @@
-// src/components/features/forum/CommentSection.component.tsx
+// src/components/features/feed/CommentSection.component.tsx
 "use client";
 import React, { useState } from "react";
 import { useComments, useCreateComment } from "@/services/comments.service";

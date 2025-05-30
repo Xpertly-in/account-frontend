@@ -2,7 +2,7 @@
 import { supabase } from "@/helper/supabase.helper";
 import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
-import type { PostCardProps } from "@/components/features/forum/PostCard.component";
+import type { PostCardProps } from "@/components/features/feed/PostCard.component";
 import { getSignedUrls } from "./storage.service";
 
 // 1. one central select‐clause

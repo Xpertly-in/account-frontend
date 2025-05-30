@@ -505,7 +505,7 @@ create table public.lead_engagements (
 + [x] **Post Interactions** - Likes and reactions implemented
 + [x] **Similar Posts** - Related posts displayed in detail view
 + [ ] **Comments** - Comments feature pending
-+ [ ] **Content Moderation** - Community guidelines and moderation tools
++ [ ] **Content Moderation** - Feed guidelines and moderation tools
 
 ## Planned Features 📋
 
@@ -571,7 +571,7 @@ create table public.lead_engagements (
     /onboarding - Multi-step onboarding forms
     /profile - CA profile display components
     /search - CA search and filtering
-    /forum - Forum posts and interactions
+    /feed - Forum posts and interactions
     /analytics - Analytics and tracking
     /common - Shared feature components
   /leads - Lead management components

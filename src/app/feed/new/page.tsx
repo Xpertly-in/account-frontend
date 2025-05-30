@@ -1,4 +1,4 @@
-// src/app/forum/new/page.tsx
+// src/app/feed/new/page.tsx
 "use client";
 
 import React, { useEffect, Suspense } from "react";
@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { CaretLeft } from "@phosphor-icons/react";
 import { Container } from "@/components/layout/Container.component";
-import { CreatePost } from "@/components/features/forum/CreatePost.component";
+import { CreatePost } from "@/components/features/feed/CreatePost.component";
 import { useSearchParams } from "next/navigation";
 
 function NewPostContent() {
@@ -32,7 +32,7 @@ function NewPostContent() {
       <Container className="max-w-3xl py-4">
         {/* Back button */}
         <button
-          onClick={() => router.push("/forum")}
+          onClick={() => router.push("/feed")}
           className="flex items-center gap-2 text-primary hover:underline mb-2"
         >
           <CaretLeft size={20} weight="bold" />
@@ -40,7 +40,7 @@ function NewPostContent() {
         </button>
         {/* Form Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-4">
-          <CreatePost initialContent={initialContent ?? ""} onPostCreated={() => router.push("/forum")} />
+          <CreatePost initialContent={initialContent ?? ""} onPostCreated={() => router.push("/feed")} />
         </div>
       </Container>
     </div>

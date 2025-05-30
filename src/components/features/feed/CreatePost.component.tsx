@@ -1,4 +1,4 @@
-// src/components/features/forum/CreatePost.component.tsx
+// src/components/features/feed/CreatePost.component.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";

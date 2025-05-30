@@ -3,10 +3,10 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePost, useSimilarPosts } from "@/services/posts.service";
-import { CommentSection } from "@/components/features/forum/CommentSection.component";
+import { CommentSection } from "@/components/features/feed/CommentSection.component";
 import { Container } from "@/components/layout/Container.component";
 import { Card } from "@/ui/Card.ui";
-import { PostCard } from "@/components/features/forum/PostCard.component";
+import { PostCard } from "@/components/features/feed/PostCard.component";
 
 export default function PostPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +29,7 @@ export default function PostPage() {
       <Container className="max-w-3xl py-4">
         {/* Back button */}
         <button
-          onClick={() => router.push("/forum")}
+          onClick={() => router.push("/feed")}
           className="flex items-center gap-2 text-primary hover:underline mb-4"
         >
           &lt; Back to Feed
@@ -39,7 +39,7 @@ export default function PostPage() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-6">
           <PostCard
             {...post}
-            onEdit={id => router.push(`/forum/${id}/edit`)}
+            onEdit={id => router.push(`/feed/${id}/edit`)}
             onDelete={id => {
               /* (Optional) confirm + delete */
             }}
@@ -59,9 +59,9 @@ export default function PostPage() {
                 <Card key={sim.id} className="overflow-hidden rounded-2xl shadow-xl transition">
                   <PostCard
                     {...sim}
-                    onCategoryClick={cat => router.push(`/forum?category=${cat}`)}
-                    onTagClick={tag => router.push(`/forum?tags=${tag}`)}
-                    onEdit={id => router.push(`/forum/${id}/edit`)}
+                    onCategoryClick={cat => router.push(`/feed?category=${cat}`)}
+                    onTagClick={tag => router.push(`/feed?tags=${tag}`)}
+                    onEdit={id => router.push(`/feed/${id}/edit`)}
                     onDelete={() => {}}
                   />
                 </Card>

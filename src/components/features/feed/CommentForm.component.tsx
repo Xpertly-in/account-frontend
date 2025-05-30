@@ -1,4 +1,4 @@
-// src/components/features/forum/CommentForm.component.tsx
+// src/components/features/feed/CommentForm.component.tsx
 
 "use client";
 import React, { useState, useRef } from "react";

@@ -49,7 +49,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <>
                   <GoogleAnalytics />
                   {/* hide privacy toggle on forum pages */}
-                  {pathname && !pathname.startsWith("/forum") && <AnalyticsOptOut />}
+                  {pathname && !pathname.startsWith("/feed") && <AnalyticsOptOut />}
                 </>
               )}
             </GoogleAuthProvider>
