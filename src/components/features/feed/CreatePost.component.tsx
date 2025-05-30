@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation"; // added
 import { createPost, updatePost, PostPayload } from "@/services/posts.service";
 import { useCategories, useUpsertCategory } from "@/services/categories.service";
 import { useTags, useUpsertTag } from "@/services/tags.service";
-import { uploadImages } from "@/services/storage.service";
-import { useMutation } from "@tanstack/react-query";
+import { uploadImages, getSignedUrls } from "@/services/storage.service";
 import { Input } from "@/ui/Input.ui";
 import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
@@ -53,6 +52,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   const [category, setCategory] = useState(initialCategory);
   const [tags, setTags] = useState<string[]>(initialTags);
   const [allImages, setAllImages] = useState<(File | string)[]>([...initialImages]);
+  const [signedUrlsCache, setSignedUrlsCache] = useState<Record<string, string>>({});
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -93,6 +93,24 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     };
     localStorage.setItem("create-post-draft", JSON.stringify(draft));
   }, [title, content, category, tags, allImages]);
+
+  // fetch signed URLs for any string paths so we can preview them
+  useEffect(() => {
+    const pathsToFetch = allImages
+      .filter((img): img is string => typeof img === "string")
+      .filter(path => !/^https?:\/\//.test(path)) // only raw storage paths
+      .filter(path => !signedUrlsCache[path]); // not yet fetched
+    if (pathsToFetch.length === 0) return;
+    getSignedUrls(pathsToFetch).then(urls => {
+      setSignedUrlsCache(prev => {
+        const entries: Record<string, string> = {};
+        pathsToFetch.forEach((p, i) => {
+          entries[p] = urls[i];
+        });
+        return { ...prev, ...entries };
+      });
+    });
+  }, [allImages, signedUrlsCache]);
 
   // ... existing handleAddTag, handleRemoveTag, handleImageChange ...
   const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -162,7 +180,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     };
 
     if (postId) {
-      await updatePost(postId, postPayload);
+      const nowUtc = new Date().toISOString();
+      await updatePost(postId, { ...postPayload, updated_at: nowUtc });
       onPostUpdated?.();
     } else {
       await createPost(postPayload);
@@ -256,14 +275,14 @@ export const CreatePost: React.FC<CreatePostProps> = ({
                 >
                   <Tag size={12} weight="bold" />
                   <span>{tag}</span>
-                  <button
+                  <Button
                     type="button"
                     aria-label={`Remove tag ${tag}`}
                     className="p-0.5 hover:bg-primary/80 rounded-full"
                     onClick={() => handleRemoveTag(tag)}
                   >
                     <X size={12} weight="bold" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -291,9 +310,13 @@ export const CreatePost: React.FC<CreatePostProps> = ({
           {allImages.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {allImages.map((img, idx) => (
-                <div key={idx} className="relative h-24 w-full overflow-hidden rounded-lg">
+                <div key={idx} className="relative h-full w-full overflow-hidden rounded-lg">
                   <img
-                    src={typeof img === "string" ? img : URL.createObjectURL(img)}
+                    src={
+                      typeof img === "string"
+                        ? signedUrlsCache[img] ?? "" // show once signed URL is fetched
+                        : URL.createObjectURL(img) // immediate preview for newly added File
+                    }
                     alt={`Preview ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />

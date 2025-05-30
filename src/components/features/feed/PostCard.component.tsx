@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useComments } from "@/services/comments.service";
-import { CommentItem } from "./CommentItem.component";
+import { CommentSection } from "./CommentSection.component";
 import { createPortal } from "react-dom";
 import { ReactionButton } from "./ReactionButton.component";
 import { ReactionSummary } from "./ReactionSummary.component";
@@ -11,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import {
   ChatCircle,
-  ShareNetwork,
   DotsThree,
   PencilSimple,
   TrashSimple,
@@ -19,12 +17,12 @@ import {
   CaretRight,
   X,
 } from "@phosphor-icons/react";
-import { toast } from "sonner";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ShareButton } from "@/ui/ShareButton.ui";
 
 export interface PostCardProps {
   id: number;
+  created_at: string;
   updated_at: string;
   title: string;
   content: string;
@@ -52,8 +50,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   content,
   images,
   tags,
+  created_at,
   updated_at,
-  reaction_counts = {},
   onCategoryClick,
   onTagClick,
   onEdit,
@@ -68,7 +66,6 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionVersion, setReactionVersion] = useState(0);
 
-  const router = useRouter();
   const { data: comments = [] } = useComments(id);
   const [showCommentsPreview, setShowCommentsPreview] = useState(false);
 
@@ -79,7 +76,13 @@ export const PostCard: React.FC<PostCardProps> = ({
       .join("")
       .toUpperCase();
   }, [author_name]);
-  const relativeTime = useMemo(() => formatRelativeTime(updated_at), [updated_at]);
+  const displayTime = useMemo(
+    () =>
+      created_at !== updated_at
+        ? `edited ${formatRelativeTime(updated_at)}`
+        : formatRelativeTime(created_at),
+    [created_at, updated_at]
+  );
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -136,7 +139,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           </Avatar>
           <div className="flex flex-col">
             <p className="font-semibold text-gray-900 dark:text-gray-100">{author_name}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
+            <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">{displayTime}</p>
           </div>
         </div>
         {/* Center: category badge */}
@@ -334,21 +337,8 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {showCommentsPreview && (
-        <div className="px-4 pb-4 space-y-2">
-          {comments.slice(0, 2).map(c => (
-            <CommentItem key={c.id} comment={c} />
-          ))}
-          {comments.length > 2 && (
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                router.push(`/feed/${id}`);
-              }}
-              className="text-primary text-sm"
-            >
-              Load more comments
-            </button>
-          )}
+        <div className="px-4 pb-4">
+          <CommentSection postId={id} />
         </div>
       )}
 

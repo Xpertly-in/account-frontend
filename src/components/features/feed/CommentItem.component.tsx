@@ -1,6 +1,8 @@
 // src/components/features/feed/CommentItem.component.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { DotsThree, PencilSimple, TrashSimple } from "@phosphor-icons/react";
+import { useAuth } from "@/store/context/Auth.provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import { ReactionButton } from "./ReactionButton.component";
@@ -10,9 +12,29 @@ import type { Comment } from "@/services/comments.service";
 interface Props {
   comment: Comment;
   onReply?: () => void;
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }
-export const CommentItem: React.FC<Props> = ({ comment, onReply }) => {
+export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelete }) => {
+  const isEdited = comment.updated_at !== comment.created_at;
+  const displayTime = isEdited
+    ? `edited ${formatRelativeTime(comment.updated_at)}`
+    : formatRelativeTime(comment.created_at);
   const [reactionVersion, setReactionVersion] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const { auth } = useAuth();
+  const currentUserId = auth.user?.id;
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
 
   return (
     <div className="flex space-x-3 py-3 border-b border-gray-200 dark:border-gray-700">
@@ -29,13 +51,46 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply }) => {
             <span className="font-semibold text-gray-900 dark:text-gray-100">
               {comment.author_name}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatRelativeTime(comment.created_at)}
-            </span>
+            <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">{displayTime}</span>
           </div>
-          <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-            •••
-          </button>
+          {currentUserId === comment.author_id && (
+            <div className="relative" ref={wrapperRef}>
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  setMenuOpen(o => !o);
+                }}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                aria-label="Comment menu"
+              >
+                <DotsThree size={20} />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onEdit?.(comment.id);
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <PencilSimple size={14} /> Edit
+                  </button>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onDelete?.(comment.id);
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <TrashSimple size={14} /> Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{comment.content}</p>
         {comment.images.length > 0 && (
@@ -55,7 +110,13 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply }) => {
             onReactComplete={() => setReactionVersion(v => v + 1)}
           />
           {onReply && (
-            <button onClick={onReply} className="text-primary hover:underline">
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                onReply();
+              }}
+              className="text-primary hover:underline"
+            >
               Reply
             </button>
           )}

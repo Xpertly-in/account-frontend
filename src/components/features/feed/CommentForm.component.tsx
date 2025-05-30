@@ -10,10 +10,19 @@ import EmojiPicker from "emoji-picker-react";
 interface Props {
   parent_id?: number;
   onSubmit: (content: string, images: string[]) => void;
+  initialContent?: string;
+  placeholder?: string;
+  submitLabel?: string;
 }
 
-export const CommentForm: React.FC<Props> = ({ parent_id, onSubmit }) => {
-  const [content, setContent] = useState("");
+export const CommentForm: React.FC<Props> = ({
+  parent_id,
+  onSubmit,
+  initialContent = "",
+  placeholder = "Add a comment…",
+  submitLabel = "Comment",
+}) => {
+  const [content, setContent] = useState(initialContent);
   const [files, setFiles] = useState<FileList | null>(null);
   const [posting, setPosting] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -57,7 +66,7 @@ export const CommentForm: React.FC<Props> = ({ parent_id, onSubmit }) => {
         ref={textareaRef}
         className="flex-1 placeholder-gray-500 resize-none overflow-hidden"
         rows={1}
-        placeholder="Add a comment…"
+        placeholder={placeholder}
         value={content}
         onChange={handleInput}
         onFocus={() => setExpanded(true)}
@@ -74,8 +83,8 @@ export const CommentForm: React.FC<Props> = ({ parent_id, onSubmit }) => {
             <EmojiPicker
               onEmojiClick={onEmojiClick}
               // shrink overall font & emoji size
-            //   pickerStyle={{ maxHeight: "240px", fontSize: "12px" }}
-            //   emojiSize={18}
+              //   pickerStyle={{ maxHeight: "240px", fontSize: "12px" }}
+              //   emojiSize={18}
               previewConfig={{ showPreview: false }}
             />
           </div>
@@ -91,7 +100,7 @@ export const CommentForm: React.FC<Props> = ({ parent_id, onSubmit }) => {
           disabled={posting || !content.trim()}
           className="bg-blue-500 text-white rounded-full"
         >
-          {posting ? "Commenting..." : "Comment"}
+          {posting ? `${submitLabel}ing...` : submitLabel}
         </Button>
       )}
     </form>

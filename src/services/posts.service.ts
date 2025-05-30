@@ -13,7 +13,7 @@ const POST_SELECT = `
   category,
   tags,
   images,
-  reaction_counts,
+  created_at,
   updated_at,
   is_deleted,
   author_id,
@@ -28,6 +28,7 @@ async function normalizePost(p: any): Promise<PostCardProps> {
   const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
   return {
     id: p.id,
+    created_at: p.created_at,
     updated_at: p.updated_at,
     title: p.title,
     content: p.content,
@@ -66,6 +67,7 @@ export interface PostPayload {
   tags: string[];
   images: string[];
   author_id: string;
+  updated_at?: string;
 }
 
 /** insert a new post */

@@ -184,13 +184,13 @@ export const Feed: React.FC = () => {
               Are you sure you want to delete this post? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-2">
-              <button
+              <Button
                 onClick={() => setDeleteDialogOpen(false)}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   if (deleteTarget !== null) deletePostMutation.mutate(deleteTarget);
                   setDeleteDialogOpen(false);
@@ -198,7 +198,7 @@ export const Feed: React.FC = () => {
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Confirm
-              </button>
+              </Button>
             </div>
           </div>
         </div>
