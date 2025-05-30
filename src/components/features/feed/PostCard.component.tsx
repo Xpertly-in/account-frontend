@@ -349,7 +349,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             <button
               onClick={e => {
                 e.stopPropagation();
-                router.push(`/forum/${id}`);
+                router.push(`/feed/${id}`);
               }}
               className="text-primary text-sm"
             >

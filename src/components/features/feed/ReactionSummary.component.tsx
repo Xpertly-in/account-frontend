@@ -1,4 +1,4 @@
-// src/components/features/forum/ReactionSummary.component.tsx
+// src/components/features/feed/ReactionSummary.component.tsx
 import React, { useState, useEffect } from "react";
 import { fetchReactions } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";

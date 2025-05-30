@@ -86,15 +86,15 @@ export function Header() {
                 About
               </Link>
               <Link
-                href="/forum"
+                href="/feed"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/forum")
+                  pathname.startsWith("/feed")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
               >
-                Community
+                Feed
               </Link>
               <Link
                 href="/contact"

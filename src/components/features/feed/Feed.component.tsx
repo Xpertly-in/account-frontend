@@ -14,7 +14,7 @@ import { useCategories } from "@/services/categories.service";
 import { useTags } from "@/services/tags.service";
 import { useAuth } from "@/store/context/Auth.provider";
 
-export const ForumFeed: React.FC = () => {
+export const Feed: React.FC = () => {
   const router = useRouter();
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
@@ -122,7 +122,7 @@ export const ForumFeed: React.FC = () => {
             />
           </div>
           <Button
-            onClick={() => router.push("/forum/new")}
+            onClick={() => router.push("/feed/new")}
             className="p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full shadow-lg hover:scale-105 transition"
             aria-label="Create new post"
           >
@@ -268,13 +268,13 @@ export const ForumFeed: React.FC = () => {
             <Card
               key={post.id}
               className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
-              onClick={() => router.push(`/forum/${post.id}`)}
+              onClick={() => router.push(`/feed/${post.id}`)}
             >
               <PostCard
                 {...post}
                 onCategoryClick={cat => setFilterCategory(cat)}
                 onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
-                onEdit={id => router.push(`/forum/${id}/edit`)}
+                onEdit={id => router.push(`/feed/${id}/edit`)}
                 onDelete={id => {
                   // guard: only the post’s author may delete
                   if (!currentUserId || currentUserId !== post.author_id) {
