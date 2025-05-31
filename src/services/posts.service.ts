@@ -1,9 +1,47 @@
 // src/services/posts.service.ts
 import { supabase } from "@/helper/supabase.helper";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
-import type { PostCardProps } from "@/components/features/forum/PostCard.component";
+import type { PostCardProps } from "@/components/features/feed/PostCard.component";
 import { getSignedUrls } from "./storage.service";
+
+// 1. one central select‐clause
+const POST_SELECT = `
+  id,
+  title,
+  content,
+  category,
+  tags,
+  images,
+  created_at,
+  updated_at,
+  is_deleted,
+  author_id,
+  profiles (
+    name,
+    profile_picture
+  )
+`;
+
+// 2. normalize a raw row to your PostCardProps
+async function normalizePost(p: any): Promise<PostCardProps> {
+  const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+  return {
+    id: p.id,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    title: p.title,
+    content: p.content,
+    author_id: p.author_id,
+    author_name: profile?.name ?? "",
+    author_avatar: profile?.profile_picture ?? undefined,
+    category: p.category,
+    tags: p.tags,
+    images: await getSignedUrls(p.images),
+    reaction_counts: p.reaction_counts,
+    is_deleted: p.is_deleted,
+  };
+}
 
 export interface PostFilter {
   searchTerm?: string;
@@ -29,6 +67,7 @@ export interface PostPayload {
   tags: string[];
   images: string[];
   author_id: string;
+  updated_at?: string;
 }
 
 /** insert a new post */
@@ -54,27 +93,7 @@ export async function fetchPosts(
   page: number,
   pageSize: number
 ): Promise<PostsPage> {
-  let query = supabase
-    .from("posts")
-    .select(
-      `
-      id,
-      title,
-      content,
-      category,
-      tags,
-      images,
-      reaction_counts,
-      updated_at,
-      is_deleted,
-      author_id,
-      profiles (
-        name,
-        profile_picture
-      )
-    `
-    )
-    .eq("is_deleted", false);
+  let query = supabase.from("posts").select(POST_SELECT).eq("is_deleted", false);
 
   if (filter.searchTerm) {
     query = query.or(`content.ilike.%${filter.searchTerm}%,title.ilike.%${filter.searchTerm}%`);
@@ -96,27 +115,7 @@ export async function fetchPosts(
   const { data, error } = await query;
   if (error) throw error;
 
-  // await each getSignedUrls so images: string[]
-  const mapped = await Promise.all(
-    (data || []).map(async p => {
-      const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
-      const signedImages = await getSignedUrls(p.images);
-      return {
-        id: p.id,
-        updated_at: p.updated_at,
-        title: p.title,
-        content: p.content,
-        author_id: p.author_id,
-        author_name: profile?.name || "",
-        author_avatar: profile?.profile_picture || undefined,
-        category: p.category,
-        tags: p.tags,
-        images: signedImages,
-        reaction_counts: p.reaction_counts,
-        is_deleted: p.is_deleted,
-      } as PostCardProps;
-    })
-  );
+  const mapped = await Promise.all((data || []).map(normalizePost));
 
   return {
     data: mapped,
@@ -161,3 +160,52 @@ export function useDeletePost() {
     },
   });
 }
+
+// --------------------------------------------------------------------------
+// FETCH SINGLE POST
+// --------------------------------------------------------------------------
+/** Fetch a single post by id */
+export async function fetchPostById(id: number): Promise<PostCardProps> {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .eq("id", id)
+    .eq("is_deleted", false)
+    .single();
+  if (error) throw error;
+  return normalizePost(data);
+}
+
+// --------------------------------------------------------------------------
+// FETCH SIMILAR POSTS
+// --------------------------------------------------------------------------
+/** Fetch similar posts by same category or overlapping tags (excludes current id) */
+export async function fetchSimilarPosts(
+  id: number,
+  category?: string,
+  tags?: string[]
+): Promise<PostCardProps[]> {
+  let q = supabase.from("posts").select(POST_SELECT).eq("is_deleted", false).neq("id", id);
+  if (category) q = q.eq("category", category);
+  else if (tags?.length) q = q.overlaps("tags", tags);
+  q = q.order("updated_at", { ascending: false }).limit(4);
+  const { data, error } = await q;
+  if (error) throw error;
+  return Promise.all((data || []).map(normalizePost));
+}
+
+// single‐post hook
+export const usePost = (id: number) =>
+  useQuery<PostCardProps>({
+    queryKey: ["post", id],
+    queryFn: () => fetchPostById(id),
+    enabled: Boolean(id),
+  });
+
+// similar‐posts hook
+export const useSimilarPosts = (id: number, category?: string, tags?: string[]) =>
+  useQuery<PostCardProps[]>({
+    queryKey: ["similarPosts", id],
+    queryFn: () => fetchSimilarPosts(id, category, tags),
+    enabled: Boolean(id && (category || tags?.length)),
+  });

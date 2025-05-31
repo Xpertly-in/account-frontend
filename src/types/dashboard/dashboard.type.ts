@@ -7,7 +7,7 @@ import { ContactRequest, ContactRequestFilter, ContactRequestSort } from "./cont
 export enum DashboardSection {
   LEADS = "leads",
   CONTACT_REQUESTS = "contact-requests",
-  FORUM_POSTS = "forum-posts",
+  FEED_POSTS = "feed-posts",
   ANALYTICS = "analytics",
 }
 

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useComments } from "@/services/comments.service";
+import { CommentSection } from "./CommentSection.component";
 import { createPortal } from "react-dom";
 import { ReactionButton } from "./ReactionButton.component";
 import { ReactionSummary } from "./ReactionSummary.component";
@@ -8,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import {
   ChatCircle,
-  ShareNetwork,
   DotsThree,
   PencilSimple,
   TrashSimple,
@@ -17,9 +18,11 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
+import { ShareButton } from "@/ui/ShareButton.ui";
 
 export interface PostCardProps {
   id: number;
+  created_at: string;
   updated_at: string;
   title: string;
   content: string;
@@ -47,8 +50,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   content,
   images,
   tags,
+  created_at,
   updated_at,
-  reaction_counts = {},
   onCategoryClick,
   onTagClick,
   onEdit,
@@ -63,6 +66,9 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionVersion, setReactionVersion] = useState(0);
 
+  const { data: comments = [] } = useComments(id);
+  const [showCommentsPreview, setShowCommentsPreview] = useState(false);
+
   const initials = useMemo(() => {
     return author_name
       .split(" ")
@@ -70,7 +76,13 @@ export const PostCard: React.FC<PostCardProps> = ({
       .join("")
       .toUpperCase();
   }, [author_name]);
-  const relativeTime = useMemo(() => formatRelativeTime(updated_at), [updated_at]);
+  const displayTime = useMemo(
+    () =>
+      created_at !== updated_at
+        ? `edited ${formatRelativeTime(updated_at)}`
+        : formatRelativeTime(created_at),
+    [created_at, updated_at]
+  );
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -127,14 +139,17 @@ export const PostCard: React.FC<PostCardProps> = ({
           </Avatar>
           <div className="flex flex-col">
             <p className="font-semibold text-gray-900 dark:text-gray-100">{author_name}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{relativeTime}</p>
+            <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">{displayTime}</p>
           </div>
         </div>
         {/* Center: category badge */}
         <div className="flex-1 flex justify-center">
           {category && (
             <span
-              onClick={() => onCategoryClick?.(category)}
+              onClick={e => {
+                e.stopPropagation();
+                onCategoryClick?.(category);
+              }}
               className="bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
             >
               {category}
@@ -146,7 +161,10 @@ export const PostCard: React.FC<PostCardProps> = ({
           {currentUserId === author_id && (
             <div className="relative" ref={wrapperRef}>
               <button
-                onClick={() => setMenuOpen(o => !o)}
+                onClick={e => {
+                  e.stopPropagation();
+                  setMenuOpen(o => !o);
+                }}
                 aria-label="Open menu"
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
@@ -155,7 +173,8 @@ export const PostCard: React.FC<PostCardProps> = ({
               {menuOpen && onEdit && (
                 <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10">
                   <button
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
                       setMenuOpen(false);
                       onEdit(id);
                     }}
@@ -165,7 +184,8 @@ export const PostCard: React.FC<PostCardProps> = ({
                     Edit Post
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
                       setMenuOpen(false);
                       onDelete?.(id);
                     }}
@@ -194,7 +214,13 @@ export const PostCard: React.FC<PostCardProps> = ({
         />
         {/* only show toggle if content overflows */}
         {hasOverflow && (
-          <button onClick={() => setExpanded(prev => !prev)} className="text-primary text-sm mt-1">
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setExpanded(prev => !prev);
+            }}
+            className="text-primary text-sm mt-1"
+          >
             {expanded ? "Show less" : "Read more"}
           </button>
         )}
@@ -204,7 +230,10 @@ export const PostCard: React.FC<PostCardProps> = ({
             {tags.map(tag => (
               <span
                 key={tag}
-                onClick={() => onTagClick?.(tag)}
+                onClick={e => {
+                  e.stopPropagation();
+                  onTagClick?.(tag);
+                }}
                 className="bg-secondary/10 text-secondary text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer"
               >
                 #{tag}
@@ -215,7 +244,8 @@ export const PostCard: React.FC<PostCardProps> = ({
         {images?.length > 0 && (
           <div
             className="relative w-full aspect-video bg-muted overflow-hidden rounded-lg cursor-zoom-in"
-            onClick={() => {
+            onClick={e => {
+              e.stopPropagation();
               setPreviewIndex(currentIndex);
               setIsPreviewOpen(true);
             }}
@@ -256,7 +286,10 @@ export const PostCard: React.FC<PostCardProps> = ({
               {images.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setCurrentIndex(idx)}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setCurrentIndex(idx);
+                  }}
                   className={`w-2 h-2 rounded-full ${
                     idx === currentIndex ? "bg-primary" : "bg-muted-foreground"
                   }`}
@@ -267,40 +300,64 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/* Above the actions, show the summary */}
-      <div className="flex justify-left">
-        <ReactionSummary targetType="post" targetId={id} version={reactionVersion}/>
+      {/* Above the actions, show reactions and comment count */}
+      <div className="flex justify-between items-center px-3 pb-1">
+        <ReactionSummary targetType="post" targetId={id} version={reactionVersion} />
+        <button
+          type="button"
+          className="flex items-center gap-1 hover:text-primary cursor-pointer hover:underline"
+          onClick={e => {
+            e.stopPropagation();
+            setShowCommentsPreview(prev => !prev);
+          }}
+        >
+          <span className="text-sm">{comments.length} Comments</span>
+        </button>
       </div>
 
       {/* Actions */}
       <div className="border-t ... pt-1 flex justify-between">
-        <ReactionButton targetType="post" targetId={id} onReactComplete={() => setReactionVersion(v => v + 1)} />
+        <ReactionButton
+          targetType="post"
+          targetId={id}
+          onReactComplete={() => setReactionVersion(v => v + 1)}
+        />
         <button
           type="button"
           className="flex items-center gap-1 hover:text-primary"
+          onClick={e => {
+            e.stopPropagation();
+            setShowCommentsPreview(prev => !prev);
+          }}
         >
           <ChatCircle size={18} />
           <span className="text-sm">Comments</span>
         </button>
-        <button
-          type="button"
-          className="flex items-center gap-1 hover:text-primary mr-2"
-        >
-          <ShareNetwork size={18} />
-          <span className="text-sm">Share</span>
-        </button>
+        <ShareButton postId={id} title={title} />
       </div>
+
+      {showCommentsPreview && (
+        <div className="px-4 pb-4">
+          <CommentSection postId={id} />
+        </div>
+      )}
 
       {/* Image preview modal */}
       {isPreviewOpen &&
         createPortal(
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-            onClick={() => setIsPreviewOpen(false)}
+            onClick={e => {
+              e.stopPropagation();
+              setIsPreviewOpen(false);
+            }}
           >
             <button
               className="absolute top-4 right-4 text-white"
-              onClick={() => setIsPreviewOpen(false)}
+              onClick={e => {
+                e.stopPropagation();
+                setIsPreviewOpen(false);
+              }}
             >
               <X size={32} weight="bold" />
             </button>

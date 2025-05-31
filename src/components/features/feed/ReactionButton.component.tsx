@@ -1,4 +1,4 @@
-// src/components/features/forum/ReactionButton.component.tsx
+// src/components/features/feed/ReactionButton.component.tsx
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
@@ -91,7 +91,10 @@ export function ReactionButton({
       onTouchEnd={handleTouchEnd}
     >
       <button
-        onClick={() => onReact("like")}
+        onClick={e => {
+          e.stopPropagation();
+          onReact("like");
+        }}
         className={`flex items-center space-x-1 text-sm rounded-full px-2 py-1 transition ${
           myReaction
             ? `${REACTIONS.find(r => r.type === myReaction)!.fg}`
@@ -119,7 +122,8 @@ export function ReactionButton({
           {REACTIONS.map(({ type, icon, bg, fg }, i) => (
             <button
               key={type}
-              onClick={() => {
+              onClick={e => {
+                e.stopPropagation();
                 onReact(type);
                 setPickerVisible(false);
               }}

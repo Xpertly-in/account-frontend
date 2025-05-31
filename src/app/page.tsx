@@ -3,10 +3,7 @@
 import { useState, useEffect } from "react";
 import { SearchBar } from "@/components/features/search";
 import { Container } from "@/components/layout/Container.component";
-import { Button } from "@/ui/Button.ui";
-import { ShieldCheck, Lightning, Funnel } from "@phosphor-icons/react";
-import Link from "next/link";
-import { ForumFeed } from "@/components/features/forum/ForumFeed.component";
+import { Feed } from "@/components/features/feed/Feed.component";
 import { supabase } from "@/lib/supabase";
 
 interface PostCardProps {
@@ -115,9 +112,6 @@ export default function Home() {
           </section>
         </Container>
       </div>
-
-      {/* Forum Feed Section */}
-      <ForumFeed />
     </>
   );
 }
