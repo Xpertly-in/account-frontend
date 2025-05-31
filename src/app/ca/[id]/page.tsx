@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabase } from "@/helper/supabase.helper";
-import CAProfileWrapper from "@/components/features/profile/CAProfileWrapper";
+import CAProfileDetails from "@/components/features/profile/CAProfileDetails.component";
 
 // Required for static export
 export async function generateStaticParams() {
@@ -45,12 +45,12 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
     // Fetch related data with proper error handling
     const [addressResult, socialProfileResult, servicesResult, experiencesResult, educationsResult] = await Promise.all([
       supabase
-        .from("addresses")
+        .from("address")
         .select("*")
         .eq("ca_id", params.id)
         .single(),
       supabase
-        .from("social_profiles")
+        .from("social_profile")
         .select("*")
         .eq("ca_id", params.id)
         .single(),
@@ -87,27 +87,20 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
       email: caProfile.email,
       phone: caProfile.phone,
       imageUrl: caProfile.profile_picture,
-      about: caProfile.about,
+      about: caProfile.about || "",
       experience: caProfile.years_of_experience,
       location: addressResult.data ? `${addressResult.data.city}, ${addressResult.data.state}` : "",
       city: addressResult.data?.city || "",
       state: addressResult.data?.state || "",
       specialization: socialProfileResult.data?.areas_of_expertise?.split(",") || [],
-      qualification: socialProfileResult.data?.icai_membership_number ? "CA" : "",
+      qualification: socialProfileResult.data?.ica_membership_number ? "CA" : "",
       firm_name: socialProfileResult.data?.practice_license_number ? `${caProfile.name} & Associates` : "",
       member_since: new Date(caProfile.created_at).getFullYear().toString(),
       clients: "120+", // This should come from a separate table if available
-      services: servicesResult.data?.map(service => service.service_name) || [
-        "Income Tax Return Filing",
-        "GST Registration & Filing",
-        "Business Accounting",
-        "Tax Planning",
-        "Audit Services",
-        "Financial Advisory",
-      ],
+      services: servicesResult.data?.map(service => service.service_name) || [],
       website: socialProfileResult.data?.professional_website,
       linkedin: socialProfileResult.data?.linkedin_profile,
-      verified: true, // We'll handle verification status separately
+      verified: caProfile.is_verified,
       rating: 4.5, // This should come from a reviews table
       reviews: 0, // This should come from a reviews table
     };
@@ -141,7 +134,7 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
     })) || [];
 
     return (
-      <CAProfileWrapper 
+      <CAProfileDetails 
         ca={transformedCA} 
         experiences={transformedExperiences}
         educations={transformedEducations}
