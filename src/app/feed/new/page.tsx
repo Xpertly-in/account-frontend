@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { CaretLeft } from "@phosphor-icons/react";
 import { Container } from "@/components/layout/Container.component";
-import { CreatePost } from "@/components/features/feed/CreatePost.component";
+import { CreatePost } from "@/components/features/feed/post/CreatePost.component";
 import { useSearchParams } from "next/navigation";
 
 function NewPostContent() {
@@ -40,7 +40,12 @@ function NewPostContent() {
         </button>
         {/* Form Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-4">
-          <CreatePost initialContent={initialContent ?? ""} onPostCreated={() => router.push("/feed")} />
+          <CreatePost
+            initialContent={initialContent ?? ""}
+            onPostCreated={() => {
+              router.push("/feed");
+            }}
+          />
         </div>
       </Container>
     </div>

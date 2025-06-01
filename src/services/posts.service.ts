@@ -1,29 +1,12 @@
 // src/services/posts.service.ts
 import { supabase } from "@/helper/supabase.helper";
 import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import type { PostCardProps, PostFilter, PostPayload, PostsPage } from "@/types/feed/post.type";
+import { POST_SELECT } from "@/constants/feed.constants";
 import { useAuth } from "@/store/context/Auth.provider";
-import type { PostCardProps } from "@/components/features/feed/PostCard.component";
 import { getSignedUrls } from "./storage.service";
 
-// 1. one central select‐clause
-const POST_SELECT = `
-  id,
-  title,
-  content,
-  category,
-  tags,
-  images,
-  created_at,
-  updated_at,
-  is_deleted,
-  author_id,
-  profiles (
-    name,
-    profile_picture
-  )
-`;
-
-// 2. normalize a raw row to your PostCardProps
+// Normalize a raw row to your PostCardProps
 async function normalizePost(p: any): Promise<PostCardProps> {
   const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
   return {
@@ -43,32 +26,9 @@ async function normalizePost(p: any): Promise<PostCardProps> {
   };
 }
 
-export interface PostFilter {
-  searchTerm?: string;
-  category?: string;
-  tags?: string[];
-  sortOption?: "recent" | "top";
-}
-
-export interface PostsPage {
-  data: PostCardProps[];
-  currentPage: number;
-  pageSize: number;
-  hasNextPage: boolean;
-}
-
 // --------------------------------------------------------------------------
 // CREATE / UPDATE POST SERVICE
 // --------------------------------------------------------------------------
-export interface PostPayload {
-  title: string;
-  content: string;
-  category: string;
-  tags: string[];
-  images: string[];
-  author_id: string;
-  updated_at?: string;
-}
 
 /** insert a new post */
 export async function createPost(p: PostPayload) {
@@ -116,7 +76,7 @@ export async function fetchPosts(
   if (error) throw error;
 
   const mapped = await Promise.all((data || []).map(normalizePost));
-
+  console.log(mapped);
   return {
     data: mapped,
     currentPage: page,
@@ -137,6 +97,7 @@ export function usePosts(filter: PostFilter, pageSize = 10) {
     initialPageParam: 0,
     staleTime: 0,
     refetchOnWindowFocus: false,
+    refetchOnMount: "always",
   });
 }
 
@@ -209,3 +170,25 @@ export const useSimilarPosts = (id: number, category?: string, tags?: string[]) 
     queryFn: () => fetchSimilarPosts(id, category, tags),
     enabled: Boolean(id && (category || tags?.length)),
   });
+
+/**
+ * Hook: create a post, then invalidate the feed list
+ */
+export function useCreatePostMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createPost,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["posts"], refetchType: "all" }),
+  });
+}
+
+/**
+ * Hook: update a post, then invalidate the feed list
+ */
+export function useUpdatePostMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PostPayload }) => updatePost(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["posts"] }),
+  });
+}

@@ -1,17 +1,11 @@
 // src/components/features/feed/ReactionSummary.component.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fetchReactions } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ThumbsUp, Heart, Smiley, SmileySad, Flame, X } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
-
-const REACTIONS = [
-  { type: "like", icon: <ThumbsUp />, bg: "bg-blue-100", fg: "text-blue-500" },
-  { type: "love", icon: <Heart />, bg: "bg-red-100", fg: "text-red-500" },
-  { type: "laugh", icon: <Smiley />, bg: "bg-yellow-100", fg: "text-yellow-500" },
-  { type: "sad", icon: <SmileySad />, bg: "bg-purple-100", fg: "text-purple-500" },
-  { type: "fire", icon: <Flame />, bg: "bg-orange-100", fg: "text-orange-500" },
-];
+import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { REACTIONS } from "@/constants/feed.constants";
 
 export function ReactionSummary({
   targetType,
@@ -31,6 +25,8 @@ export function ReactionSummary({
     { name: string; avatar?: string; type: string }[]
   >([]);
   const [selectedTab, setSelectedTab] = useState<string>("");
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(wrapperRef, () => setListOpen(false));
 
   useEffect(() => {
     async function load() {
@@ -79,21 +75,19 @@ export function ReactionSummary({
   return (
     <div className="mb-2">
       {/* Top-3 overlapping reaction icons + total count */}
-      <div className="flex items-center">
+      <div className="flex items-center" ref={wrapperRef}>
         {top3.map((type, idx) => {
           const reaction = REACTIONS.find(r => r.type === type)!;
           // higher z-index for earlier icons
           const zClasses = ["z-10", "z-20", "z-30"];
+          const IconComp = reaction.icon;
           return (
             <div key={type} className={`${idx > 0 ? "-ml-2" : ""} ${zClasses[idx]}`}>
               <button
                 onClick={() => setListOpen(true)}
                 className={`p-1 rounded-full border-2 border-white ${reaction.bg} ${reaction.fg}`}
               >
-                {React.cloneElement(reaction.icon, {
-                  size: 16,
-                  weight: "fill",
-                })}
+                <IconComp size={16} weight="fill" />
               </button>
             </div>
           );
@@ -117,7 +111,10 @@ export function ReactionSummary({
           <div className="relative bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-md w-full">
             {/* Close icon in top-right */}
             <button
-              onClick={(e) => { e.stopPropagation(); setListOpen(false); }}
+              onClick={e => {
+                e.stopPropagation();
+                setListOpen(false);
+              }}
               aria-label="Close"
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:text-gray-400"
             >
@@ -127,20 +124,26 @@ export function ReactionSummary({
 
             {/* ← New: Tab navigation */}
             <div className="flex space-x-4 border-b mb-4">
-              {REACTIONS.filter(r => counts[r.type] > 0).map(r => (
-                <button
-                  key={r.type}
-                  onClick={(e) => { e.stopPropagation(); setSelectedTab(r.type); }}
-                  className={`flex items-center space-x-1 text-sm pb-1 ${
-                    selectedTab === r.type
-                      ? "border-b-4 border-primary text-primary"
-                      : "text-gray-500 dark:text-gray-400"
-                  } ${r.fg}`}
-                >
-                  {React.cloneElement(r.icon as any, { size: 20, weight: "fill" })}
-                  <span>{counts[r.type]}</span>
-                </button>
-              ))}
+              {REACTIONS.filter(r => counts[r.type] > 0).map(r => {
+                const IconComp = r.icon;
+                return (
+                  <button
+                    key={r.type}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSelectedTab(r.type);
+                    }}
+                    className={`flex items-center space-x-1 text-sm pb-1 ${
+                      selectedTab === r.type
+                        ? "border-b-4 border-primary text-primary"
+                        : "text-gray-500 dark:text-gray-400"
+                    } ${r.fg}`}
+                  >
+                    <IconComp size={20} weight="fill" />
+                    <span>{counts[r.type]}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* ← Filtered list */}

@@ -1,20 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
 import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for button elements
 import { MagnifyingGlass, Plus, TrashSimple } from "@phosphor-icons/react";
-import { PostCard } from "./PostCard.component";
+import { PostCard } from "./post/PostCard.component";
 import { Container } from "@/components/layout/Container.component";
-import { usePosts, PostFilter, useDeletePost } from "@/services/posts.service";
+import { usePosts, useDeletePost } from "@/services/posts.service";
 import { useCategories } from "@/services/categories.service";
 import { useTags } from "@/services/tags.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Select } from "@/ui/Select.ui";
 import { Combobox } from "@/ui/Combobox.ui";
+import { PostFilter } from "@/types/feed/post.type";
 
 export const Feed: React.FC = () => {
   const router = useRouter();
@@ -34,13 +35,16 @@ export const Feed: React.FC = () => {
   const { data: categoriesList = [] } = useCategories();
   const { data: tagsList = [] } = useTags();
 
-  // replace manual state + fetch with React-Query hook
-  const filterOpts: PostFilter = {
-    searchTerm,
-    category: filterCategory,
-    tags: filterTags,
-    sortOption,
-  };
+  // memoize filter object so queryKey stays stable
+  const filterOpts = useMemo<PostFilter>(
+    () => ({
+      searchTerm,
+      category: filterCategory,
+      tags: filterTags,
+      sortOption,
+    }),
+    [searchTerm, filterCategory, filterTags, sortOption]
+  );
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts(
     filterOpts,
     10

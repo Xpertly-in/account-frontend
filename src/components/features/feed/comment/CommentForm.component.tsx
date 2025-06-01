@@ -6,16 +6,11 @@ import { uploadImages } from "@/services/storage.service";
 import { Button } from "@/ui/Button.ui";
 import { Image, Smiley } from "@phosphor-icons/react";
 import EmojiPicker from "emoji-picker-react";
+import { CommentFormProps } from "@/types/feed/comment.type";
 
-interface Props {
-  parent_id?: number;
-  onSubmit: (content: string, images: string[]) => void;
-  initialContent?: string;
-  placeholder?: string;
-  submitLabel?: string;
-}
 
-export const CommentForm: React.FC<Props> = ({
+
+export const CommentForm: React.FC<CommentFormProps> = ({
   parent_id,
   onSubmit,
   initialContent = "",
@@ -69,6 +64,7 @@ export const CommentForm: React.FC<Props> = ({
         placeholder={placeholder}
         value={content}
         onChange={handleInput}
+        onClick={e => e.stopPropagation()}
         onFocus={() => setExpanded(true)}
         required
       />
@@ -97,6 +93,7 @@ export const CommentForm: React.FC<Props> = ({
       {expanded && (
         <Button
           type="submit"
+          onClick={e => e.stopPropagation()}
           disabled={posting || !content.trim()}
           className="bg-blue-500 text-white rounded-full"
         >
