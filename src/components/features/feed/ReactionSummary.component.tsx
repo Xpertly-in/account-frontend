@@ -84,7 +84,10 @@ export function ReactionSummary({
           return (
             <div key={type} className={`${idx > 0 ? "-ml-2" : ""} ${zClasses[idx]}`}>
               <button
-                onClick={() => setListOpen(true)}
+                onClick={e => {
+                  e.stopPropagation();
+                  setListOpen(true);
+                }}
                 className={`p-1 rounded-full border-2 border-white ${reaction.bg} ${reaction.fg}`}
               >
                 <IconComp size={16} weight="fill" />

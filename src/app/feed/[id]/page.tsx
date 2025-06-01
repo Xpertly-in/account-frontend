@@ -7,6 +7,7 @@ import { CommentSection } from "@/components/features/feed/comment/CommentSectio
 import { Container } from "@/components/layout/Container.component";
 import { Card } from "@/ui/Card.ui";
 import { PostCard } from "@/components/features/feed/post/PostCard.component";
+import Link from "next/link";
 
 export default function PostPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,12 +29,11 @@ export default function PostPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/30 dark:from-primary-dark/10 dark:to-primary-dark/30 py-4">
       <Container className="max-w-3xl py-4">
         {/* Back button */}
-        <button
-          onClick={() => router.push("/feed")}
-          className="flex items-center gap-2 text-primary hover:underline mb-4"
-        >
-          &lt; Back to Feed
-        </button>
+        <Link href="/feed">
+          <button className="flex items-center gap-2 text-primary hover:underline mb-4">
+            &lt; Back to Feed
+          </button>
+        </Link>
 
         {/* Post Detail */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-6">
