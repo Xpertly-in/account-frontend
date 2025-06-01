@@ -1,10 +1,9 @@
 // src/components/features/feed/ImageCarousel.component.tsx
+import { ImageCarouselProps } from "@/types/storage.type";
 import { CaretLeft, CaretRight, X } from "@phosphor-icons/react";
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
-export interface ImageCarouselProps {
-  images: string[];
-}
+
 
 export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);

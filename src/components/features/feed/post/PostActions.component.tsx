@@ -1,16 +1,13 @@
 // src/components/features/feed/PostActions.component.tsx
 import React, { useState } from "react";
-import { ReactionSummary } from "./ReactionSummary.component";
-import { ReactionButton } from "./ReactionButton.component";
+import { ReactionSummary } from "../ReactionSummary.component";
+import { ReactionButton } from "../ReactionButton.component";
 import { ChatCircle } from "@phosphor-icons/react";
 import { ShareButton } from "@/ui/ShareButton.ui";
-import { CommentSection } from "./CommentSection.component";
+import { CommentSection } from "../comment/CommentSection.component";
+import { PostActionsProps } from "@/types/feed/post.type";
 
-export interface PostActionsProps {
-  id: number;
-  title: string;
-  commentCount: number;
-}
+
 
 export const PostActions: React.FC<PostActionsProps> = ({ id, title, commentCount }) => {
   const [reactionVersion, setReactionVersion] = useState(0);

@@ -3,10 +3,10 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePost, useSimilarPosts } from "@/services/posts.service";
-import { CommentSection } from "@/components/features/feed/CommentSection.component";
+import { CommentSection } from "@/components/features/feed/comment/CommentSection.component";
 import { Container } from "@/components/layout/Container.component";
 import { Card } from "@/ui/Card.ui";
-import { PostCard } from "@/components/features/feed/PostCard.component";
+import { PostCard } from "@/components/features/feed/post/PostCard.component";
 
 export default function PostPage() {
   const { id } = useParams<{ id: string }>();

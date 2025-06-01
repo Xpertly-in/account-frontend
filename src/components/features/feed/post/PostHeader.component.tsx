@@ -5,19 +5,9 @@ import { formatRelativeTime } from "@/utils/date.utils";
 import { DotsThree, PencilSimple, TrashSimple } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { PostHeaderProps } from "@/types/feed/post.type";
 
-export interface PostHeaderProps {
-  id: number;
-  author_id: string;
-  author_name: string;
-  author_avatar?: string;
-  created_at: string;
-  updated_at: string;
-  category?: string;
-  onCategoryClick?: (c: string) => void;
-  onEdit?: (id: number) => void;
-  onDelete?: (id: number) => void;
-}
+
 
 export const PostHeader: React.FC<PostHeaderProps> = ({
   id,

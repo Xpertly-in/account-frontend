@@ -3,28 +3,10 @@
 import { useComments } from "@/services/comments.service";
 import { PostHeader } from "./PostHeader.component";
 import { PostBody } from "./PostBody.component";
-import { ImageCarousel } from "./ImageCarousel.component";
+import { ImageCarousel } from "../ImageCarousel.component";
 import { PostActions } from "./PostActions.component";
+import { PostCardProps } from "@/types/feed/post.type";
 
-export interface PostCardProps {
-  id: number;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  content: string;
-  author_id: string;
-  author_name: string;
-  author_avatar?: string;
-  category?: string;
-  tags: string[];
-  images: string[];
-  reaction_counts?: Record<string, number>;
-  is_deleted?: boolean;
-  onCategoryClick?: (category: string) => void;
-  onTagClick?: (tag: string) => void;
-  onEdit?: (id: number) => void;
-  onDelete?: (id: number) => void;
-}
 
 export const PostCard: React.FC<PostCardProps> = props => {
   const { id } = props;

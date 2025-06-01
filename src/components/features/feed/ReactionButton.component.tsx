@@ -4,16 +4,16 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
 import { fetchMyReaction, toggleReaction } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
-import { ThumbsUp, Heart, Smiley, SmileySad, Flame } from "@phosphor-icons/react";
-import type { ReactionType } from "@/types/reaction.type";
+import { ThumbsUp } from "@phosphor-icons/react";
+import { REACTIONS } from "@/constants/feed.constants";
 
-const REACTIONS: { type: ReactionType; icon: JSX.Element; bg: string; fg: string }[] = [
-  { type: "like", icon: <ThumbsUp />, bg: "bg-blue-100", fg: "text-blue-500" },
-  { type: "love", icon: <Heart />, bg: "bg-red-100", fg: "text-red-500" },
-  { type: "laugh", icon: <Smiley />, bg: "bg-yellow-100", fg: "text-yellow-500" },
-  { type: "sad", icon: <SmileySad />, bg: "bg-purple-100", fg: "text-purple-500" },
-  { type: "fire", icon: <Flame />, bg: "bg-orange-100", fg: "text-orange-500" },
-];
+// const REACTIONS: { type: ReactionType; icon: JSX.Element; bg: string; fg: string }[] = [
+//   { type: "like", icon: <ThumbsUp />, bg: "bg-blue-100", fg: "text-blue-500" },
+//   { type: "love", icon: <Heart />, bg: "bg-red-100", fg: "text-red-500" },
+//   { type: "laugh", icon: <Smiley />, bg: "bg-yellow-100", fg: "text-yellow-500" },
+//   { type: "sad", icon: <SmileySad />, bg: "bg-purple-100", fg: "text-purple-500" },
+//   { type: "fire", icon: <Flame />, bg: "bg-orange-100", fg: "text-orange-500" },
+// ];
 
 export function ReactionButton({
   targetType,
@@ -102,14 +102,14 @@ export function ReactionButton({
             : "text-gray-500 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700"
         }`}
       >
-        {myReaction ? (
-          React.cloneElement(REACTIONS.find(r => r.type === myReaction)!.icon, {
-            size: 18,
-            weight: "fill",
-          })
-        ) : (
-          <ThumbsUp size={18} weight="regular" />
-        )}
+        {(() => {
+          const entry = REACTIONS.find(r => r.type === myReaction);
+          if (entry) {
+            const IconComp = entry.icon;
+            return <IconComp size={18} weight="fill" />;
+          }
+          return <ThumbsUp size={18} weight="regular" />;
+        })()}
         <span>
           {myReaction ? myReaction.charAt(0).toUpperCase() + myReaction.slice(1) : "Like"}
         </span>
@@ -120,7 +120,7 @@ export function ReactionButton({
           ref={pickerRef}
           className="absolute bottom-full left-1/2 transform -translate-x-1/2 flex bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg z-50 space-x-2"
         >
-          {REACTIONS.map(({ type, icon, bg, fg }, i) => (
+          {REACTIONS.map(({ type, icon: IconComp, bg, fg }, i) => (
             <button
               key={type}
               onClick={e => {
@@ -133,10 +133,7 @@ export function ReactionButton({
               }`}
               style={{ animationDelay: `${i * 50}ms` }}
             >
-              {React.cloneElement(icon, {
-                size: 24,
-                weight: "fill",
-              })}
+              <IconComp size={24} weight="fill" />
             </button>
           ))}
         </div>

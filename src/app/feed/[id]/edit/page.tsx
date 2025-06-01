@@ -7,7 +7,7 @@ import { supabase } from "@/helper/supabase.helper";
 import { useAuth } from "@/store/context/Auth.provider";
 import { CaretLeft } from "@phosphor-icons/react";
 import { Container } from "@/components/layout/Container.component";
-import { CreatePost } from "@/components/features/feed/CreatePost.component";
+import { CreatePost } from "@/components/features/feed/post/CreatePost.component";
 
 function EditPostContent() {
   const router = useRouter();

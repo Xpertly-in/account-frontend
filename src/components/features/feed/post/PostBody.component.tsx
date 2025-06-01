@@ -1,17 +1,12 @@
 // src/components/features/feed/PostBody.component.tsx
+import { PostBodyProps } from "@/types/feed/post.type";
 import React, { useState, useRef, useEffect } from "react";
-
-export interface PostBodyProps {
-  title: string;
-  content: string;
-  tags: string[];
-  onTagClick?: (t: string) => void;
-}
 
 export const PostBody: React.FC<PostBodyProps> = ({ title, content, tags, onTagClick }) => {
   const [expanded, setExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
   // measure overflow once when content changes (when collapsed)
   useEffect(() => {
     if (!expanded && contentRef.current) {
@@ -21,18 +16,20 @@ export const PostBody: React.FC<PostBodyProps> = ({ title, content, tags, onTagC
       }
     }
   }, [content, expanded]);
-  // TODO: move the <h3>, content <div> with Read more toggle, and tags section
+
   return (
     <div className="px-3 pb-3 space-y-1">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+
+      {/* content + inline “more” */}
       <div
         ref={contentRef}
-        className={`prose text-sm text-gray-700 dark:prose-invert dark:text-gray-300 max-w-none ${
+        className={`prose text-sm text-gray-700 dark:prose-invert dark:text-gray-300 max-w-none relative ${
           expanded ? "" : "line-clamp-3 overflow-hidden"
         }`}
         dangerouslySetInnerHTML={{ __html: content }}
       />
-      {/* only show toggle if content overflows */}
+
       {hasOverflow && (
         <button
           onClick={e => {
@@ -44,6 +41,7 @@ export const PostBody: React.FC<PostBodyProps> = ({ title, content, tags, onTagC
           {expanded ? "Show less" : "Read more"}
         </button>
       )}
+
       {/* Tags (clickable) */}
       {tags?.length > 0 && (
         <div className="px-3 py-1 flex flex-wrap gap-1">
