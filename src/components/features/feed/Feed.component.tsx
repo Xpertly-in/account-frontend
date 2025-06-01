@@ -15,7 +15,9 @@ import { useTags } from "@/services/tags.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Select } from "@/ui/Select.ui";
 import { Combobox } from "@/ui/Combobox.ui";
+import { PostCardSkeleton } from "./post/PostCardSkeleton.component";
 import { PostFilter } from "@/types/feed/post.type";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export const Feed: React.FC = () => {
   const router = useRouter();
@@ -23,6 +25,7 @@ export const Feed: React.FC = () => {
   const currentUserId = auth.user?.id;
 
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filterCategory, setFilterCategory] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<"recent" | "top">("recent");
@@ -38,12 +41,12 @@ export const Feed: React.FC = () => {
   // memoize filter object so queryKey stays stable
   const filterOpts = useMemo<PostFilter>(
     () => ({
-      searchTerm,
+      searchTerm: debouncedSearchTerm,
       category: filterCategory,
       tags: filterTags,
       sortOption,
     }),
-    [searchTerm, filterCategory, filterTags, sortOption]
+    [debouncedSearchTerm, filterCategory, filterTags, sortOption]
   );
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts(
     filterOpts,
@@ -51,19 +54,19 @@ export const Feed: React.FC = () => {
   );
   const posts = data?.pages.flatMap(p => p.data) || [];
 
-  // Infinite scroll triggers next page via React-Query
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const onScroll = () => {
-      if (
-        window.innerHeight + window.scrollY + 100 >= document.documentElement.offsetHeight &&
-        hasNextPage &&
-        !isFetchingNextPage
-      ) {
-        fetchNextPage();
-      }
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "100px" }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
@@ -148,32 +151,49 @@ export const Feed: React.FC = () => {
 
         {/* Posts List */}
         <div className="space-y-2">
-          {posts.map(post => (
-            <Card
-              key={post.id}
-              className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
-              onClick={() => router.push(`/feed/${post.id}`)}
-            >
-              <PostCard
-                {...post}
-                onCategoryClick={cat => setFilterCategory(cat)}
-                onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
-                onEdit={id => router.push(`/feed/${id}/edit`)}
-                onDelete={id => {
-                  // guard: only the post’s author may delete
-                  if (!currentUserId || currentUserId !== post.author_id) {
-                    alert("You are not authorized to delete this post");
-                    return;
-                  }
-                  // open confirmation dialog
-                  setDeleteTarget(id);
-                  setDeleteDialogOpen(true);
+          {/* Initial load skeletons */}
+          {isLoading &&
+            posts.length === 0 &&
+            [...Array(3)].map((_, i) => <PostCardSkeleton key={i} />)}
+
+          {/* Empty-state when no posts match filters */}
+          {!isLoading && posts.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                No posts found
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                We couldn’t find any posts matching your search or filters.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterCategory("");
+                  setFilterTags([]);
                 }}
-              />
-            </Card>
-          ))}
-          {isLoading && <p className="text-center text-gray-600 dark:text-gray-400">Loading…</p>}
-          {!hasNextPage && !isLoading && (
+              >
+                Clear filters
+              </Button>
+            </div>
+          )}
+          {/* Actual posts */}
+          {!isLoading &&
+            posts.map(post => (
+              <Card
+                key={post.id}
+                className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
+                onClick={() => router.push(`/feed/${post.id}`)}
+              >
+                <PostCard {...post} /* … */ />
+              </Card>
+            ))}
+          {/* Sentinel for infinite scroll */}
+          <div ref={sentinelRef} className="h-1" />
+          {/* “Load more” skeleton */}
+          {isFetchingNextPage && <PostCardSkeleton />}
+          {/* End‐of‐feed message */}
+          {!hasNextPage && !isLoading && !isFetchingNextPage && posts.length > 0 && (
             <p className="text-center text-gray-600 dark:text-gray-400">No more posts</p>
           )}
         </div>

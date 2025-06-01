@@ -40,10 +40,10 @@ By tackling these areas you’ll improve maintainability, performance, accessibi
 - [x] Define and centralize shared types (`ReactionType`, `PostFilter`, `Comment`, etc.) in `/src/types`
 
 ## B. Performance & UX
-- [ ] Debounce search input (300 ms) to avoid excessive refetches
-- [ ] Replace the global `window.scroll` listener with an `IntersectionObserver` sentinel
-- [ ] Add skeleton/shimmer placeholders for loading states instead of plain “Loading…”
-- [ ] Design and display an empty-state UI when no posts match current filters
+- [x] Debounce search input (300 ms) to avoid excessive refetches
+- [x] Replace the global `window.scroll` listener with an `IntersectionObserver` sentinel
+- [x] Add skeleton/shimmer placeholders for loading states instead of plain “Loading…”
+- [x] Design and display an empty-state UI when no posts match current filters
 - [ ] Migrate all navigation to Next.js `<Link>` and images to `<Image>` (configure remote domains)
 - [ ] Revoke object-URLs in `CreatePost.component.tsx` when removing images to prevent memory leaks
 - [ ] Tweak the reaction picker so a fast click doesn’t briefly flash the full picker UI
