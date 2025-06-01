@@ -118,29 +118,41 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         return;
       }
 
+      // Check for stored redirect path
+      const storedRedirect = localStorage.getItem("postLoginRedirect");
+
       // If no profile exists, redirect to role selection
       if (!profile) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
         router.push("/role-select");
         return;
       }
 
       // If no role is set, redirect to role selection
       if (!profile.role) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
         router.push("/role-select");
         return;
       }
 
       // If role exists, then check onboarding status
       if (!profile.onboarding_completed) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
         router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
         return;
       }
 
-      // If both role exists and onboarding is completed, go to dashboard
-      if (profile.role === UserRole.ACCOUNTANT) {
-        router.push("/ca/dashboard");
+      // If both role exists and onboarding is completed, check for stored redirect
+      if (storedRedirect) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+        router.push(storedRedirect);
       } else {
-        router.push("/user/dashboard");
+        // Default redirect based on role
+        if (profile.role === UserRole.ACCOUNTANT) {
+          router.push("/ca/dashboard");
+        } else {
+          router.push("/user/dashboard");
+        }
       }
     } catch (error) {
       // Track login error
