@@ -12,6 +12,7 @@ import { Container } from "@/components/layout/Container.component";
 import { usePosts, useDeletePost } from "@/services/posts.service";
 import { useCategories } from "@/services/categories.service";
 import { useTags } from "@/services/tags.service";
+import { useAuth } from "@/store/context/Auth.provider";
 import { Select } from "@/ui/Select.ui";
 import { Combobox } from "@/ui/Combobox.ui";
 import { PostCardSkeleton } from "./post/PostCardSkeleton.component";
@@ -21,6 +22,8 @@ import Link from "next/link";
 
 export const Feed: React.FC = () => {
   const router = useRouter();
+  const { auth } = useAuth();
+  const currentUserId = auth.user?.id;
 
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -179,14 +182,25 @@ export const Feed: React.FC = () => {
           {/* Actual posts */}
           {!isLoading &&
             posts.map(post => (
-              <Link href={`/feed/${post.id}`} key={post.id}>
-                <Card
-                  key={post.id}
-                  className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
-                >
-                  <PostCard {...post} /* … */ />
-                </Card>
-              </Link>
+              <Card
+                className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
+                onClick={() => router.push(`/feed/${post.id}`)}
+              >
+                <PostCard
+                  {...post}
+                  onCategoryClick={cat => setFilterCategory(cat)}
+                  onTagClick={tag => setFilterTags(ts => (ts.includes(tag) ? ts : [...ts, tag]))}
+                  onEdit={id => router.push(`/feed/${id}/edit`)}
+                  onDelete={id => {
+                    if (!currentUserId || currentUserId !== post.author_id) {
+                      alert("You are not authorized to delete this post");
+                      return;
+                    }
+                    setDeleteTarget(id);
+                    setDeleteDialogOpen(true);
+                  }}
+                />
+              </Card>
             ))}
           {/* Sentinel for infinite scroll */}
           <div ref={sentinelRef} className="h-1" />

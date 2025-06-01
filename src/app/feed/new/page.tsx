@@ -43,7 +43,7 @@ function NewPostContent() {
           <CreatePost
             initialContent={initialContent ?? ""}
             onPostCreated={() => {
-              <Link href="/feed" />;
+              router.push("/feed");
             }}
           />
         </div>

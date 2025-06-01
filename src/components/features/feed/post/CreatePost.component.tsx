@@ -14,6 +14,7 @@ import { Button } from "@/ui/Button.ui";
 import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 import { PostPayload } from "@/types/feed/post.type";
+import Image from "next/image";
 
 // Dynamically import ReactQuill with no SSR
 const ReactQuill = dynamic(() => import("react-quill"), {
@@ -58,6 +59,13 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   const [signedUrlsCache, setSignedUrlsCache] = useState<Record<string, string>>({});
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  // Revoke object URLs on unmount to avoid leaks
+  useEffect(() => {
+    return () => previewUrls.forEach(url => URL.revokeObjectURL(url));
+  }, [previewUrls]);
 
   // enum lists & helpers
   const [newCategory, setNewCategory] = useState("");
@@ -137,7 +145,9 @@ export const CreatePost: React.FC<CreatePostProps> = ({
 
   const handleImageChange = (file: File | null) => {
     if (file) {
+      const url = URL.createObjectURL(file);
       setAllImages(prev => [...prev, file]);
+      setPreviewUrls(prev => [...prev, url]);
     }
   };
 
@@ -160,18 +170,6 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     const newUrls = await uploadImages(newFiles, "forum/post");
     const imageUrls = [...existingUrls, ...newUrls];
     const authorId = auth.user?.id;
-
-    // include title in payload
-    const payload = {
-      title,
-      content,
-      category: finalCategory,
-      tags,
-      images: imageUrls,
-      author_id: authorId,
-      is_deleted: false,
-      reaction_counts: 0,
-    };
 
     const postPayload: PostPayload = {
       title,
@@ -309,21 +307,24 @@ export const CreatePost: React.FC<CreatePostProps> = ({
           />
           {allImages.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {allImages.map((img, idx) => (
+              {allImages.map((img, idx: number) => (
                 <div key={idx} className="relative h-full w-full overflow-hidden rounded-lg">
                   <img
-                    src={
-                      typeof img === "string"
-                        ? signedUrlsCache[img] ?? "" // show once signed URL is fetched
-                        : URL.createObjectURL(img) // immediate preview for newly added File
-                    }
+                    src={typeof img === "string" ? signedUrlsCache[img] ?? "" : URL.createObjectURL(img)}
                     alt={`Preview ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />
                   <button
                     type="button"
                     aria-label="Remove image"
-                    onClick={() => setAllImages(prev => prev.filter((_, j) => j !== idx))}
+                    onClick={() => {
+                      // revoke the URL for this file
+                      if (img instanceof File) {
+                        URL.revokeObjectURL(previewUrls[idx]);
+                        setPreviewUrls(prev => prev.filter((_, j) => j !== idx));
+                      }
+                      setAllImages(prev => prev.filter((_, j) => j !== idx));
+                    }}
                     className="absolute top-1 right-1 bg-black/50 text-white p-0.5 rounded-full hover:bg-black/70"
                   >
                     <X size={12} weight="bold" />

@@ -37,7 +37,7 @@ function EditPostContent() {
   useEffect(() => {
     if (!auth.isLoading && auth.user && post) {
       if (post.author_id !== auth.user.id) {
-        <Link href="/feed" />;
+        router.push("/feed");
       }
     }
   }, [auth.isLoading, auth.user, post, router]);
@@ -65,7 +65,7 @@ function EditPostContent() {
             initialCategory={post.category}
             initialTags={post.tags}
             initialImages={post.images}
-            onPostUpdated={() => <Link href="/feed" />}
+            onPostUpdated={() => router.push("/feed")}
           />
         </div>
       </Container>

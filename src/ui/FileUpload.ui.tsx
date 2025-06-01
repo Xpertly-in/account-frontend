@@ -46,9 +46,20 @@ export function FileUpload({
     });
     if (!valids.length) return;
     setLocalError(null);
-    const next = [...files, ...valids];
-    setFiles(next);
-    onChange(next);
+    // merge with duplicate handling
+    let updated = [...files];
+    valids.forEach(f => {
+      const idx = updated.findIndex(existing => existing.name === f.name);
+      if (idx >= 0) {
+        const replace = window.confirm(`"${f.name}" already exists. Replace it?`);
+        if (replace) updated[idx] = f;
+        else updated.push(f);
+      } else {
+        updated.push(f);
+      }
+    });
+    setFiles(updated);
+    onChange(updated);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -80,9 +91,20 @@ export function FileUpload({
     });
     if (!valids.length) return;
     setLocalError(null);
-    const next = [...files, ...valids];
-    setFiles(next);
-    onChange(next);
+    // merge with duplicate handling
+    let updated = [...files];
+    valids.forEach(f => {
+      const idx = updated.findIndex(existing => existing.name === f.name);
+      if (idx >= 0) {
+        const replace = window.confirm(`"${f.name}" already exists. Replace it?`);
+        if (replace) updated[idx] = f;
+        else updated.push(f);
+      } else {
+        updated.push(f);
+      }
+    });
+    setFiles(updated);
+    onChange(updated);
   };
 
   const handleRemove = (idx: number) => {
@@ -128,42 +150,28 @@ export function FileUpload({
           required={required}
         />
 
-        {files.length ? (
-          <div className="flex flex-col gap-2 w-full">
-            {files.map((f, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="truncate">{f.name}</div>
-                <button onClick={() => handleRemove(i)}>
-                  <X size={16} />
-                </button>
-                <span>{(f.size / 1024 / 1024).toFixed(2)} MB</span>
-              </div>
-            ))}
+        <>
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <File size={20} className="text-muted-foreground" />
           </div>
-        ) : (
-          <>
-            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <File size={20} className="text-muted-foreground" />
-            </div>
-            <div className="mb-2 text-center">
-              <p className="text-sm text-muted-foreground">
+          <div className="mb-2 text-center">
+            <p className="text-sm text-muted-foreground">
               <span className="font-medium">Click to upload</span> or drag & drop files
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Supported: JPEG, PNG, GIF, MP4 (max 5 MB)
-              </p>
-            </div>
-            <Button
-              type="button"
-              onClick={handleButtonClick}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              Select Files
-            </Button>
-          </>
-        )}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Supported: JPEG, PNG, GIF, MP4 (max 5 MB)
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={handleButtonClick}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            Select Files
+          </Button>
+        </>
       </div>
     </div>
   );
