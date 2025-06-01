@@ -1,7 +1,8 @@
+import LoginContent from "@/components/features/auth/LoginContent";
 import { Suspense } from "react";
-import CALoginContent from "@/components/features/auth/CALoginContent";
 
-export default function CALoginPage() {
+
+export default function LoginPage() {
   return (
     <Suspense
       fallback={
@@ -10,7 +11,7 @@ export default function CALoginPage() {
         </div>
       }
     >
-      <CALoginContent />
+      <LoginContent />
     </Suspense>
   );
-}
+} 
