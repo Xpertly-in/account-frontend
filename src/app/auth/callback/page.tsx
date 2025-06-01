@@ -26,6 +26,9 @@ export default function AuthCallback() {
         }
 
         if (session?.user) {
+          // Check for stored redirect path
+          const storedRedirect = localStorage.getItem("postLoginRedirect");
+
           // Check if user has a role and onboarding status
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
@@ -51,6 +54,7 @@ export default function AuthCallback() {
                 throw insertError;
               }
               
+              localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
               router.push("/role-select");
               return;
             }
@@ -60,21 +64,29 @@ export default function AuthCallback() {
 
           // If no role is set, redirect to role selection
           if (!profile?.role) {
+            localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
             router.push("/role-select");
             return;
           }
 
           // If role exists but onboarding is not completed
           if (!profile.onboarding_completed) {
+            localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
             router.push(profile.role === "ACCOUNTANT" ? "/ca/onboarding" : "/user/onboarding");
             return;
           }
 
-          // If both role exists and onboarding is completed, go to dashboard
-          if (profile.role === "ACCOUNTANT") {
-            router.push("/ca/dashboard");
+          // If both role exists and onboarding is completed, check for stored redirect
+          if (storedRedirect) {
+            localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+            router.push(storedRedirect);
           } else {
-            router.push("/user/dashboard");
+            // Default redirect based on role
+            if (profile.role === "ACCOUNTANT") {
+              router.push("/ca/dashboard");
+            } else {
+              router.push("/user/dashboard");
+            }
           }
         } else {
           console.log("[AuthCallback] No user in session");
