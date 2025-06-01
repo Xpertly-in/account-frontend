@@ -51,7 +51,7 @@ export function Header() {
   };
 
   const isLoggedIn = mounted && (auth.user || hasSession);
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const dashboardPath = userRole === UserRole.ACCOUNTANT ? "/ca/dashboard" : "/user/dashboard";
 
   return (
@@ -67,7 +67,7 @@ export function Header() {
                 href="/search"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/search")
+                  pathname?.startsWith("/search")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
@@ -78,7 +78,7 @@ export function Header() {
                 href="/about"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/about")
+                  pathname?.startsWith("/about")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
@@ -89,7 +89,7 @@ export function Header() {
                 href="/feed"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/feed")
+                  pathname?.startsWith("/feed")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
@@ -100,7 +100,7 @@ export function Header() {
                 href="/contact"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/contact")
+                  pathname?.startsWith("/contact")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
@@ -143,7 +143,7 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center">
-                <Link href="/login/ca">
+                <Link href="/login">
                   <Button
                     variant="default"
                     className="rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
@@ -213,7 +213,7 @@ export function Header() {
               </div>
             ) : (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/login/ca" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="default"
                     className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
