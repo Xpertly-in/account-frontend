@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation"; // added
-import { createPost, updatePost, PostPayload } from "@/services/posts.service";
+import { useCreatePostMutation, useUpdatePostMutation } from "@/services/posts.service";
 import { useCategories, useUpsertCategory } from "@/services/categories.service";
 import { useTags, useUpsertTag } from "@/services/tags.service";
 import { uploadImages, getSignedUrls } from "@/services/storage.service";
@@ -13,6 +13,7 @@ import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
 import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
+import { PostPayload } from "@/types/feed/post.type";
 
 // Dynamically import ReactQuill with no SSR
 const ReactQuill = dynamic(() => import("react-quill"), {
@@ -44,6 +45,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
 }) => {
   const router = useRouter(); // added for Cancel
   const { auth } = useAuth();
+  const createPostMutation = useCreatePostMutation();
+  const updatePostMutation = useUpdatePostMutation();
   if (auth.isLoading || !auth.user) return null;
 
   // --- State ---
@@ -180,17 +183,14 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     };
 
     if (postId) {
-      const nowUtc = new Date().toISOString();
-      await updatePost(postId, { ...postPayload, updated_at: nowUtc });
+      await updatePostMutation.mutateAsync({
+        id: postId,
+        data: { ...postPayload, updated_at: new Date().toISOString() },
+      });
       onPostUpdated?.();
     } else {
-      await createPost(postPayload);
-      // clear draft & UI
-      setTitle("");
-      setContent("");
-      setTags([]);
-      setAllImages([]);
-      localStorage.removeItem("create-post-draft");
+      await createPostMutation.mutateAsync(postPayload);
+      // clear…
       onPostCreated?.();
     }
 

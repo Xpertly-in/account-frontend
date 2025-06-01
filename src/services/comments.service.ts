@@ -3,34 +3,11 @@ import { supabase } from "@/helper/supabase.helper";
 import { getSignedUrls } from "./storage.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
+import type { Comment } from "@/types/feed/comment.type";
+import { COMMENT_SELECT } from "@/constants/feed.constants";
 
-export interface Comment {
-  id: number;
-  post_id: number;
-  parent_id: number | null;
-  author_id: string;
-  author_name: string;
-  author_avatar?: string;
-  content: string;
-  images: string[];
-  reaction_counts?: Record<string, number>;
-  created_at: string;
-  updated_at: string;
-  replies?: Comment[];
-}
 
-const COMMENT_SELECT = `
-  id,
-  post_id,
-  parent_id,
-  content,
-  images,
-  reaction_counts,
-  created_at,
-  updated_at,
-  author_id,
-  profiles ( name, profile_picture )
-`;
+
 
 async function normalize(r: any): Promise<Comment> {
   const prof = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;

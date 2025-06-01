@@ -121,3 +121,5 @@ To learn more about the technologies used in this project:
 ## Deployment
 
 The application is deployed on Vercel. For more information about deploying Next.js apps, check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying).
+
+update

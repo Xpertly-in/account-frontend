@@ -1,21 +1,17 @@
 // src/components/features/feed/CommentItem.component.tsx
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { DotsThree, PencilSimple, TrashSimple } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
-import { ReactionButton } from "./ReactionButton.component";
-import { ReactionSummary } from "./ReactionSummary.component";
-import type { Comment } from "@/services/comments.service";
+import { ReactionButton } from "../ReactionButton.component";
+import { ReactionSummary } from "../ReactionSummary.component";
+import type { CommentItemProps } from "@/types/feed/comment.type";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
-interface Props {
-  comment: Comment;
-  onReply?: () => void;
-  onEdit?: (id: number) => void;
-  onDelete?: (id: number) => void;
-}
-export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelete }) => {
+
+export const CommentItem: React.FC<CommentItemProps> = ({ comment, onReply, onEdit, onDelete }) => {
   const isEdited = comment.updated_at !== comment.created_at;
   const displayTime = isEdited
     ? `edited ${formatRelativeTime(comment.updated_at)}`
@@ -26,15 +22,7 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
 
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
+  useOutsideClick(wrapperRef, () => setMenuOpen(false));
 
   return (
     <div className="flex space-x-3 py-3 border-b border-gray-200 dark:border-gray-700">
