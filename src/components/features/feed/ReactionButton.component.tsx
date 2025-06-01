@@ -5,8 +5,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { fetchMyReaction, toggleReaction } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ThumbsUp, Heart, Smiley, SmileySad, Flame } from "@phosphor-icons/react";
+import type { ReactionType } from "@/types/reaction.type";
 
-const REACTIONS = [
+const REACTIONS: { type: ReactionType; icon: JSX.Element; bg: string; fg: string }[] = [
   { type: "like", icon: <ThumbsUp />, bg: "bg-blue-100", fg: "text-blue-500" },
   { type: "love", icon: <Heart />, bg: "bg-red-100", fg: "text-red-500" },
   { type: "laugh", icon: <Smiley />, bg: "bg-yellow-100", fg: "text-yellow-500" },

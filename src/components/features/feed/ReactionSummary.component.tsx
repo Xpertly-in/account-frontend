@@ -1,11 +1,13 @@
 // src/components/features/feed/ReactionSummary.component.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fetchReactions } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ThumbsUp, Heart, Smiley, SmileySad, Flame, X } from "@phosphor-icons/react";
+import type { ReactionType } from "@/types/reaction.type";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
-const REACTIONS = [
+const REACTIONS: { type: ReactionType; icon: JSX.Element; bg: string; fg: string }[] = [
   { type: "like", icon: <ThumbsUp />, bg: "bg-blue-100", fg: "text-blue-500" },
   { type: "love", icon: <Heart />, bg: "bg-red-100", fg: "text-red-500" },
   { type: "laugh", icon: <Smiley />, bg: "bg-yellow-100", fg: "text-yellow-500" },
@@ -31,6 +33,8 @@ export function ReactionSummary({
     { name: string; avatar?: string; type: string }[]
   >([]);
   const [selectedTab, setSelectedTab] = useState<string>("");
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(wrapperRef, () => setListOpen(false));
 
   useEffect(() => {
     async function load() {
@@ -79,7 +83,7 @@ export function ReactionSummary({
   return (
     <div className="mb-2">
       {/* Top-3 overlapping reaction icons + total count */}
-      <div className="flex items-center">
+      <div className="flex items-center" ref={wrapperRef}>
         {top3.map((type, idx) => {
           const reaction = REACTIONS.find(r => r.type === type)!;
           // higher z-index for earlier icons

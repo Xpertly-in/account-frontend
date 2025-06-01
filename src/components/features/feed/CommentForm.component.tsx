@@ -69,6 +69,7 @@ export const CommentForm: React.FC<Props> = ({
         placeholder={placeholder}
         value={content}
         onChange={handleInput}
+        onClick={e => e.stopPropagation()}
         onFocus={() => setExpanded(true)}
         required
       />
@@ -97,6 +98,7 @@ export const CommentForm: React.FC<Props> = ({
       {expanded && (
         <Button
           type="submit"
+          onClick={e => e.stopPropagation()}
           disabled={posting || !content.trim()}
           className="bg-blue-500 text-white rounded-full"
         >

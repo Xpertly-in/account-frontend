@@ -1,6 +1,7 @@
 // src/services/posts.service.ts
 import { supabase } from "@/helper/supabase.helper";
 import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import type { PostFilter } from "@/types/post.type";
 import { useAuth } from "@/store/context/Auth.provider";
 import type { PostCardProps } from "@/components/features/feed/PostCard.component";
 import { getSignedUrls } from "./storage.service";
@@ -41,13 +42,6 @@ async function normalizePost(p: any): Promise<PostCardProps> {
     reaction_counts: p.reaction_counts,
     is_deleted: p.is_deleted,
   };
-}
-
-export interface PostFilter {
-  searchTerm?: string;
-  category?: string;
-  tags?: string[];
-  sortOption?: "recent" | "top";
 }
 
 export interface PostsPage {

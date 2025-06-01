@@ -3,21 +3,8 @@ import { supabase } from "@/helper/supabase.helper";
 import { getSignedUrls } from "./storage.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
+import type { Comment } from "@/types/comment.type";
 
-export interface Comment {
-  id: number;
-  post_id: number;
-  parent_id: number | null;
-  author_id: string;
-  author_name: string;
-  author_avatar?: string;
-  content: string;
-  images: string[];
-  reaction_counts?: Record<string, number>;
-  created_at: string;
-  updated_at: string;
-  replies?: Comment[];
-}
 
 const COMMENT_SELECT = `
   id,

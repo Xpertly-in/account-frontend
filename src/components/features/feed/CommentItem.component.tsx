@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { formatRelativeTime } from "@/utils/date.utils";
 import { ReactionButton } from "./ReactionButton.component";
 import { ReactionSummary } from "./ReactionSummary.component";
-import type { Comment } from "@/services/comments.service";
+import type { Comment } from "@/types/comment.type";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 interface Props {
   comment: Comment;
@@ -26,15 +27,7 @@ export const CommentItem: React.FC<Props> = ({ comment, onReply, onEdit, onDelet
   const { auth } = useAuth();
   const currentUserId = auth.user?.id;
 
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
+  useOutsideClick(wrapperRef, () => setMenuOpen(false));
 
   return (
     <div className="flex space-x-3 py-3 border-b border-gray-200 dark:border-gray-700">
