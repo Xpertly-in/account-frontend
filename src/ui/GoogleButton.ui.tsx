@@ -21,7 +21,7 @@ export function GoogleButton({
     <Button
       type="button"
       variant="outline"
-      className="w-full border-border/50 bg-white text-foreground hover:bg-gray-50 dark:border-blue-800/30 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800 hover:shadow-md transition-shadow duration-300"
+      className="w-full border-border/50 bg-white text-foreground hover:bg-gray-50 hover:text-foreground dark:border-blue-800/30 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800 dark:hover:text-white hover:shadow-md transition-shadow duration-300"
       onClick={onClick}
       disabled={isLoading}
     >

@@ -4,20 +4,15 @@ import { useState } from "react";
 import LoginForm from "./LoginForm.component";
 import SignUpForm from "./SignUpForm.component";
 import { cn } from "@/helper/tw.helper";
-import Link from "next/link";
-import { Briefcase } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "framer-motion";
 
 type TabType = "login" | "signup";
 
 interface AuthTabsProps {
   defaultTab?: TabType;
-  showCALoginButton?: boolean;
 }
 
-export default function AuthTabs({
-  defaultTab = "login",
-  showCALoginButton = true,
-}: AuthTabsProps) {
+export default function AuthTabs({ defaultTab = "login" }: AuthTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
 
   return (
@@ -25,55 +20,65 @@ export default function AuthTabs({
       {/* Colored top border */}
       <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-gradient-to-r from-primary via-secondary to-accent"></div>
 
-      {/* Tabs */}
-      <div className="relative flex">
-        <button
-          className={cn(
-            "flex-1 rounded-tl-lg border-b-2 py-4 text-sm font-medium transition-colors",
-            activeTab === "login"
-              ? "border-primary text-primary dark:border-blue-500 dark:text-blue-400"
-              : "border-transparent text-muted-foreground hover:text-foreground dark:hover:text-foreground"
-          )}
-          onClick={() => setActiveTab("login")}
-        >
-          Sign In
-        </button>
-        <button
-          className={cn(
-            "flex-1 rounded-tr-lg border-b-2 py-4 text-sm font-medium transition-colors",
-            activeTab === "signup"
-              ? "border-primary text-primary dark:border-blue-500 dark:text-blue-400"
-              : "border-transparent text-muted-foreground hover:text-foreground dark:hover:text-foreground"
-          )}
-          onClick={() => setActiveTab("signup")}
-        >
-          Sign Up
-        </button>
-      </div>
+      <div className="flex flex-col p-6 sm:p-8">
+        {/* Tabs */}
+        <div className="relative flex mb-6 border-b border-border dark:border-blue-800/50">
+          <button
+            className={cn(
+              "flex-1 py-3 text-sm font-medium transition-all duration-300 relative min-w-[100px]",
+              activeTab === "login"
+                ? "text-primary dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+            )}
+            onClick={() => setActiveTab("login")}
+          >
+            Sign In
+            {activeTab === "login" && (
+              <motion.div
+                layoutId="tab-indicator"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary dark:bg-blue-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              />
+            )}
+          </button>
+          <button
+            className={cn(
+              "flex-1 py-3 text-sm font-medium transition-all duration-300 relative min-w-[100px]",
+              activeTab === "signup"
+                ? "text-primary dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+            )}
+            onClick={() => setActiveTab("signup")}
+          >
+            Sign Up
+            {activeTab === "signup" && (
+              <motion.div
+                layoutId="tab-indicator"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary dark:bg-blue-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              />
+            )}
+          </button>
+        </div>
 
-      {/* Content */}
-      <div className="p-6 sm:p-8">
-        {activeTab === "login" ? <LoginForm hideContainer /> : <SignUpForm hideContainer />}
-
-        {/* CA Login Button */}
-        {showCALoginButton && (
-          <div className="mt-6 text-center">
-            <div className="relative flex items-center py-2 mb-4">
-              <div className="flex-grow border-t border-border dark:border-blue-800/50"></div>
-              <span className="mx-3 flex-shrink text-xs text-muted-foreground dark:text-blue-100/50">
-                OR
-              </span>
-              <div className="flex-grow border-t border-border dark:border-blue-800/50"></div>
-            </div>
-            <Link
-              href="/ca/login"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
+        {/* Form Content with animated transitions */}
+        <div className="relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
             >
-              <Briefcase weight="bold" className="w-4 h-4" />
-              <span>Login as CA</span>
-            </Link>
-          </div>
-        )}
+              {activeTab === "login" ? <LoginForm hideContainer /> : <SignUpForm hideContainer />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
