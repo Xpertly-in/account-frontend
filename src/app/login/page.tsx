@@ -1,6 +1,6 @@
-import LoginContent from "@/components/features/auth/LoginContent";
+import AuthTabs from "@/components/features/auth/AuthTabs.component";
+import { Container } from "@/components/layout/Container.component";
 import { Suspense } from "react";
-
 
 export default function LoginPage() {
   return (
@@ -11,7 +11,9 @@ export default function LoginPage() {
         </div>
       }
     >
-      <LoginContent />
+      <Container className="flex min-h-screen items-center justify-center py-12">
+        <AuthTabs defaultTab="login" showCALoginButton={true} />
+      </Container>
     </Suspense>
   );
 } 
