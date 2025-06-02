@@ -23,6 +23,7 @@ async function normalizePost(p: any): Promise<PostCardProps> {
     images: await getSignedUrls(p.images),
     reaction_counts: p.reaction_counts,
     is_deleted: p.is_deleted,
+    commentCount: p.comments?.length ?? 0,
   };
 }
 

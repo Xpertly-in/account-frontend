@@ -3,6 +3,7 @@ import { ImageCarouselProps } from "@/types/storage.type";
 import { CaretLeft, CaretRight, X } from "@phosphor-icons/react";
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 
 
 export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
@@ -36,10 +37,11 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <img
+          <Image
             src={images[currentIndex]}
             alt={`Slide ${currentIndex + 1}`}
-            className="w-full h-full object-contain object-center"
+            fill
+            className="object-contain object-center"
           />
           {/* Prev */}
           {currentIndex > 0 && (
@@ -102,10 +104,11 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
             >
               <X size={32} weight="bold" />
             </button>
-            <img
+            <Image
               src={images[previewIndex]}
               alt={`Preview ${previewIndex + 1}`}
-              className="max-h-[90vh] max-w-[90vw] object-contain"
+              fill
+              className="object-contain"
             />
           </div>,
           document.body

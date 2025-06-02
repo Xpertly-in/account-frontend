@@ -17,7 +17,8 @@ export const POST_SELECT = `
   profiles (
     name,
     profile_picture
-  )
+  ),
+  comments ( id )
 `;
 
 export const COMMENT_SELECT = `

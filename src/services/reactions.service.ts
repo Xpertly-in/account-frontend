@@ -11,6 +11,7 @@ export interface ProfileRow {
   profile_picture: string | null;
 }
 
+
 // fetch all reactions + profiles for a target
 export async function fetchReactions(
   targetType: "post" | "comment",
@@ -111,4 +112,49 @@ export async function toggleReaction(
     increment: true,
   });
   return type;
+}
+
+// fetch every reaction row for a list of posts in one shot
+export async function fetchReactionsForPosts(
+  targetType: "post" | "comment",
+  targetIds: number[]
+): Promise<{
+  [postId: number]: { counts: Record<string, number>; latestNames: string[] };
+}> {
+  // pull back all reactions + user_ids in one query
+  const { data: rows, error } = await supabase
+    .from("reactions")
+    .select("target_id, reaction_type, user_id, created_at")
+    .eq("target_type", targetType)
+    .in("target_id", targetIds)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  // batch‐grab the unique user_ids so you can join profiles once
+  const uids = Array.from(new Set(rows.map(r => r.user_id)));
+  const { data: profiles, error: pErr } = await supabase
+    .from("profiles")
+    .select("user_id, name")
+    .in("user_id", uids);
+  if (pErr) throw pErr;
+
+  // build a map[id] = { counts: { like: 3 … }, latestNames: ["Alice", …] }
+  const map: Record<number, { counts: Record<string, number>; latestNames: string[] }> = {};
+  targetIds.forEach(id => {
+    map[id] = { counts: {}, latestNames: [] };
+  });
+
+  for (const r of rows) {
+    const bucket = map[r.target_id]!;
+    bucket.counts[r.reaction_type] = (bucket.counts[r.reaction_type] || 0) + 1;
+    // collect first 3 distinct names
+    if (bucket.latestNames.length < 3) {
+      const prof = profiles.find(p => p.user_id === r.user_id);
+      if (prof && !bucket.latestNames.includes(prof.name)) {
+        bucket.latestNames.push(prof.name);
+      }
+    }
+  }
+
+  return map;
 }
