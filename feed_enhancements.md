@@ -46,7 +46,7 @@ By tackling these areas you’ll improve maintainability, performance, accessibi
 - [x] Design and display an empty-state UI when no posts match current filters
 - [x] Migrate all navigation to Next.js `<Link>` and images to `<Image>` (configure remote domains)
 - [x] Revoke object-URLs in `CreatePost.component.tsx` when removing images to prevent memory leaks
-- [ ] Tweak the reaction picker so a fast click doesn’t briefly flash the full picker UI
+- [x] Tweak the reaction picker so a fast click doesn’t briefly flash the full picker UI
 
 ## C. Accessibility
 - [ ] Add proper ARIA roles/labels and keyboard support (ESC to close, arrow navigation in pickers and carousel)

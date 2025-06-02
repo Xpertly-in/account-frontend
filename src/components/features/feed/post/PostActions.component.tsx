@@ -6,17 +6,31 @@ import { ChatCircle } from "@phosphor-icons/react";
 import { ShareButton } from "@/ui/ShareButton.ui";
 import { CommentSection } from "../comment/CommentSection.component";
 import { PostActionsProps } from "@/types/feed/post.type";
-
-
+import { useComments } from "@/services/comments.service";
+import { useQuery } from "@tanstack/react-query";
+import { fetchReactionsForPosts } from "@/services/reactions.service";
 
 export const PostActions: React.FC<PostActionsProps> = ({ id, title, commentCount }) => {
   const [reactionVersion, setReactionVersion] = useState(0);
   const [showCommentsPreview, setShowCommentsPreview] = useState(false);
+  // only fetch comments when preview is open
+  const { data: comments = [] } = useComments(id, showCommentsPreview);
 
+  const { data: reactionsBatch = {} } = useQuery({
+      queryKey: ["reactionsBatch", id],
+      queryFn:() => fetchReactionsForPosts("post", [id]),
+      enabled: true
+  });
   return (
     <>
       <div className="flex justify-between items-center px-3 pb-1">
-        <ReactionSummary targetType="post" targetId={id} version={reactionVersion} />
+        <ReactionSummary
+          targetType="post"
+          targetId={id}
+          version={reactionVersion}
+          initialCounts={reactionsBatch[id]?.counts}
+          initialLatestNames={reactionsBatch[id]?.latestNames}
+        />
         <button
           type="button"
           className="flex items-center gap-1 hover:text-primary cursor-pointer hover:underline"
@@ -51,7 +65,7 @@ export const PostActions: React.FC<PostActionsProps> = ({ id, title, commentCoun
 
       {showCommentsPreview && (
         <div className="px-4 pb-4">
-          <CommentSection postId={id} />
+          <CommentSection postId={id} comments={comments} />
         </div>
       )}
     </>

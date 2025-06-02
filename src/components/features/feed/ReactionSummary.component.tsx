@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchReactions } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
-import { ThumbsUp, Heart, Smiley, SmileySad, Flame, X } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/Avatar.ui";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { REACTIONS } from "@/constants/feed.constants";
@@ -11,10 +11,14 @@ export function ReactionSummary({
   targetType,
   targetId,
   version,
+  initialCounts,
+  initialLatestNames,
 }: {
   targetType: "post" | "comment";
   targetId: number;
   version: number;
+  initialCounts?: Record<string, number>;
+  initialLatestNames?: string[];
 }) {
   const { auth } = useAuth();
   const userId = auth.user?.id;
@@ -29,6 +33,12 @@ export function ReactionSummary({
   useOutsideClick(wrapperRef, () => setListOpen(false));
 
   useEffect(() => {
+    if (initialCounts) {
+      setCounts(initialCounts);
+      setLatestName(initialLatestNames?.[0] ?? null);
+      // you can skip loading allReactions if you only need names for the “and N others”
+      return;
+    }
     async function load() {
       // fetch both reactions and profiles via the service
       const { rows, profiles } = await fetchReactions(targetType, targetId);

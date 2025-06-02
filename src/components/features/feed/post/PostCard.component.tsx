@@ -1,6 +1,5 @@
 "use client";
 
-import { useComments } from "@/services/comments.service";
 import { PostHeader } from "./PostHeader.component";
 import { PostBody } from "./PostBody.component";
 import { ImageCarousel } from "../ImageCarousel.component";
@@ -9,9 +8,7 @@ import { PostCardProps } from "@/types/feed/post.type";
 
 
 export const PostCard: React.FC<PostCardProps> = props => {
-  const { id } = props;
-  const { data: comments = [] } = useComments(id);
-  const commentCount = comments.length;
+  const { commentCount } = props;
 
   return (
     <div className="rounded-lg overflow-hidden">

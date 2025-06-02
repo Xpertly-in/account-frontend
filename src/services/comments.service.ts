@@ -81,11 +81,11 @@ export async function createComment(payload: {
   return normalize(data);
 }
 
-export function useComments(postId: number) {
+export function useComments(postId: number, enabled = true) {
   return useQuery<Comment[]>({
     queryKey: ["comments", postId],
     queryFn: () => fetchComments(postId),
-    enabled: Boolean(postId),
+    enabled: Boolean(postId) && enabled,
   });
 }
 

@@ -38,7 +38,7 @@ export function Header() {
           .select("role")
           .eq("user_id", session.user.id)
           .single();
-        
+
         setUserRole(profile?.role || null);
       }
     };
@@ -175,6 +175,13 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               About
+            </Link>
+            <Link
+              href="/feed"
+              className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Feed
             </Link>
             <Link
               href="/contact"
