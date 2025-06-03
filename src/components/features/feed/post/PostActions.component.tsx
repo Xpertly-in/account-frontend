@@ -17,9 +17,9 @@ export const PostActions: React.FC<PostActionsProps> = ({ id, title, commentCoun
   const { data: comments = [] } = useComments(id, showCommentsPreview);
 
   const { data: reactionsBatch = {} } = useQuery({
-      queryKey: ["reactionsBatch", id],
-      queryFn:() => fetchReactionsForPosts("post", [id]),
-      enabled: true
+    queryKey: ["reactionsBatch", id, reactionVersion],
+    queryFn: () => fetchReactionsForPosts("post", [id]),
+    enabled: true,
   });
   return (
     <>
