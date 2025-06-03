@@ -77,7 +77,6 @@ export async function fetchPosts(
   if (error) throw error;
 
   const mapped = await Promise.all((data || []).map(normalizePost));
-  console.log(mapped);
   return {
     data: mapped,
     currentPage: page,
