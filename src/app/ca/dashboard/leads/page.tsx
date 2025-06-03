@@ -14,7 +14,7 @@ export default function LeadsPage() {
   useEffect(() => {
     // Check if user is authenticated
     if (!auth.isAuthenticated && isLoaded) {
-      router.push("/login/ca");
+      router.push("/login");
       return;
     }
   }, [auth.isAuthenticated, router, isLoaded]);

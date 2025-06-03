@@ -143,7 +143,7 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center">
-                <Link href="/login/ca">
+                <Link href="/login">
                   <Button
                     variant="default"
                     className="rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
@@ -220,7 +220,7 @@ export function Header() {
               </div>
             ) : (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/login/ca" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="default"
                     className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"

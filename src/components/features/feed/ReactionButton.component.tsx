@@ -63,7 +63,7 @@ export function ReactionButton({
   // handle react / un-react
   const onReact = async (type: string) => {
     if (!userId) {
-      router.push("/login/ca");
+      router.push("/login");
       return;
     }
     try {
