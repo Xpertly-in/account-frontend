@@ -1,7 +1,7 @@
 // src/components/features/feed/CreatePost.component.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation"; // added
 import { useCreatePostMutation, useUpdatePostMutation } from "@/services/posts.service";
@@ -14,7 +14,6 @@ import { Button } from "@/ui/Button.ui";
 import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
 import { PostPayload } from "@/types/feed/post.type";
-import Image from "next/image";
 
 // Dynamically import ReactQuill with no SSR
 const ReactQuill = dynamic(() => import("react-quill"), {
@@ -61,6 +60,9 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  // track if there’s a saved draft
+  const [hasDraft, setHasDraft] = useState(false);
+  const isFirstSave = useRef(true);
 
   // Revoke object URLs on unmount to avoid leaks
   useEffect(() => {
@@ -84,24 +86,35 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     if (!initialContent) {
       const draft = localStorage.getItem("create-post-draft");
       if (draft) {
+        setHasDraft(true);
         const data = JSON.parse(draft);
         setTitle(data.title || ""); // added
         setContent(data.content || "");
+        setCategory(data.category || "");
         setTags(data.tags || []);
         setAllImages(data.allImages || []);
       }
     }
   }, [initialContent]);
 
+  // discard the saved draft
+  const handleDiscardDraft = () => {
+    localStorage.removeItem("create-post-draft");
+    setHasDraft(false);
+    setTitle("");
+    setContent("");
+    setCategory("");
+    setTags([]);
+    setAllImages([]);
+    setPreviewUrls([]);
+  };
   // --- Save draft on every change ---
   useEffect(() => {
-    const draft = {
-      title, // added
-      content,
-      category,
-      tags,
-      allImages,
-    };
+    if (isFirstSave.current) {
+      isFirstSave.current = false;
+      return;
+    }
+    const draft = { title, content, category, tags, allImages };
     localStorage.setItem("create-post-draft", JSON.stringify(draft));
   }, [title, content, category, tags, allImages]);
 
@@ -141,14 +154,6 @@ export const CreatePost: React.FC<CreatePostProps> = ({
 
   const handleRemoveTag = (remove: string) => {
     setTags(tags.filter(t => t !== remove));
-  };
-
-  const handleImageChange = (file: File | null) => {
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setAllImages(prev => [...prev, file]);
-      setPreviewUrls(prev => [...prev, url]);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -198,8 +203,19 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   return (
     <div className="flex flex-col h-screen bg-background dark:bg-gray-900">
       {/* Header: show Create vs Edit */}
-      <header className="px-4 py-3 border-b dark:border-gray-700">
-        <h2 className="text-lg font-semibold"> {postId ? "Edit Post" : "Create Post"}</h2>
+      <header className="px-4 py-3 border-b dark:border-gray-700 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">
+          {postId ? "Edit Post" : hasDraft ? "Edit Draft" : "Create Post"}
+        </h2>
+        {!postId && hasDraft && (
+          <button
+            type="button"
+            onClick={handleDiscardDraft}
+            className="text-sm text-red-500 hover:underline"
+          >
+            Discard Draft
+          </button>
+        )}
       </header>
       {/* Body */}
       <div className="flex-1 overflow-auto p-4">
@@ -310,7 +326,11 @@ export const CreatePost: React.FC<CreatePostProps> = ({
               {allImages.map((img, idx: number) => (
                 <div key={idx} className="relative h-full w-full overflow-hidden rounded-lg">
                   <img
-                    src={typeof img === "string" ? signedUrlsCache[img] ?? "" : URL.createObjectURL(img)}
+                    src={
+                      typeof img === "string"
+                        ? signedUrlsCache[img] ?? ""
+                        : URL.createObjectURL(img)
+                    }
                     alt={`Preview ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />
