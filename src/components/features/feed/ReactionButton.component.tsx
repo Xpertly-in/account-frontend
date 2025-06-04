@@ -2,7 +2,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
-import { fetchMyReaction, toggleReaction } from "@/services/reactions.service";
+import { fetchMyReaction, useOptimisticToggleReaction } from "@/services/reactions.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { ThumbsUp } from "@phosphor-icons/react";
 import { REACTIONS } from "@/constants/feed.constants";
@@ -60,16 +60,35 @@ export function ReactionButton({
       .catch(console.error);
   }, [userId, targetType, targetId]);
 
-  // handle react / un-react
-  const onReact = async (type: string) => {
+  // // handle react / un-react
+  // const onReact = async (type: string) => {
+  //   if (!userId) {
+  //     router.push("/login");
+  //     return;
+  //   }
+  //   try {
+  //     const newType = await toggleReaction(userId, targetType, targetId, type);
+  //     setMyReaction(newType);
+  //     onReactComplete?.();
+  //   } catch (err) {
+  //     console.error("Failed to toggle reaction", err);
+  //   }
+  // };
+
+  // use our optimistic hook
+  const mut = useOptimisticToggleReaction(userId!, targetType, targetId);
+  const onReact = (type: string) => {
     if (!userId) {
-      router.push("/login/ca");
+      router.push("/login");
       return;
     }
     try {
-      const newType = await toggleReaction(userId, targetType, targetId, type);
-      setMyReaction(newType);
-      onReactComplete?.();
+      mut.mutate(type, {
+        onSuccess: newType => {
+          setMyReaction(newType);
+          onReactComplete?.();
+        },
+      });
     } catch (err) {
       console.error("Failed to toggle reaction", err);
     }

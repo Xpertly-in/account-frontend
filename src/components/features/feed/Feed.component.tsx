@@ -9,6 +9,7 @@ import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for bu
 import { MagnifyingGlass, Plus, TrashSimple } from "@phosphor-icons/react";
 import { PostCard } from "./post/PostCard.component";
 import { Container } from "@/components/layout/Container.component";
+import { useFeedRealtimeUpdates } from "@/services/realtime.service";
 import { usePosts, useDeletePost } from "@/services/posts.service";
 import { useCategories } from "@/services/categories.service";
 import { useTags } from "@/services/tags.service";
@@ -54,6 +55,9 @@ export const Feed: React.FC = () => {
     10
   );
   const posts = data?.pages.flatMap(p => p.data) || [];
+
+  // subscribe to Supabase Realtime in a service hook
+  useFeedRealtimeUpdates();
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {

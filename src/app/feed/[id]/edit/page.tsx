@@ -29,7 +29,7 @@ function EditPostContent() {
   useEffect(() => {
     if (!auth.isLoading && !auth.user) {
       localStorage.setItem("postLoginRedirect", window.location.pathname);
-      router.push("/login/ca");
+      router.push("/login");
     }
   }, [auth.user, auth.isLoading, router]);
 

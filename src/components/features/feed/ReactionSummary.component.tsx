@@ -29,28 +29,24 @@ export function ReactionSummary({
     { name: string; avatar?: string; type: string }[]
   >([]);
   const [selectedTab, setSelectedTab] = useState<string>("");
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  useOutsideClick(wrapperRef, () => setListOpen(false));
+  const modalRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(modalRef, () => setListOpen(false));
 
   useEffect(() => {
     if (initialCounts) {
       setCounts(initialCounts);
-      setLatestName(initialLatestNames?.[0] ?? null);
-      // you can skip loading allReactions if you only need names for the “and N others”
+      // set latestName only if there are any reactions
+      const total = Object.values(initialCounts).reduce((a, b) => a + b, 0);
+      setLatestName(total > 0 ? initialLatestNames?.[0] ?? null : null);
       return;
     }
     async function load() {
-      // fetch both reactions and profiles via the service
       const { rows, profiles } = await fetchReactions(targetType, targetId);
-
-      // build counts
       const newCounts: Record<string, number> = {};
       rows.forEach(r => {
         newCounts[r.reaction_type] = (newCounts[r.reaction_type] ?? 0) + 1;
       });
       setCounts(newCounts);
-
-      // merge profile data into each reaction
       const withNames = rows.map(r => {
         const u = profiles.find(p => p.user_id === r.user_id);
         return {
@@ -60,37 +56,41 @@ export function ReactionSummary({
         };
       });
       setAllReactions(withNames);
-
       // default selectedTab to the highest-count reaction
       const first = Object.entries(newCounts)
         .filter(([, c]) => c > 0)
         .sort(([, a], [, b]) => b - a)
         .map(([t]) => t)[0];
       if (first) setSelectedTab(first);
-
       // latest
-      if (withNames.length) {
-        setLatestName(withNames[0].name);
-      }
+      setLatestName(withNames[0]?.name ?? null);
     }
     load();
-  }, [targetType, targetId, userId, version]);
+  }, [targetType, targetId, userId, version, initialCounts, initialLatestNames]);
 
-  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  // ensure latestName clears when counts drop to zero
+  useEffect(() => {
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    if (total === 0) {
+      setLatestName(null);
+    }
+  }, [counts]);
+
+  const total = Object.values(counts).reduce((sum, c) => sum + c, 0);
   const top3 = Object.entries(counts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3)
     .map(([t]) => t);
 
   return (
-    <div className="mb-2">
+    // keep the space but hide contents when no reactions
+    <div className="mb-2 ${total === 0 ? 'invisible' : ''}">
       {/* Top-3 overlapping reaction icons + total count */}
-      <div className="flex items-center" ref={wrapperRef}>
+      <div className="flex items-center">
         {top3.map((type, idx) => {
           const reaction = REACTIONS.find(r => r.type === type)!;
           // higher z-index for earlier icons
           const zClasses = ["z-10", "z-20", "z-30"];
-          const IconComp = reaction.icon;
           return (
             <div key={type} className={`${idx > 0 ? "-ml-2" : ""} ${zClasses[idx]}`}>
               <button
@@ -100,7 +100,7 @@ export function ReactionSummary({
                 }}
                 className={`p-1 rounded-full border-2 border-white ${reaction.bg} ${reaction.fg}`}
               >
-                <IconComp size={16} weight="fill" />
+                <reaction.icon size={16} weight="fill" />
               </button>
             </div>
           );
@@ -121,7 +121,10 @@ export function ReactionSummary({
 
       {listOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="relative bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-md w-full">
+          <div
+            ref={modalRef}
+            className="relative bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-md w-full"
+          >
             {/* Close icon in top-right */}
             <button
               onClick={e => {
@@ -137,26 +140,23 @@ export function ReactionSummary({
 
             {/* ← New: Tab navigation */}
             <div className="flex space-x-4 border-b mb-4">
-              {REACTIONS.filter(r => counts[r.type] > 0).map(r => {
-                const IconComp = r.icon;
-                return (
-                  <button
-                    key={r.type}
-                    onClick={e => {
-                      e.stopPropagation();
-                      setSelectedTab(r.type);
-                    }}
-                    className={`flex items-center space-x-1 text-sm pb-1 ${
-                      selectedTab === r.type
-                        ? "border-b-4 border-primary text-primary"
-                        : "text-gray-500 dark:text-gray-400"
-                    } ${r.fg}`}
-                  >
-                    <IconComp size={20} weight="fill" />
-                    <span>{counts[r.type]}</span>
-                  </button>
-                );
-              })}
+              {REACTIONS.filter(r => counts[r.type] > 0).map(r => (
+                <button
+                  key={r.type}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setSelectedTab(r.type);
+                  }}
+                  className={`flex items-center space-x-1 text-sm pb-1 ${
+                    selectedTab === r.type
+                      ? "border-b-4 border-primary text-primary"
+                      : "text-gray-500 dark:text-gray-400"
+                  } ${r.fg}`}
+                >
+                  <r.icon size={20} weight="fill" />
+                  <span>{counts[r.type]}</span>
+                </button>
+              ))}
             </div>
 
             {/* ← Filtered list */}

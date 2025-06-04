@@ -7,7 +7,7 @@ import { ShareButton } from "@/ui/ShareButton.ui";
 import { CommentSection } from "../comment/CommentSection.component";
 import { PostActionsProps } from "@/types/feed/post.type";
 import { useComments } from "@/services/comments.service";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchReactionsForPosts } from "@/services/reactions.service";
 
 export const PostActions: React.FC<PostActionsProps> = ({ id, title, commentCount }) => {
@@ -16,10 +16,10 @@ export const PostActions: React.FC<PostActionsProps> = ({ id, title, commentCoun
   // only fetch comments when preview is open
   const { data: comments = [] } = useComments(id, showCommentsPreview);
 
+  const qc = useQueryClient();
   const { data: reactionsBatch = {} } = useQuery({
-      queryKey: ["reactionsBatch", id],
-      queryFn:() => fetchReactionsForPosts("post", [id]),
-      enabled: true
+    queryKey: ["reactionsBatch", id],
+    queryFn: () => fetchReactionsForPosts("post", [id]),
   });
   return (
     <>
@@ -47,7 +47,10 @@ export const PostActions: React.FC<PostActionsProps> = ({ id, title, commentCoun
         <ReactionButton
           targetType="post"
           targetId={id}
-          onReactComplete={() => setReactionVersion(v => v + 1)}
+          onReactComplete={() => {
+            qc.invalidateQueries({ queryKey: ["reactionsBatch", id] });
+            setReactionVersion(v => v + 1);
+          }}
         />
         <button
           type="button"

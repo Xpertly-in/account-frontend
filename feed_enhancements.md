@@ -54,9 +54,9 @@ By tackling these areas you’ll improve maintainability, performance, accessibi
 - [ ] Ensure every image (carousel slides, comment attachments) has meaningful `alt` text
 
 ## D. Feature Enhancements
-- [ ] Implement real-time updates via Supabase Realtime or WebSockets (new posts/comments/reactions)
+- [x] Implement real-time updates via Supabase Realtime or WebSockets (new posts/comments/reactions)
 - [ ] Support multi-level nested threads or provide a “View full thread” collapse for deep replies
-- [ ] Show an “Edit draft” state on the CreatePost page if a localStorage draft exists
+- [x] Show an “Edit draft” state on the CreatePost page if a localStorage draft exists
 - [ ] Add optimistic updates for reactions and comments to make the UI snappier
 - [ ] Introduce new filters: date-range picker and “My posts”
 - [ ] Enhance the share dialog with social-media previews (Open Graph) and copy-link feedback

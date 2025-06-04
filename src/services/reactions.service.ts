@@ -1,4 +1,5 @@
 import { supabase } from "@/helper/supabase.helper";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface ReactionRow {
   reaction_type: string;
@@ -10,7 +11,6 @@ export interface ProfileRow {
   name: string;
   profile_picture: string | null;
 }
-
 
 // fetch all reactions + profiles for a target
 export async function fetchReactions(
@@ -25,7 +25,7 @@ export async function fetchReactions(
     .order("created_at", { ascending: false });
   if (rowsErr) throw rowsErr;
 
-  const uids = rows.map((r) => r.user_id);
+  const uids = rows.map(r => r.user_id);
   const { data: profiles, error: profErr } = await supabase
     .from("profiles")
     .select("user_id, name, profile_picture")
@@ -103,9 +103,11 @@ export async function toggleReaction(
   }
 
   // brand new
-  await supabase.from("reactions").insert([
-    { user_id: userId, target_type: targetType, target_id: targetId, reaction_type: type },
-  ]);
+  await supabase
+    .from("reactions")
+    .insert([
+      { user_id: userId, target_type: targetType, target_id: targetId, reaction_type: type },
+    ]);
   await supabase.rpc("update_reaction_count_jsonb", {
     post_id: targetId,
     reaction_type: type,
@@ -157,4 +159,54 @@ export async function fetchReactionsForPosts(
   }
 
   return map;
+}
+
+// Optimistic mutation for toggling a reaction on a post or comment
+export function useOptimisticToggleReaction(
+  userId: string,
+  targetType: "post" | "comment",
+  targetId: number
+) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (type: string) => toggleReaction(userId, targetType, targetId, type),
+    // 1) before the mutation fn runs
+    onMutate: async newType => {
+      await qc.cancelQueries({ queryKey: ["reactionsBatch", targetId] });
+
+      // snapshot the old batch
+      const previous = qc.getQueryData<{ counts: Record<string, number> }>([
+        "reactionsBatch",
+        targetId,
+      ]);
+
+      // apply optimistic update
+      qc.setQueryData(["reactionsBatch", targetId], (old: any) => {
+        const counts = { ...(old?.counts || {}) };
+        // decrement old
+        if (old.myReaction) {
+          counts[old.myReaction] = Math.max((counts[old.myReaction] || 1) - 1, 0);
+        }
+        // increment new
+        counts[newType] = (counts[newType] || 0) + 1;
+        return { counts, myReaction: newType };
+      });
+
+      return { previous };
+    },
+
+    // 2) on error, roll back
+    onError: (_err, _vars, context: any) => {
+      if (context?.previous) {
+        qc.setQueryData(["reactionsBatch", targetId], context.previous);
+      }
+    },
+
+    // 3) always refetch in the end to sync with the server
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["reactionsBatch", targetId] });
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
 }

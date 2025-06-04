@@ -31,7 +31,7 @@ export const CommentSection: React.FC<{ postId: number; comments: Comment[] }> =
     // redirect to login if not authenticated
     if (!auth.isLoading && !auth.user) {
       localStorage.setItem("postLoginRedirect", pathname);
-      router.push("/login/ca");
+      router.push("/login");
       return;
     }
     await create.mutateAsync({ post_id: postId, parent_id, content: c, images: a });
