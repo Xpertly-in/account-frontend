@@ -6,6 +6,13 @@ import { Card } from "@/ui/Card.ui";
 import { useCreateEngagement, useHideLead } from "@/services/leads.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Avatar } from "@/ui/Avatar.ui";
+import {
+  getBadgeVariantForUrgency,
+  getBadgeVariantForContactPreference,
+  getBadgeVariantForStatus,
+  UrgencyLevel,
+  ContactPreference,
+} from "@/types/common.type";
 
 interface LeadCardProps {
   lead: Lead;
@@ -48,35 +55,33 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
     });
   };
 
-  // Helper to get urgency badge color
-  const getUrgencyColor = (urgency: Lead["urgency"]) => {
+  // Helper to map urgency string to UrgencyLevel enum
+  const mapUrgencyToEnum = (urgency: Lead["urgency"]): UrgencyLevel => {
     switch (urgency) {
       case "Immediately":
-        return "bg-red-500 text-white";
+        return UrgencyLevel.IMMEDIATELY;
       case "Within a week":
-        return "bg-orange-500 text-white";
+        return UrgencyLevel.WITHIN_A_WEEK;
       case "This month":
-        return "bg-blue-500 text-white";
+        return UrgencyLevel.THIS_MONTH;
       case "Just exploring":
-        return "bg-green-500 text-white";
+        return UrgencyLevel.FLEXIBLE;
       default:
-        return "bg-gray-500 text-white";
+        return UrgencyLevel.FLEXIBLE;
     }
   };
 
-  // Helper to get status badge style
-  const getStatusStyle = (status: Lead["status"]) => {
-    switch (status) {
-      case "new":
-        return "inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400";
-      case "contacted":
-        return "inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-      case "closed":
-        return "inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-      case "archived":
-        return "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/20 dark:text-amber-400";
+  // Helper to map contact preference string to ContactPreference enum
+  const mapContactPreferenceToEnum = (preference: string): ContactPreference => {
+    switch (preference) {
+      case "Phone":
+        return ContactPreference.PHONE;
+      case "Email":
+        return ContactPreference.EMAIL;
+      case "WhatsApp":
+        return ContactPreference.WHATSAPP;
       default:
-        return "inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
+        return ContactPreference.EMAIL;
     }
   };
 
@@ -209,11 +214,8 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
               </div>
             </div>
           </div>
-          <Badge
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${getUrgencyColor(
-              lead.urgency
-            )}`}
-          >
+          {/* Enhanced Badge for urgency */}
+          <Badge variant={getBadgeVariantForUrgency(mapUrgencyToEnum(lead.urgency))}>
             {lead.urgency}
           </Badge>
         </div>
@@ -245,15 +247,22 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
                 Preferred Contact:
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                <div className="font-medium text-gray-700 dark:text-gray-300">
-                  {lead.contactPreference}
+                <div className="flex items-center gap-2">
+                  {/* Enhanced Badge for contact preference */}
+                  <Badge
+                    variant={getBadgeVariantForContactPreference(
+                      mapContactPreferenceToEnum(lead.contactPreference)
+                    )}
+                  >
+                    {lead.contactPreference}
+                  </Badge>
                 </div>
                 {showContactInfo ? (
-                  <div className="mt-1 font-medium text-gray-900 dark:text-gray-200">
+                  <div className="mt-2 font-medium text-gray-900 dark:text-gray-200">
                     {contactInfo || lead.contactInfo}
                   </div>
                 ) : (
-                  <div className="mt-1 text-gray-500 dark:text-gray-400">
+                  <div className="mt-2 text-gray-500 dark:text-gray-400">
                     Click "View Contact" to see details
                   </div>
                 )}
@@ -291,10 +300,10 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
         {/* Footer with actions */}
         <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-700">
           <div className="flex items-center gap-4">
-            {/* Status Badge */}
-            <div className={getStatusStyle(lead.status)}>
+            {/* Enhanced Badge for status */}
+            <Badge variant={getBadgeVariantForStatus(lead.status)}>
               {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
-            </div>
+            </Badge>
           </div>
           <div className="flex gap-2">
             <Button
