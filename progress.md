@@ -501,11 +501,11 @@ create table public.lead_engagements (
 
 ### Forum System
 
-+ [x] **Forum Posts** - CAs can create and share professional content
-+ [x] **Post Interactions** - Likes and reactions implemented
-+ [x] **Similar Posts** - Related posts displayed in detail view
-+ [ ] **Comments** - Comments feature pending
-+ [ ] **Content Moderation** - Feed guidelines and moderation tools
+- [x] **Forum Posts** - CAs can create and share professional content
+- [x] **Post Interactions** - Likes and reactions implemented
+- [x] **Similar Posts** - Related posts displayed in detail view
+- [ ] **Comments** - Comments feature pending
+- [ ] **Content Moderation** - Feed guidelines and moderation tools
 
 ## Planned Features 📋
 
@@ -900,3 +900,309 @@ create table public.lead_engagements (
 - [x] Added migration scripts and maintenance procedures
 - [x] Updated PRD to reference database schema documentation
 - [x] Established database schema as single source of truth for data decisions
+
+---
+
+## 🎨 Contact Requests UI Components Development (Current Phase)
+
+**OBJECTIVE**: Build missing UI components required for the Contact Requests feature implementation.
+
+**Current State Analysis**:
+
+- ✅ **Existing UI Foundation**: 85% of required components already exist and are production-ready
+- ✅ **Design System**: Consistent design tokens, dark mode, accessibility, mobile-first approach
+- ✅ **Component Architecture**: Well-structured with TypeScript, CVA variants, Phosphor icons
+- ❌ **Missing Components**: 15% specialized components needed for Contact Requests functionality
+
+### Phase 1: Essential Missing UI Components
+
+#### Task 1: DateRangePicker Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: High
+- **Description**: Create date range picker for filtering contact requests by date
+- **Requirements**:
+  - [ ] Build `DateRangePicker.ui.tsx` component (under 200 lines)
+  - [ ] Support "From" and "To" date selection
+  - [ ] Add preset date ranges (Today, This Week, This Month, Last 30 Days)
+  - [ ] Implement date validation (From ≤ To)
+  - [ ] Add clear date range functionality
+  - [ ] Mobile-friendly date selection interface
+  - [ ] Dark mode support with consistent styling
+  - [ ] Accessibility compliance (ARIA labels, keyboard navigation)
+  - [ ] Integration with existing form validation patterns
+- **Dependencies**: None (can use existing Input.ui.tsx as base)
+- **Estimated Time**: 4-6 hours
+
+#### Task 2: FilterChips Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: High
+- **Description**: Display active filters as removable chips for better UX
+- **Requirements**:
+  - [ ] Build `FilterChips.ui.tsx` component (under 200 lines)
+  - [ ] Display applied filters as individual chips
+  - [ ] Add remove button (X) for each chip
+  - [ ] Implement "Clear All Filters" functionality
+  - [ ] Show filter count in header (e.g., "3 filters applied")
+  - [ ] Support different chip types (status, urgency, date, search)
+  - [ ] Responsive design with proper wrapping
+  - [ ] Hover states and smooth animations
+  - [ ] Integration with existing filter state management
+- **Dependencies**: Badge.ui.tsx, Button.ui.tsx
+- **Estimated Time**: 3-4 hours
+
+#### Task 3: Enhanced Badge Variants ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Medium
+- **Description**: Extend existing Badge component with urgency and status variants
+- **Requirements**:
+  - [ ] Add urgency variants to `Badge.ui.tsx`:
+    - `urgent`: Red styling for "Immediately" urgency
+    - `high`: Orange styling for "Within a week" urgency
+    - `medium`: Yellow styling for "This month" urgency
+    - `low`: Green styling for "Just exploring" urgency
+  - [ ] Add contact request status variants:
+    - `new`: Blue styling for new requests
+    - `replied`: Green styling for replied requests
+    - `ignored`: Gray styling for ignored requests
+  - [ ] Maintain existing variants and backward compatibility
+  - [ ] Update TypeScript types and exports
+  - [ ] Ensure dark mode compatibility
+- **Dependencies**: Existing Badge.ui.tsx
+- **Estimated Time**: 1-2 hours
+
+#### Task 4: StatusDropdown Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Medium
+- **Description**: Specialized dropdown for contact request status management
+- **Requirements**:
+  - [ ] Build `StatusDropdown.ui.tsx` component (under 200 lines)
+  - [ ] Support status transitions (New → Replied/Ignored)
+  - [ ] Visual status indicators with colors and icons
+  - [ ] Confirmation for destructive actions (ignore)
+  - [ ] Keyboard navigation support
+  - [ ] Loading states during status updates
+  - [ ] Integration with contact request update API
+  - [ ] Responsive design for mobile devices
+  - [ ] Accessibility compliance
+- **Dependencies**: Select.ui.tsx, Badge.ui.tsx, Button.ui.tsx
+- **Estimated Time**: 3-4 hours
+
+### Phase 2: Advanced UI Components
+
+#### Task 5: SearchInput Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Low
+- **Description**: Enhanced search input with clear button and search icon
+- **Requirements**:
+  - [ ] Build `SearchInput.ui.tsx` component (under 200 lines)
+  - [ ] Search icon on the left side
+  - [ ] Clear button (X) when input has value
+  - [ ] Debounced search functionality
+  - [ ] Loading state indicator
+  - [ ] Placeholder text customization
+  - [ ] Integration with existing Input.ui.tsx styling
+  - [ ] Mobile-optimized touch targets
+  - [ ] Keyboard shortcuts (Escape to clear)
+- **Dependencies**: Input.ui.tsx, Button.ui.tsx
+- **Estimated Time**: 2-3 hours
+
+#### Task 6: RelativeTime Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Low
+- **Description**: Display timestamps in relative format ("2 hours ago")
+- **Requirements**:
+  - [ ] Build `RelativeTime.ui.tsx` component (under 200 lines)
+  - [ ] Support relative time formatting (seconds, minutes, hours, days, weeks)
+  - [ ] Automatic updates for live timestamps
+  - [ ] Tooltip showing exact timestamp on hover
+  - [ ] Internationalization support (future-ready)
+  - [ ] Performance optimization for multiple instances
+  - [ ] Consistent styling with existing text components
+  - [ ] Accessibility with proper time elements
+- **Dependencies**: None (utility-focused component)
+- **Estimated Time**: 2-3 hours
+
+#### Task 7: FilterModal Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Low
+- **Description**: Mobile-optimized filter overlay for small screens
+- **Requirements**:
+  - [ ] Build `FilterModal.ui.tsx` component (under 200 lines)
+  - [ ] Full-screen modal for mobile devices
+  - [ ] Slide-up animation from bottom
+  - [ ] Filter sections with collapsible groups
+  - [ ] Apply/Cancel buttons with proper actions
+  - [ ] Filter count indicators
+  - [ ] Backdrop click to close
+  - [ ] Escape key to close
+  - [ ] Scroll handling for long filter lists
+  - [ ] Integration with existing filter components
+- **Dependencies**: Existing modal/dialog patterns, Button.ui.tsx
+- **Estimated Time**: 4-5 hours
+
+### Phase 3: Specialized Components
+
+#### Task 8: MessagePreview Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Low
+- **Description**: Truncated message display with expand functionality
+- **Requirements**:
+  - [ ] Build `MessagePreview.ui.tsx` component (under 200 lines)
+  - [ ] Configurable character limit for truncation
+  - [ ] "Read more" / "Read less" toggle functionality
+  - [ ] Preserve line breaks and basic formatting
+  - [ ] Smooth expand/collapse animations
+  - [ ] Responsive design for different screen sizes
+  - [ ] Integration with existing text styling
+  - [ ] Accessibility with proper ARIA labels
+- **Dependencies**: Button.ui.tsx
+- **Estimated Time**: 2-3 hours
+
+#### Task 9: UrgencyBadge Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Low
+- **Description**: Specialized urgency indicators with icons and colors
+- **Requirements**:
+  - [ ] Build `UrgencyBadge.ui.tsx` component (under 200 lines)
+  - [ ] Color-coded urgency levels with appropriate icons
+  - [ ] Consistent sizing and spacing
+  - [ ] Tooltip with urgency description
+  - [ ] Animation for high-priority items
+  - [ ] Integration with existing Badge.ui.tsx patterns
+  - [ ] Dark mode compatibility
+  - [ ] Accessibility compliance
+- **Dependencies**: Badge.ui.tsx, Phosphor icons
+- **Estimated Time**: 1-2 hours
+
+#### Task 10: ContactPreferenceBadge Component ⚠️ **PENDING**
+
+- **Status**: Not Started
+- **Priority**: Low
+- **Description**: Visual indicators for contact preferences (Phone/WhatsApp/Email)
+- **Requirements**:
+  - [ ] Build `ContactPreferenceBadge.ui.tsx` component (under 200 lines)
+  - [ ] Icons for each contact method (Phone, WhatsApp, Email)
+  - [ ] Consistent styling with other badges
+  - [ ] Tooltip with contact preference details
+  - [ ] Responsive sizing for different contexts
+  - [ ] Integration with existing design system
+  - [ ] Dark mode support
+  - [ ] Accessibility with proper labels
+- **Dependencies**: Badge.ui.tsx, Phosphor icons
+- **Estimated Time**: 1-2 hours
+
+### Implementation Strategy:
+
+#### **Phase 1 Priority Order** (Essential Components):
+
+1. **DateRangePicker** - Critical for filtering functionality
+2. **FilterChips** - Important for UX and filter management
+3. **Enhanced Badge Variants** - Quick win, extends existing component
+4. **StatusDropdown** - Core functionality for CA actions
+
+#### **Phase 2 Priority Order** (Advanced Components):
+
+5. **SearchInput** - Enhances search experience
+6. **RelativeTime** - Improves timestamp display
+7. **FilterModal** - Mobile optimization
+
+#### **Phase 3 Priority Order** (Specialized Components):
+
+8. **MessagePreview** - Content display enhancement
+9. **UrgencyBadge** - Visual improvement
+10. **ContactPreferenceBadge** - Visual improvement
+
+### Success Metrics:
+
+- ✅ All components follow existing design system patterns
+- ✅ Mobile-first responsive design maintained
+- ✅ Dark mode support for all new components
+- ✅ Accessibility compliance (WCAG AA standards)
+- ✅ TypeScript strict mode compatibility
+- ✅ Component size limit (200 lines max) maintained
+- ✅ Integration with existing state management
+- ✅ Comprehensive test coverage for each component
+
+### Dependencies & Integration:
+
+- **Existing UI Foundation**: Leverages 85% of existing components
+- **Design System**: Maintains consistency with current patterns
+- **State Management**: Integrates with existing Jotai atoms
+- **Testing**: Follows established TDD methodology
+- **Documentation**: Updates component documentation
+
+---
+
+## 🧹 UI Component Structure Cleanup (June 14, 2025)
+
+**OBJECTIVE**: Consolidate duplicate UI folder structure and maintain consistent component organization.
+
+### Issue Identified:
+
+- **Duplicate UI Directories**: Found two separate UI directories with different purposes:
+  - `src/components/ui/` - 4 shadcn UI components (button, card, badge, separator)
+  - `src/ui/` - 21 custom UI components following project naming conventions
+
+### Analysis Results:
+
+- **Usage Pattern**: 90%+ of the application used `@/ui/` imports (custom components)
+- **Naming Conflicts**: Both directories had similar components but different implementations
+- **Import Inconsistency**: Only `CAProfileDetails.component.tsx` used shadcn components
+- **Project Standards**: Custom components follow `.ui.tsx` naming convention vs shadcn lowercase
+
+### Resolution Implemented: ✅
+
+1. **Updated Import References**:
+
+   - ✅ Updated `CAProfileDetails.component.tsx` to use custom UI components
+   - ✅ Changed imports from `@/components/ui/button` to `@/ui/Button.ui`
+   - ✅ Removed unused `Separator` and `cn` imports
+
+2. **Removed Duplicate Directory**:
+
+   - ✅ Deleted `src/components/ui/` directory completely
+   - ✅ Verified no remaining references to old path
+   - ✅ Maintained all existing functionality
+
+3. **Verified Build Integrity**:
+   - ✅ Confirmed no import errors from UI changes
+   - ✅ All UI components now consistently use `src/ui/` directory
+   - ✅ Maintained project naming conventions (`.ui.tsx`)
+
+### Final UI Structure:
+
+```
+src/
+  ├── ui/                    # Single UI directory (21 components)
+  │   ├── Button.ui.tsx      # Custom button component
+  │   ├── Card.ui.tsx        # Custom card component
+  │   ├── Badge.ui.tsx       # Custom badge component
+  │   ├── Combobox.ui.tsx    # Advanced combobox component
+  │   └── ...                # All other custom UI components
+  └── components/            # Feature components only
+      ├── features/          # Feature-specific components
+      ├── leads/             # Lead management components
+      └── layout/            # Layout components
+```
+
+### Benefits Achieved:
+
+- ✅ **Consistent Import Pattern**: All UI components use `@/ui/ComponentName.ui` format
+- ✅ **Eliminated Confusion**: Single source of truth for UI components
+- ✅ **Maintained Standards**: All components follow project naming conventions
+- ✅ **Reduced Complexity**: No more dual UI directories to maintain
+- ✅ **Better Organization**: Clear separation between UI and feature components
+
+**Date**: June 14, 2025  
+**Impact**: Improved code organization and eliminated duplicate UI component directories
+
+---

@@ -1,12 +1,22 @@
-'use client';
+"use client";
 
-import { FC } from 'react';
-import { Star, MapPin, Briefcase, GraduationCap, Globe, LinkedinLogo, Phone, Envelope, Clock, CheckCircle } from '@phosphor-icons/react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { FC } from "react";
+import {
+  Star,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  Globe,
+  LinkedinLogo,
+  Phone,
+  Envelope,
+  Clock,
+  CheckCircle,
+} from "@phosphor-icons/react";
+import { Button } from "@/ui/Button.ui";
+import { Card } from "@/ui/Card.ui";
+import { Badge } from "@/ui/Badge.ui";
 
 interface CAProfileDetailsProps {
   ca: {
@@ -67,17 +77,17 @@ const CAProfileDetails: FC<CAProfileDetailsProps> = ({ ca, experiences, educatio
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] opacity-10 dark:opacity-5" />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/90" />
-        
+
         {/* Decorative glows */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400 to-blue-200 rounded-full filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/3 dark:opacity-0"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-300 to-blue-200 rounded-full filter blur-3xl opacity-20 translate-y-1/3 -translate-x-1/2 dark:opacity-0"></div>
-        
+
         <div className="container relative mx-auto px-4 h-full flex items-center">
           <div className="flex flex-col md:flex-row items-center gap-6 w-full">
             <div className="relative">
               <div className="relative h-40 w-40 rounded-full border-4 border-background overflow-hidden bg-background shadow-xl">
                 <img
-                  src={ca.imageUrl || '/placeholder-avatar.png'}
+                  src={ca.imageUrl || "/placeholder-avatar.png"}
                   alt={ca.name}
                   className="h-full w-full object-cover"
                 />
@@ -95,11 +105,18 @@ const CAProfileDetails: FC<CAProfileDetailsProps> = ({ ca, experiences, educatio
                   <p className="text-lg text-background/90">{ca.qualification}</p>
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" size="lg" className="gap-2 bg-background/10 hover:bg-background/20 text-background border-background/20">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="gap-2 bg-background/10 hover:bg-background/20 text-background border-background/20"
+                  >
                     <Phone size={20} />
                     Contact
                   </Button>
-                  <Button size="lg" className="gap-2 bg-background text-primary hover:bg-background/90">
+                  <Button
+                    size="lg"
+                    className="gap-2 bg-background text-primary hover:bg-background/90"
+                  >
                     <Envelope size={20} />
                     Message
                   </Button>
@@ -155,19 +172,21 @@ const CAProfileDetails: FC<CAProfileDetailsProps> = ({ ca, experiences, educatio
             <Card className="p-4">
               <h2 className="text-base font-semibold mb-2">Work Experience</h2>
               <div className="space-y-6">
-                {experiences.map((exp) => (
-                  <div key={exp.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:h-full before:w-px before:bg-border">
+                {experiences.map(exp => (
+                  <div
+                    key={exp.id}
+                    className="relative pl-6 before:absolute before:left-0 before:top-0 before:h-full before:w-px before:bg-border"
+                  >
                     <div className="absolute left-0 top-0 -ml-[5px] h-3 w-3 rounded-full border-2 border-primary bg-background" />
                     <div className="space-y-1">
                       <h3 className="font-medium">{exp.title}</h3>
                       <p className="text-sm text-muted-foreground">{exp.companyName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(exp.startDate).getFullYear()} - {exp.isCurrent ? 'Present' : new Date(exp.endDate).getFullYear()}
+                        {new Date(exp.startDate).getFullYear()} -{" "}
+                        {exp.isCurrent ? "Present" : new Date(exp.endDate).getFullYear()}
                       </p>
                       <p className="text-sm text-muted-foreground">{exp.location}</p>
-                      {exp.description && (
-                        <p className="text-sm mt-2">{exp.description}</p>
-                      )}
+                      {exp.description && <p className="text-sm mt-2">{exp.description}</p>}
                     </div>
                   </div>
                 ))}
@@ -178,21 +197,23 @@ const CAProfileDetails: FC<CAProfileDetailsProps> = ({ ca, experiences, educatio
             <Card className="p-4">
               <h2 className="text-base font-semibold mb-2">Education</h2>
               <div className="space-y-6">
-                {educations.map((edu) => (
-                  <div key={edu.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:h-full before:w-px before:bg-border">
+                {educations.map(edu => (
+                  <div
+                    key={edu.id}
+                    className="relative pl-6 before:absolute before:left-0 before:top-0 before:h-full before:w-px before:bg-border"
+                  >
                     <div className="absolute left-0 top-0 -ml-[5px] h-3 w-3 rounded-full border-2 border-primary bg-background" />
                     <div className="space-y-1">
                       <h3 className="font-medium">{edu.degree}</h3>
                       <p className="text-sm text-muted-foreground">{edu.instituteName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(edu.startDate).getFullYear()} - {edu.isCurrent ? 'Present' : new Date(edu.endDate).getFullYear()}
+                        {new Date(edu.startDate).getFullYear()} -{" "}
+                        {edu.isCurrent ? "Present" : new Date(edu.endDate).getFullYear()}
                       </p>
                       {edu.grade && (
                         <p className="text-sm text-muted-foreground">Grade: {edu.grade}</p>
                       )}
-                      {edu.description && (
-                        <p className="text-sm mt-2">{edu.description}</p>
-                      )}
+                      {edu.description && <p className="text-sm mt-2">{edu.description}</p>}
                     </div>
                   </div>
                 ))}
@@ -221,7 +242,12 @@ const CAProfileDetails: FC<CAProfileDetailsProps> = ({ ca, experiences, educatio
                 {ca.website && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Globe size={20} />
-                    <a href={ca.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                    <a
+                      href={ca.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-primary"
+                    >
                       {ca.website}
                     </a>
                   </div>
@@ -229,7 +255,12 @@ const CAProfileDetails: FC<CAProfileDetailsProps> = ({ ca, experiences, educatio
                 {ca.linkedin && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <LinkedinLogo size={20} />
-                    <a href={ca.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                    <a
+                      href={ca.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-primary"
+                    >
                       LinkedIn Profile
                     </a>
                   </div>
@@ -278,4 +309,4 @@ const CAProfileDetails: FC<CAProfileDetailsProps> = ({ ca, experiences, educatio
   );
 };
 
-export default CAProfileDetails; 
+export default CAProfileDetails;
