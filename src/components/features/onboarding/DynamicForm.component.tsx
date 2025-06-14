@@ -1254,7 +1254,7 @@ export default function DynamicForm() {
             label={field.label}
             description={field.description}
             accept={field.accept}
-            onChange={(file: File | null) => handleInputChange(field.id, file)}
+            onChange={(files: File[]) => handleInputChange(field.id, files)}
             required={field.required}
             error={error}
           />

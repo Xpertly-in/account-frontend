@@ -1,16 +1,19 @@
-// src/components/features/forum/CreatePost.component.tsx
+// src/components/features/feed/CreatePost.component.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation"; // added
-import { supabase } from "@/helper/supabase.helper";
-import { Card } from "@/ui/Card.ui";
+import { useCreatePostMutation, useUpdatePostMutation } from "@/services/posts.service";
+import { useCategories, useUpsertCategory } from "@/services/categories.service";
+import { useTags, useUpsertTag } from "@/services/tags.service";
+import { uploadImages, getSignedUrls } from "@/services/storage.service";
 import { Input } from "@/ui/Input.ui";
 import { FileUpload } from "@/ui/FileUpload.ui";
 import { Button } from "@/ui/Button.ui";
 import { Tag, X } from "@phosphor-icons/react";
 import { useAuth } from "@/store/context/Auth.provider";
+import { PostPayload } from "@/types/feed/post.type";
 
 // Dynamically import ReactQuill with no SSR
 const ReactQuill = dynamic(() => import("react-quill"), {
@@ -42,6 +45,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
 }) => {
   const router = useRouter(); // added for Cancel
   const { auth } = useAuth();
+  const createPostMutation = useCreatePostMutation();
+  const updatePostMutation = useUpdatePostMutation();
   if (auth.isLoading || !auth.user) return null;
 
   // --- State ---
@@ -50,51 +55,86 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   const [category, setCategory] = useState(initialCategory);
   const [tags, setTags] = useState<string[]>(initialTags);
   const [allImages, setAllImages] = useState<(File | string)[]>([...initialImages]);
+  const [signedUrlsCache, setSignedUrlsCache] = useState<Record<string, string>>({});
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  // track if there’s a saved draft
+  const [hasDraft, setHasDraft] = useState(false);
+  const isFirstSave = useRef(true);
+
+  // Revoke object URLs on unmount to avoid leaks
+  useEffect(() => {
+    return () => previewUrls.forEach(url => URL.revokeObjectURL(url));
+  }, [previewUrls]);
+
   // enum lists & helpers
-  const [categoriesList, setCategoriesList] = useState<string[]>([]);
-  const [tagsOptions, setTagsOptions] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
+
+  // replace manual effect+state with React-Query hooks:
+  const { data: categoriesList = [] } = useCategories();
+  const { data: tagsList = [] } = useTags();
+
+  // category/tag mutations
+  const upsertCategoryMutation = useUpsertCategory();
+  const upsertTagMutation = useUpsertTag();
 
   // --- Load draft if no initialContent ---
   useEffect(() => {
     if (!initialContent) {
       const draft = localStorage.getItem("create-post-draft");
       if (draft) {
+        setHasDraft(true);
         const data = JSON.parse(draft);
         setTitle(data.title || ""); // added
         setContent(data.content || "");
+        setCategory(data.category || "");
         setTags(data.tags || []);
         setAllImages(data.allImages || []);
       }
     }
   }, [initialContent]);
 
-  // --- Fetch categories & tags once ---
-  useEffect(() => {
-    (async () => {
-      const { data: catData } = await supabase.from("categories").select("name");
-      setCategoriesList(catData?.map(c => c.name) || []);
-
-      const { data: tagData } = await supabase.from("tags").select("name");
-      setTagsOptions(tagData?.map(t => t.name) || []);
-    })();
-  }, []);
-
+  // discard the saved draft
+  const handleDiscardDraft = () => {
+    localStorage.removeItem("create-post-draft");
+    setHasDraft(false);
+    setTitle("");
+    setContent("");
+    setCategory("");
+    setTags([]);
+    setAllImages([]);
+    setPreviewUrls([]);
+  };
   // --- Save draft on every change ---
   useEffect(() => {
-    const draft = {
-      title, // added
-      content,
-      category,
-      tags,
-      allImages,
-    };
+    if (isFirstSave.current) {
+      isFirstSave.current = false;
+      return;
+    }
+    const draft = { title, content, category, tags, allImages };
     localStorage.setItem("create-post-draft", JSON.stringify(draft));
   }, [title, content, category, tags, allImages]);
+
+  // fetch signed URLs for any string paths so we can preview them
+  useEffect(() => {
+    const pathsToFetch = allImages
+      .filter((img): img is string => typeof img === "string")
+      .filter(path => !/^https?:\/\//.test(path)) // only raw storage paths
+      .filter(path => !signedUrlsCache[path]); // not yet fetched
+    if (pathsToFetch.length === 0) return;
+    getSignedUrls(pathsToFetch).then(urls => {
+      setSignedUrlsCache(prev => {
+        const entries: Record<string, string> = {};
+        pathsToFetch.forEach((p, i) => {
+          entries[p] = urls[i];
+        });
+        return { ...prev, ...entries };
+      });
+    });
+  }, [allImages, signedUrlsCache]);
 
   // ... existing handleAddTag, handleRemoveTag, handleImageChange ...
   const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -103,9 +143,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
       const newTag = tagInput.trim();
       if (!tags.includes(newTag)) {
         // upsert tag
-        if (!tagsOptions.includes(newTag)) {
-          await supabase.from("tags").insert({ name: newTag });
-          setTagsOptions(prev => [...prev, newTag]);
+        if (!tagsList.includes(newTag)) {
+          await upsertTagMutation.mutateAsync(newTag);
         }
         setTags([...tags, newTag]);
       }
@@ -117,12 +156,6 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     setTags(tags.filter(t => t !== remove));
   };
 
-  const handleImageChange = (file: File | null) => {
-    if (file) {
-      setAllImages(prev => [...prev, file]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -131,57 +164,37 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     let finalCategory = category;
     if (creatingCategory && newCategory.trim()) {
       const name = newCategory.trim();
-      await supabase.from("categories").insert({ name });
-      setCategoriesList(prev => [...prev, name]);
+      await upsertCategoryMutation.mutateAsync(name);
       finalCategory = name;
     }
 
     // upload new files & gather URLs
     const newFiles = allImages.filter(img => img instanceof File) as File[];
     const existingUrls = allImages.filter(img => typeof img === "string") as string[];
-    const newUrls = await Promise.all(
-      newFiles.map(async file => {
-        const ts = Date.now();
-        const ext = file.name.split(".").pop();
-        const path = `${ts}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("images")
-          .upload(path, file, { cacheControl: "3600" });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("images").getPublicUrl(path);
-        return data.publicUrl;
-      })
-    );
+    // delegate uploads to service
+    const newUrls = await uploadImages(newFiles, "forum/post");
     const imageUrls = [...existingUrls, ...newUrls];
     const authorId = auth.user?.id;
 
-    // include title in payload
-    const payload = {
+    const postPayload: PostPayload = {
       title,
       content,
       category: finalCategory,
       tags,
       images: imageUrls,
-      author_id: authorId,
-      is_deleted: false,
-      reaction_counts: 0,
+      author_id: authorId!,
     };
 
-    let error;
     if (postId) {
-      ({ error } = await supabase.from("posts").update(payload).eq("id", postId));
-      if (!error) onPostUpdated?.();
+      await updatePostMutation.mutateAsync({
+        id: postId,
+        data: { ...postPayload, updated_at: new Date().toISOString() },
+      });
+      onPostUpdated?.();
     } else {
-      ({ error } = await supabase.from("posts").insert([payload]));
-      if (!error) {
-        // clear after successful post
-        setTitle(""); // added
-        setContent("");
-        setTags([]);
-        setAllImages([]);
-        localStorage.removeItem("create-post-draft");
-        onPostCreated?.();
-      }
+      await createPostMutation.mutateAsync(postPayload);
+      // clear…
+      onPostCreated?.();
     }
 
     setIsSubmitting(false);
@@ -190,8 +203,19 @@ export const CreatePost: React.FC<CreatePostProps> = ({
   return (
     <div className="flex flex-col h-screen bg-background dark:bg-gray-900">
       {/* Header: show Create vs Edit */}
-      <header className="px-4 py-3 border-b dark:border-gray-700">
-        <h2 className="text-lg font-semibold"> {postId ? "Edit Post" : "Create Post"}</h2>
+      <header className="px-4 py-3 border-b dark:border-gray-700 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">
+          {postId ? "Edit Post" : hasDraft ? "Edit Draft" : "Create Post"}
+        </h2>
+        {!postId && hasDraft && (
+          <button
+            type="button"
+            onClick={handleDiscardDraft}
+            className="text-sm text-red-500 hover:underline"
+          >
+            Discard Draft
+          </button>
+        )}
       </header>
       {/* Body */}
       <div className="flex-1 overflow-auto p-4">
@@ -209,7 +233,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
               className="w-full rounded border px-3 py-2 focus:ring-primary focus:border-primary"
               maxLength={185}
             />
-            <p className="text-xs text-gray-500">{title.length}/185 characters</p>
+            <p className="text-xs text-gray-500">{title?.length}/185 characters</p>
           </div>
 
           {/* Content */}
@@ -238,8 +262,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
                 if (e.key === "Enter" && creatingCategory && newCategory.trim()) {
                   e.preventDefault();
                   const name = newCategory.trim();
-                  await supabase.from("categories").upsert({ name });
-                  setCategoriesList(prev => Array.from(new Set([...prev, name])));
+                  await upsertCategoryMutation.mutateAsync(name);
                   setCategory(name);
                   setNewCategory("");
                   setCreatingCategory(false);
@@ -266,14 +289,14 @@ export const CreatePost: React.FC<CreatePostProps> = ({
                 >
                   <Tag size={12} weight="bold" />
                   <span>{tag}</span>
-                  <button
+                  <Button
                     type="button"
                     aria-label={`Remove tag ${tag}`}
                     className="p-0.5 hover:bg-primary/80 rounded-full"
                     onClick={() => handleRemoveTag(tag)}
                   >
                     <X size={12} weight="bold" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -285,7 +308,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
               onKeyDown={handleAddTag}
             />
             <datalist id="tags-list">
-              {tagsOptions.map(t => (
+              {tagsList.map(t => (
                 <option key={t} value={t} />
               ))}
             </datalist>
@@ -295,22 +318,33 @@ export const CreatePost: React.FC<CreatePostProps> = ({
           <FileUpload
             id="post-images"
             label="Add images (optional)"
-            accept="image/*"
-            onChange={file => file && setAllImages(p => [...p, file])}
+            accept="image/*,video/*"
+            onChange={files => setAllImages(curr => [...curr, ...files])}
           />
           {allImages.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {allImages.map((img, idx) => (
-                <div key={idx} className="relative h-24 w-full overflow-hidden rounded-lg">
+              {allImages.map((img, idx: number) => (
+                <div key={idx} className="relative h-full w-full overflow-hidden rounded-lg">
                   <img
-                    src={typeof img === "string" ? img : URL.createObjectURL(img)}
+                    src={
+                      typeof img === "string"
+                        ? signedUrlsCache[img] ?? ""
+                        : URL.createObjectURL(img)
+                    }
                     alt={`Preview ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />
                   <button
                     type="button"
                     aria-label="Remove image"
-                    onClick={() => setAllImages(prev => prev.filter((_, j) => j !== idx))}
+                    onClick={() => {
+                      // revoke the URL for this file
+                      if (img instanceof File) {
+                        URL.revokeObjectURL(previewUrls[idx]);
+                        setPreviewUrls(prev => prev.filter((_, j) => j !== idx));
+                      }
+                      setAllImages(prev => prev.filter((_, j) => j !== idx));
+                    }}
                     className="absolute top-1 right-1 bg-black/50 text-white p-0.5 rounded-full hover:bg-black/70"
                   >
                     <X size={12} weight="bold" />

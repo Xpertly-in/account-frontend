@@ -105,33 +105,55 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
         return;
       }
 
-      // After successful login, first check role
+      // After successful login, first check role/profile
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("role, onboarding_completed")
         .eq("user_id", user.id)
         .single();
 
-      if (error) {
+      if (error && error.code !== "PGRST116") {
         console.error("Error fetching profile:", error);
         toast.error("An error occurred while checking your profile");
         return;
       }
 
+      // Check for stored redirect path
+      const storedRedirect = localStorage.getItem("postLoginRedirect");
+
+      // If no profile exists, redirect to role selection
+      if (!profile) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+        router.push("/role-select");
+        return;
+      }
+
       // If no role is set, redirect to role selection
-      if (!profile?.role) {
+      if (!profile.role) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
         router.push("/role-select");
         return;
       }
 
       // If role exists, then check onboarding status
       if (!profile.onboarding_completed) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
         router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
         return;
       }
 
-      // If both role exists and onboarding is completed, go to dashboard
-      router.push("/ca/dashboard");
+      // If both role exists and onboarding is completed, check for stored redirect
+      if (storedRedirect) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+        router.push(storedRedirect);
+      } else {
+        // Default redirect based on role
+        if (profile.role === UserRole.ACCOUNTANT) {
+          router.push("/ca/dashboard");
+        } else {
+          router.push("/user/dashboard");
+        }
+      }
     } catch (error) {
       // Track login error
       trackFormSubmission("login_form", false, {
@@ -161,7 +183,7 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
     if (auth.user) {
       // Only handle non-Google auth redirects here
       if (!window.location.pathname.includes('/auth/callback')) {
-        checkAndRedirect();
+        // checkAndRedirect(); // Remove this line, logic is now in handleSubmit
       }
     }
   }, [auth.user]);

@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { CA } from "@/types/ca.type";
 
 interface DatabaseProfile {
+  user_id: string;
   id: string;
   name: string;
   profile_picture: string;
@@ -37,7 +38,7 @@ export default function Search() {
       let query = supabase
         .from('profiles')
         .select(`
-          id,
+          user_id,
           name,
           profile_picture,
           about,
@@ -50,10 +51,11 @@ export default function Search() {
             areas_of_expertise
           )
         `)
-        .eq('onboarding_completed', true);
+        .eq('onboarding_completed', true)
+        .eq('role', 'ACCOUNTANT');
 
       if (location) {
-        query = query.or(`address.city.ilike.%${location}%,address.state.ilike.%${location}%`);
+        query = query.or(`(address.city.ilike.%${location}%,address.state.ilike.%${location}%)`);
       }
 
       const { data, error } = await query;
@@ -62,7 +64,7 @@ export default function Search() {
 
       // Transform the data to match our CA interface
       const transformedData = (data as unknown as DatabaseProfile[]).map(ca => ({
-        id: ca.id,
+        id: ca.user_id,
         name: ca.name,
         imageUrl: ca.profile_picture,
         location: `${ca.address?.city || ''}, ${ca.address?.state || ''}`.trim(),

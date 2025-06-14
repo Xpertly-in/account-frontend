@@ -19,7 +19,7 @@ export default function UserOnboardingPage() {
         .select("onboarding_completed")
         .eq("user_id", auth.user.id)
         .single();
-      if (data?.onboarding_completed) router.push("/dashboard");
+      if (!data?.onboarding_completed) router.push("/user/dashboard");
       else setLoading(false);
     };
     check();

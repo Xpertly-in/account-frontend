@@ -75,7 +75,7 @@ export default function CASearchPage() {
       }
 
       if (location) {
-        query = query.or(`address.city.ilike.%${location}%,address.state.ilike.%${location}%`);
+        query = query.or(`(address.city.ilike.%${location}%,address.state.ilike.%${location}%)`);
       }
 
       if (expertise) {

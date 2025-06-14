@@ -6,8 +6,8 @@ import { Footer } from './Footer.component';
 
 export function FooterWrapper() {
   const pathname = usePathname();
-  // Hide the footer on all /forum routes
-  if (pathname.startsWith('/forum')) {
+  // Hide the footer on all /feed routes
+  if (pathname.startsWith('/feed')) {
     return null;
   }
   return <Footer />;

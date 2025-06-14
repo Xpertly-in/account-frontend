@@ -1,29 +1,20 @@
-// src/app/forum/new/page.tsx
 "use client";
 
-import React, { useEffect, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useProtectedRoute } from "@/hooks/useProtectedRoute";
+import { Container } from "@/components/layout/Container.component";
 import { useAuth } from "@/store/context/Auth.provider";
 import { CaretLeft } from "@phosphor-icons/react";
-import { Container } from "@/components/layout/Container.component";
-import { CreatePost } from "@/components/features/forum/CreatePost.component";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-function NewPostContent() {
+export default function NewForumPostPage() {
+  // This will handle authentication and redirects
+  useProtectedRoute();
+  
   const router = useRouter();
   const { auth } = useAuth();
-  const searchParams = useSearchParams();
-  const initialContent = searchParams.get("initialContent") ?? "";
 
-  // Redirect to login if unauthenticated
-  useEffect(() => {
-    if (!auth.isLoading && !auth.user) {
-      localStorage.setItem("postLoginRedirect", window.location.pathname);
-      router.push("/login/ca");
-    }
-  }, [auth.user, auth.isLoading, router]);
-
-  if (auth.isLoading || !auth.user) {
+  // If not authenticated, the hook will handle the redirect
+  if (!auth.user) {
     return null;
   }
 
@@ -36,21 +27,15 @@ function NewPostContent() {
           className="flex items-center gap-2 text-primary hover:underline mb-2"
         >
           <CaretLeft size={20} weight="bold" />
-          Back to Feed
+          Back to Forum
         </button>
         {/* Form Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 md:p-4">
-          <CreatePost initialContent={initialContent ?? ""} onPostCreated={() => router.push("/forum")} />
+          {/* Add your forum post form component here */}
+          <h1 className="text-2xl font-bold mb-4">Create New Post</h1>
+          {/* Your form content */}
         </div>
       </Container>
     </div>
   );
-}
-
-export default function NewPostPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <NewPostContent />
-    </Suspense>
-  );
-}
+} 

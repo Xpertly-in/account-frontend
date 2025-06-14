@@ -101,8 +101,12 @@ export default function RoleSelectPage() {
         return;
       }
 
-      // Redirect to appropriate onboarding based on role
-      router.push(role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+      // Redirect to appropriate onboarding or dashboard based on role
+      if (role === UserRole.ACCOUNTANT) {
+        router.push("/ca/onboarding");
+      } else {
+        router.push("/user/dashboard");
+      }
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error("Role selection error:", error);

@@ -10,25 +10,37 @@ import { ThemeToggle } from "@/ui/ThemeToggle.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { User, SignOut, List, X, Briefcase } from "@phosphor-icons/react";
 import { supabase } from "@/helper/supabase.helper";
+import { UserRole } from "@/types/onboarding.type";
 
 export function Header() {
   const { auth, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [hasSession, setHasSession] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   // Wait for hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Check for Supabase session
+  // Check for Supabase session and user role
   useEffect(() => {
     const checkSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setHasSession(!!session?.user);
+
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .single();
+
+        setUserRole(profile?.role || null);
+      }
     };
     checkSession();
   }, []);
@@ -39,7 +51,8 @@ export function Header() {
   };
 
   const isLoggedIn = mounted && (auth.user || hasSession);
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
+  const dashboardPath = userRole === UserRole.ACCOUNTANT ? "/ca/dashboard" : "/user/dashboard";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/50 dark:bg-background/90">
@@ -54,7 +67,7 @@ export function Header() {
                 href="/search"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/search")
+                  pathname?.startsWith("/search")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
@@ -65,7 +78,7 @@ export function Header() {
                 href="/about"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/about")
+                  pathname?.startsWith("/about")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
@@ -73,21 +86,21 @@ export function Header() {
                 About
               </Link>
               <Link
-                href="/forum"
+                href="/feed"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/forum")
+                  pathname?.startsWith("/feed")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
               >
-                Community
+                Feed
               </Link>
               <Link
                 href="/contact"
                 className={cn(
                   "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname.startsWith("/contact")
+                  pathname?.startsWith("/contact")
                     ? "text-primary dark:text-primary"
                     : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
                 )}
@@ -106,12 +119,12 @@ export function Header() {
           </button>
 
           {/* Desktop menu */}
-          <div className="hidden items-center space-x-6 md:flex">
+          <div className="hidden items-center space-x-4 md:flex">
             <ThemeToggle />
 
             {isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <Link href="/ca/dashboard">
+                <Link href={dashboardPath}>
                   <Button
                     variant="outline"
                     className="rounded-lg border-primary/20 px-4 py-2 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
@@ -130,7 +143,7 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center">
-                <Link href="/login/ca">
+                <Link href="/login">
                   <Button
                     variant="default"
                     className="rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
@@ -164,6 +177,13 @@ export function Header() {
               About
             </Link>
             <Link
+              href="/feed"
+              className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Feed
+            </Link>
+            <Link
               href="/contact"
               className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
@@ -177,7 +197,7 @@ export function Header() {
 
             {isLoggedIn ? (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/ca/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Link href={dashboardPath} onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="outline"
                     className="w-full justify-start rounded-lg border-primary/20 px-4 py-2.5 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
@@ -200,7 +220,7 @@ export function Header() {
               </div>
             ) : (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/login/ca" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="default"
                     className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"

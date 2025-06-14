@@ -735,7 +735,7 @@ The codebase is organized by business domain rather than technical function, whi
 - Example domains include:
   - `/components/leads/` - Components related to lead management
   - `/components/auth/` - Authentication-related components
-  - `/components/forum/` - Forum and community components
+  - `/components/feed/` - Feed components
 
 #### Migration Example
 
@@ -753,7 +753,7 @@ The project recently migrated from a technical organization (`/components/dashbo
 - **UI Components:**
   - `Button.ui.tsx`, `Input.ui.tsx`, `Card.ui.tsx`, `Avatar.ui.tsx`, `Checkbox.ui.tsx`, `Logo.ui.tsx`, `ThemeToggle.ui.tsx`, `DecorativeElements.ui.tsx`, `CheckboxGroup.ui.tsx`, `FileUpload.ui.tsx`, `Switch.ui.tsx`, `Textarea.ui.tsx`, `Select.ui.tsx`, `AuthDivider.ui.tsx`, `GoogleButton.ui.tsx`, `BackButton.ui.tsx`
 - **Feature Components:**
-  - `LoginForm.component.tsx`, `LoginFormFields.component.tsx`, `LoginFormSecurity.component.tsx`, `SignUpForm.component.tsx`, `SignUpFormContent.component.tsx`, `CAAuthTabs.component.tsx`, `SearchBar.component.tsx`, `CACard.component.tsx`, `Leads.component.tsx`, `LeadCard.component.tsx`, `LeadFilter.component.tsx`, `LeadSkeleton.component.tsx`, `LeadEmptyState.component.tsx`, `RoleSelection.component.tsx`, `UserOnboardingForm.component.tsx`, `ForumFeed.component.tsx`, `PostCard.component.tsx`, `ReactionSystem.component.tsx`, `CommentThread.component.tsx`, `CreatePost.component.tsx`, `SearchAndFilter.component.tsx`, `DashboardLayout.component.tsx`
+  - `LoginForm.component.tsx`, `LoginFormFields.component.tsx`, `LoginFormSecurity.component.tsx`, `SignUpForm.component.tsx`, `SignUpFormContent.component.tsx`, `CAAuthTabs.component.tsx`, `SearchBar.component.tsx`, `CACard.component.tsx`, `Leads.component.tsx`, `LeadCard.component.tsx`, `LeadFilter.component.tsx`, `LeadSkeleton.component.tsx`, `LeadEmptyState.component.tsx`, `RoleSelection.component.tsx`, `UserOnboardingForm.component.tsx`, `Feed.component.tsx`, `PostCard.component.tsx`, `ReactionSystem.component.tsx`, `CommentThread.component.tsx`, `CreatePost.component.tsx`, `SearchAndFilter.component.tsx`, `DashboardLayout.component.tsx`
 
 #### Best Practices
 
@@ -1162,7 +1162,7 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
 
   - **Component Requirements:**
 
-    - **ForumFeed Component:**
+    - **Feed Component:**
 
       - Virtual scrolling for performance
       - Lazy loading of images
@@ -1268,7 +1268,7 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
     - Analyze hashtag popularity and growth trends
 
   - **Implementation Guidelines:**
-    - Create all components under `/components/features/forum/`
+    - Create all components under `/components/features/feed/`
     - Keep each component under 200 lines of code
     - Use Card component from shadcn UI for post cards
     - Use Phosphor icons exclusively
@@ -1773,10 +1773,10 @@ For backward compatibility, all mock functions are re-exported from `jestMock.he
 - [x] LeadEmptyState (`src/components/leads/LeadEmptyState.component.tsx`) - 20 lines
 - [ ] RoleSelection (`src/components/features/onboarding/RoleSelection.component.tsx`)
 - [ ] UserOnboardingForm (`src/components/features/onboarding/UserOnboardingForm.component.tsx`)
-- [ ] ForumFeed (`src/components/features/forum/ForumFeed.component.tsx`)
-- [ ] PostCard (`src/components/features/forum/PostCard.component.tsx`)
-- [ ] ReactionSystem (`src/components/features/forum/ReactionSystem.component.tsx`)
-- [ ] CommentThread (`src/components/features/forum/CommentThread.component.tsx`)
-- [ ] CreatePost (`src/components/features/forum/CreatePost.component.tsx`)
-- [ ] SearchAndFilter (`src/components/features/forum/SearchAndFilter.component.tsx`)
+- [ ] Feed (`src/components/features/feed/Feed.component.tsx`)
+- [ ] PostCard (`src/components/features/feed/PostCard.component.tsx`)
+- [ ] ReactionSystem (`src/components/features/feed/ReactionSystem.component.tsx`)
+- [ ] CommentThread (`src/components/features/feed/CommentThread.component.tsx`)
+- [ ] CreatePost (`src/components/features/feed/CreatePost.component.tsx`)
+- [ ] SearchAndFilter (`src/components/features/feed/SearchAndFilter.component.tsx`)
 - [ ] DashboardLayout (`src/components/features/dashboard/DashboardLayout.component.tsx`)
