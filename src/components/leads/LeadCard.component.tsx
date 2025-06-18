@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Lead } from "@/types/dashboard/lead.type";
 import { Badge } from "@/ui/Badge.ui";
 import { Button } from "@/ui/Button.ui";
-import { Card } from "@/ui/Card.ui";
 import { useCreateEngagement, useHideLead } from "@/services/leads.service";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Avatar } from "@/ui/Avatar.ui";
@@ -53,6 +52,20 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
       day: "numeric",
       year: "numeric",
     });
+  };
+
+  // Helper to get relative time
+  const getRelativeTime = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return "Yesterday";
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return formatDate(dateString);
   };
 
   // Helper to map urgency string to UrgencyLevel enum
@@ -179,60 +192,66 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
   const isArchived = !!lead.hiddenAt;
 
   return (
-    <Card
-      className={`overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800 ${
-        isArchived ? "opacity-75" : ""
-      }`}
-    >
-      <div className="p-6">
-        {/* Header with customer info, avatar, and urgency */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-4">
-              {/* Customer Avatar */}
-              <Avatar
-                size="lg"
-                src={lead.profilePicture}
-                alt={lead.customerName}
-                name={lead.customerName}
-              />
-
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    {lead.customerName}
-                    {isArchived && (
-                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                        (Archived)
-                      </span>
-                    )}
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {lead.location.city}, {lead.location.state} • {formatDate(lead.timestamp)}
-                </p>
+    <div className={`${isArchived ? "opacity-75" : ""}`}>
+      {/* Status Indicator Bar */}
+      <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full" />
+      <div className="p-4 sm:p-6">
+        {/* Header Section */}
+        <div className="pb-4 sm:pb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1">
+            <Avatar
+              size="lg"
+              src={lead.profilePicture}
+              alt={lead.customerName}
+              name={lead.customerName}
+              className="h-12 w-12 sm:h-14 sm:w-14"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  {lead.customerName}
+                  {isArchived && (
+                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                      (Archived)
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                <span>
+                  {lead.location.city}, {lead.location.state}
+                </span>
+                <span>•</span>
+                <span>{getRelativeTime(lead.timestamp)}</span>
               </div>
             </div>
           </div>
-          {/* Enhanced Badge for urgency */}
-          <Badge variant={getBadgeVariantForUrgency(mapUrgencyToEnum(lead.urgency))}>
+          <Badge
+            variant={getBadgeVariantForUrgency(mapUrgencyToEnum(lead.urgency))}
+            className="shrink-0"
+          >
             {lead.urgency}
           </Badge>
         </div>
 
-        {/* Content in horizontal layout */}
-        <div className="mt-6 space-y-4">
+        {/* Content Section */}
+        <div className="space-y-4 sm:space-y-5">
           {/* Services */}
           <div>
-            <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Services Needed:
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30">
+                <span className="text-xs sm:text-sm">🔧</span>
+              </div>
+              <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                Services Needed
+              </h4>
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-2">
               {lead.services?.map((service, idx) => (
                 <Badge
                   key={idx}
                   variant="outline"
-                  className="rounded-md border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                  className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
                 >
                   {service}
                 </Badge>
@@ -240,76 +259,84 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
             </div>
           </div>
 
-          {/* Contact Info */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Preferred Contact:
+          {/* Contact Information */}
+          <div>
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/30 dark:to-emerald-800/30">
+                <span className="text-xs sm:text-sm">📞</span>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center gap-2">
-                  {/* Enhanced Badge for contact preference */}
-                  <Badge
-                    variant={getBadgeVariantForContactPreference(
-                      mapContactPreferenceToEnum(lead.contactPreference)
-                    )}
-                  >
-                    {lead.contactPreference}
-                  </Badge>
-                </div>
-                {showContactInfo ? (
-                  <div className="mt-2 font-medium text-gray-900 dark:text-gray-200">
-                    {contactInfo || lead.contactInfo}
-                  </div>
-                ) : (
-                  <div className="mt-2 text-gray-500 dark:text-gray-400">
-                    Click "View Contact" to see details
-                  </div>
-                )}
-              </div>
+              <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                Contact Preference
+              </h4>
             </div>
-
-            {/* Engagement Count */}
-            {lead.engagementCount !== undefined && lead.engagementCount > 0 && (
-              <div>
-                <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Interest Level:
+            <div className="flex items-center gap-3">
+              <Badge
+                variant={getBadgeVariantForContactPreference(
+                  mapContactPreferenceToEnum(lead.contactPreference)
+                )}
+                className="text-xs sm:text-sm"
+              >
+                {lead.contactPreference}
+              </Badge>
+              {showContactInfo ? (
+                <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-200">
+                  {contactInfo || lead.contactInfo}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {lead.engagementCount} CAs viewed
+              ) : (
+                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  Click "View Contact" to see details
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Notes - Expanded section for 200-250 characters */}
+          {/* Customer Notes */}
           {lead.notes && (
             <div>
-              <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Customer Notes:
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30">
+                  <span className="text-xs sm:text-sm">💬</span>
+                </div>
+                <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                  Customer Notes
+                </h4>
               </div>
-              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50">
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed min-h-[60px]">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 sm:p-4">
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   {lead.notes}
                 </p>
               </div>
             </div>
           )}
+
+          {/* Engagement Count */}
+          {lead.engagementCount !== undefined && lead.engagementCount > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30">
+                  <span className="text-xs sm:text-sm">👥</span>
+                </div>
+                <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                  Interest Level
+                </h4>
+              </div>
+              <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                {lead.engagementCount} CAs viewed
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Footer with actions */}
-        <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-700">
-          <div className="flex items-center gap-4">
-            {/* Enhanced Badge for status */}
-            <Badge variant={getBadgeVariantForStatus(lead.status)}>
-              {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
-            </Badge>
-          </div>
-          <div className="flex gap-2">
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-gray-100 dark:border-gray-700">
+          <Badge variant={getBadgeVariantForStatus(lead.status)} className="text-xs sm:text-sm">
+            {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
+          </Badge>
+          <div className="flex gap-2 sm:gap-3">
             <Button
               size="sm"
               variant="outline"
-              className="h-9 rounded-lg border-gray-200 text-sm dark:border-gray-700"
+              className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm rounded-xl border-gray-200 dark:border-gray-700"
               onClick={handleArchiveToggle}
               disabled={isHiding || isUnhiding}
             >
@@ -318,7 +345,7 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
             {!showContactInfo && !isArchived && (
               <Button
                 size="sm"
-                className="h-9 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
                 onClick={handleViewContact}
                 disabled={isCreatingEngagement}
               >
@@ -328,6 +355,6 @@ export const LeadCard = ({ lead, onLeadUpdate }: LeadCardProps) => {
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };

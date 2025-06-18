@@ -166,6 +166,10 @@ export const getBadgeVariantForContactPreference = (
 };
 
 export const getBadgeVariantForStatus = (status: string): BadgeVariant => {
+  if (!status) {
+    return "new"; // Default fallback for null/undefined
+  }
+
   switch (status.toLowerCase()) {
     case "new":
       return "new";

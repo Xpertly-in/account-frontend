@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
-import { User, Calendar, FileText, EnvelopeSimple } from "@phosphor-icons/react";
+import { User, EnvelopeSimple, ChatCenteredText } from "@phosphor-icons/react";
 import { supabase } from "@/helper/supabase.helper";
 import { UserRole } from "@/types/onboarding.type";
 
@@ -17,7 +17,7 @@ export default function CADashboardPage() {
   useEffect(() => {
     const checkRole = async () => {
       if (!auth.user) return;
-      
+
       try {
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -87,26 +87,18 @@ export default function CADashboardPage() {
 
         <div
           className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"
-          onClick={() => router.push("/ca/dashboard/bookings")}
+          onClick={() => router.push("/ca/dashboard/contact-requests")}
         >
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-secondary/20 to-secondary/30 dark:from-secondary/30 dark:to-secondary/40">
-            <Calendar className="h-6 w-6 text-secondary dark:text-blue-400" />
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-600/30 dark:from-emerald-500/30 dark:to-emerald-600/40">
+            <ChatCenteredText className="h-6 w-6 text-emerald-500 dark:text-emerald-400" />
           </div>
-          <h3 className="text-xl font-semibold">Bookings</h3>
+          <h3 className="text-xl font-semibold">Contact Requests</h3>
           <p className="mt-2 text-muted-foreground">
-            View and manage your appointments with clients.
+            View and respond to direct contact requests from customers.
           </p>
-        </div>
-
-        <div
-          className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"
-          onClick={() => router.push("/ca/dashboard/documents")}
-        >
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-accent/20 to-accent/30 dark:from-accent/30 dark:to-accent/40">
-            <FileText className="h-6 w-6 text-accent dark:text-green-400" />
+          <div className="mt-3 inline-flex items-center justify-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-500 dark:bg-emerald-500/20">
+            New
           </div>
-          <h3 className="text-xl font-semibold">Documents</h3>
-          <p className="mt-2 text-muted-foreground">Access and manage your client documents.</p>
         </div>
       </div>
 
