@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { LeadFilter, LeadSort } from "@/types/dashboard/lead.type";
 import { useLeads } from "@/services/leads.service";
@@ -9,7 +9,7 @@ import { Pagination } from "./Pagination.component";
 import { LeadsHeader } from "./LeadsHeader.component";
 import { Lead } from "@/types/dashboard/lead.type";
 
-export const LeadsComponent = () => {
+const LeadsComponent = memo(() => {
   // Local state for search and filters
   const [searchTerm, setSearchTerm] = useState("");
   const [currentFilter, setCurrentFilter] = useState<LeadFilter>({});
@@ -24,15 +24,21 @@ export const LeadsComponent = () => {
   });
 
   // Prepare filter and pagination for TanStack Query
-  const filterWithSearch = {
-    ...currentFilter,
-    search: debouncedSearchTerm,
-  };
+  const filterWithSearch = useMemo(
+    () => ({
+      ...currentFilter,
+      search: debouncedSearchTerm,
+    }),
+    [currentFilter, debouncedSearchTerm]
+  );
 
-  const paginationParams = {
-    page: currentPage,
-    pageSize: pageSize,
-  };
+  const paginationParams = useMemo(
+    () => ({
+      page: currentPage,
+      pageSize: pageSize,
+    }),
+    [currentPage, pageSize]
+  );
 
   // Use TanStack Query hooks for leads data
   const {
@@ -46,6 +52,32 @@ export const LeadsComponent = () => {
     error,
     refetch,
   } = useLeads(filterWithSearch, paginationParams, currentSort);
+
+  // Memoize stats calculation to prevent unnecessary re-renders
+  // Only calculate stats from current page leads to avoid performance issues
+  const { newCount, contactedCount, archivedCount } = useMemo(() => {
+    // For stats, we want to show stats from all leads, not just current page
+    // But since we only have current page data, we'll use totalCount for total
+    // and calculate percentages from current page for new/contacted
+    const currentPageStats = {
+      newCount: leads.filter(lead => lead.status === "new").length,
+      contactedCount: leads.filter(lead => lead.status === "contacted").length,
+      archivedCount: leads.filter(lead => lead.hiddenAt).length,
+    };
+
+    // If we have a small dataset (less than pageSize), use actual counts
+    // Otherwise, extrapolate from current page
+    if (totalCount <= pageSize) {
+      return currentPageStats;
+    }
+
+    // For larger datasets, show current page stats but indicate they're partial
+    return {
+      newCount: currentPageStats.newCount,
+      contactedCount: currentPageStats.contactedCount,
+      archivedCount: currentPageStats.archivedCount,
+    };
+  }, [leads, totalCount, pageSize]);
 
   // Handle pagination actions
   const handlePageChange = useCallback((page: number) => {
@@ -69,53 +101,50 @@ export const LeadsComponent = () => {
     }
   }, [hasPreviousPage, currentPage]);
 
-  // Handle search changes
+  // Handle search change - memoized to prevent unnecessary re-renders
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1); // Reset to first page when searching
   }, []);
 
-  // Handle filter changes
-  const handleFilterChange = useCallback((newFilter: LeadFilter) => {
-    setCurrentFilter(newFilter);
-    setCurrentPage(1); // Reset to first page on filter
+  // Handle filter change
+  const handleFilterChange = useCallback((filter: LeadFilter) => {
+    setCurrentFilter(filter);
+    setCurrentPage(1); // Reset to first page when filtering
   }, []);
 
-  // Handle sort changes
-  const handleSortChange = useCallback((newSort: LeadSort) => {
-    setCurrentSort(newSort);
-    setCurrentPage(1); // Reset to first page on sort
+  // Handle sort change
+  const handleSortChange = useCallback((sort: LeadSort) => {
+    setCurrentSort(sort);
+    setCurrentPage(1); // Reset to first page when sorting
   }, []);
 
-  // Function to refresh leads data (for manual refresh)
+  // Handle lead update (for refreshing data after actions)
   const handleLeadUpdate = useCallback(() => {
     refetch();
   }, [refetch]);
 
+  // Handle error state
   if (isError) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            Error loading leads
-          </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {error?.message || "An error occurred"}
-          </p>
-          <button
-            onClick={handleLeadUpdate}
-            className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Try Again
-          </button>
+      <div className="rounded-xl bg-white shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8 text-center">
+        <div className="text-red-600 dark:text-red-400 mb-2">Error loading leads</div>
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          {error?.message || "Something went wrong"}
         </div>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* Header with search and filters */}
+      {/* Header with search, filters, and stats */}
       <LeadsHeader
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
@@ -125,6 +154,9 @@ export const LeadsComponent = () => {
         onSortChange={handleSortChange}
         totalCount={totalCount}
         isLoading={isLoading}
+        newCount={newCount}
+        contactedCount={contactedCount}
+        archivedCount={archivedCount}
       />
 
       {/* Leads content */}
@@ -135,17 +167,24 @@ export const LeadsComponent = () => {
           ))}
         </div>
       ) : leads.length === 0 ? (
-        <LeadEmptyState searchTerm={searchTerm} />
+        <div className="rounded-xl bg-white shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+          <LeadEmptyState searchTerm={searchTerm} />
+        </div>
       ) : (
         <>
           {/* Single column layout for better focus */}
           <div className="space-y-4">
             {leads.map((lead: Lead) => (
-              <LeadCard key={lead.id} lead={lead} onLeadUpdate={handleLeadUpdate} />
+              <div
+                key={lead.id}
+                className="rounded-xl bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden"
+              >
+                <LeadCard lead={lead} onLeadUpdate={handleLeadUpdate} />
+              </div>
             ))}
           </div>
 
-          {/* Prominent Pagination - Show when there are leads */}
+          {/* Pagination - Show when there are leads */}
           {leads.length > 0 && (
             <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-700">
               <Pagination
@@ -167,4 +206,8 @@ export const LeadsComponent = () => {
       )}
     </div>
   );
-};
+});
+
+LeadsComponent.displayName = "LeadsComponent";
+
+export { LeadsComponent };

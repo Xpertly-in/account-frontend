@@ -2,7 +2,8 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LeadCard } from "@/components/leads/LeadCard.component";
-import { Lead, LeadUrgency, ContactPreference, LeadStatus } from "@/types/dashboard/lead.type";
+import { Lead, LeadUrgency, LeadStatus } from "@/types/dashboard/lead.type";
+import { ContactPreference } from "@/types/common.type";
 
 // Mock the services
 jest.mock("@/services/leads.service", () => ({
@@ -222,6 +223,44 @@ describe("LeadCard Component - TDD Implementation", () => {
 
       // Should show formatted date
       expect(screen.getByText(/Jan 15, 2024/)).toBeInTheDocument();
+    });
+
+    test("should render enhanced badge variants correctly", () => {
+      render(<LeadCard {...defaultProps} />);
+
+      // Test urgency badge uses enhanced Badge component
+      const urgencyBadge = screen.getByText("Immediately");
+      expect(urgencyBadge).toBeInTheDocument();
+      expect(urgencyBadge.closest("div")).toHaveClass("bg-red-500"); // urgent variant
+
+      // Test status badge uses enhanced Badge component
+      const statusBadge = screen.getByText("New");
+      expect(statusBadge).toBeInTheDocument();
+      expect(statusBadge.closest("div")).toHaveClass("bg-blue-500"); // new variant
+
+      // Test contact preference badge uses enhanced Badge component
+      const contactBadge = screen.getByText("Email");
+      expect(contactBadge).toBeInTheDocument();
+      expect(contactBadge.closest("div")).toHaveClass("bg-cyan-100"); // email variant
+    });
+
+    test("should handle different contact preferences with correct badge variants", () => {
+      const contactPreferences = ["Phone", "Email", "WhatsApp"];
+      const expectedClasses = ["bg-indigo-100", "bg-cyan-100", "bg-emerald-100"];
+
+      contactPreferences.forEach((preference, index) => {
+        const leadWithPreference = {
+          ...mockLead,
+          contactPreference: preference as Lead["contactPreference"],
+        };
+        const { rerender } = render(<LeadCard {...defaultProps} lead={leadWithPreference} />);
+
+        const contactBadge = screen.getByText(preference);
+        expect(contactBadge).toBeInTheDocument();
+        expect(contactBadge.closest("div")).toHaveClass(expectedClasses[index]);
+
+        rerender(<div />); // Clear for next iteration
+      });
     });
   });
 

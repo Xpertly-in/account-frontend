@@ -74,7 +74,7 @@ export const LeadFilterComponent = ({
 
   return (
     <Card className="rounded-xl border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-      <CardHeader className="border-b border-gray-100 pb-4 dark:border-gray-700">
+      <CardHeader className="border-b border-gray-100 pb-4 dark:border-gray-700 pt-4">
         <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Filter Leads
         </CardTitle>
@@ -187,7 +187,7 @@ export const LeadFilterComponent = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end gap-2 border-t border-gray-100 pt-4 dark:border-gray-700">
+      <CardFooter className="flex justify-end gap-2 border-t border-gray-100 pt-4 dark:border-gray-700 pb-4">
         <Button
           variant="outline"
           size="sm"

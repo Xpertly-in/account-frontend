@@ -110,7 +110,100 @@ CREATE TABLE public.lead_engagements (
 - Allows CAs to hide leads from their view
 - Supports CA-specific notes on leads
 
-### 4. CA Services Table
+### 4. Contact Requests Table
+
+**Purpose**: Stores direct contact form submissions from users (registered or anonymous) to specific CAs.
+
+**Key Features**:
+
+- Supports both registered and anonymous users
+- Links to specific CAs via `ca_id`
+- Tracks contact preferences and actual contact details
+- Includes subject, message, and optional service needed
+- Status tracking for CA responses
+- CA private notes for internal tracking
+- Flexible urgency and contact preference fields
+- Application-managed timestamps for better control
+- Minimal essential indexes for optimal performance
+
+#### Table Definition
+
+```sql
+CREATE TABLE public.contact_requests (
+  id                  uuid         PRIMARY KEY DEFAULT uuid_generate_v4(),
+  ca_id               uuid         NOT NULL REFERENCES public.profiles(user_id),
+
+  -- Customer information (can be anonymous)
+  customer_id         uuid         REFERENCES public.profiles(user_id), -- NULL for anonymous users
+  customer_name       text         NOT NULL,
+  customer_email      text         NOT NULL,
+  customer_phone      text,
+
+  -- Request details
+  subject             text         NOT NULL,
+  message             text         NOT NULL,
+  service_needed      text,
+  urgency             text         NOT NULL,
+  contact_preference  text         NOT NULL,
+  contact_detail      text         NOT NULL,
+
+  -- Location (optional)
+  location_city       text,
+  location_state      text,
+
+  -- Status tracking
+  status              text         NOT NULL DEFAULT 'new',
+
+  -- CA Notes
+  ca_private_notes    text,
+
+  -- Timestamps
+  created_at          timestamptz  NOT NULL DEFAULT now(),
+  updated_at          timestamptz  NOT NULL DEFAULT now(),
+  replied_at          timestamptz
+);
+```
+
+#### Performance Indexes
+
+```sql
+-- Essential indexes only for optimal performance
+CREATE INDEX idx_contact_requests_ca_id ON public.contact_requests(ca_id);
+CREATE INDEX idx_contact_requests_status ON public.contact_requests(status);
+CREATE INDEX idx_contact_requests_created_at ON public.contact_requests(created_at);
+```
+
+#### Row Level Security (RLS) Policies
+
+```sql
+-- Enable RLS
+ALTER TABLE public.contact_requests ENABLE ROW LEVEL SECURITY;
+
+-- CAs can view their own contact requests
+CREATE POLICY "CAs can view contact requests" ON public.contact_requests
+  FOR SELECT USING (auth.uid() = ca_id);
+
+-- CAs can update their own contact requests (for status changes)
+CREATE POLICY "CAs can update contact requests" ON public.contact_requests
+  FOR UPDATE USING (auth.uid() = ca_id);
+
+-- Allow contact request creation (handled by service layer for anonymous users)
+CREATE POLICY "Allow contact request creation" ON public.contact_requests
+  FOR INSERT WITH CHECK (true);
+```
+
+#### Documentation Comments
+
+```sql
+COMMENT ON TABLE public.contact_requests IS 'Stores direct contact form submissions from users (registered or anonymous) to specific CAs';
+COMMENT ON COLUMN public.contact_requests.customer_id IS 'References profiles.user_id for registered users, NULL for anonymous users';
+COMMENT ON COLUMN public.contact_requests.service_needed IS 'Optional field indicating what specific service the customer is inquiring about';
+COMMENT ON COLUMN public.contact_requests.contact_detail IS 'Actual contact information based on contact_preference (phone number, email, or WhatsApp number)';
+COMMENT ON COLUMN public.contact_requests.ca_private_notes IS 'Private notes that CAs can add for internal tracking and follow-up';
+COMMENT ON COLUMN public.contact_requests.updated_at IS 'Timestamp managed by application layer, not auto-updated by database';
+```
+
+### 5. CA Services Table
 
 **Purpose**: Stores available services that CAs can offer.
 
@@ -124,7 +217,7 @@ CREATE TABLE public.services (
 );
 ```
 
-### 5. CA Experiences Table
+### 6. CA Experiences Table
 
 **Purpose**: Stores CA work experience and employment history.
 
@@ -146,7 +239,7 @@ CREATE TABLE public.experiences (
 );
 ```
 
-### 6. Social Profile Table
+### 7. Social Profile Table
 
 **Purpose**: Stores CA social media and professional links.
 

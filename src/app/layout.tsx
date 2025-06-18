@@ -1,17 +1,14 @@
 "use client";
 
-
 import { Inter } from "next/font/google";
 import "./globals.css";
-import 'react-quill/dist/quill.snow.css';
+import "react-quill/dist/quill.snow.css";
 import { Header } from "@/components/layout/Header.component";
 import { FooterWrapper } from "@/components/layout/FooterWrapper.component";
 import { Providers } from "@/store/Providers";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
-
-
 
 export default function RootLayout({
   children,
