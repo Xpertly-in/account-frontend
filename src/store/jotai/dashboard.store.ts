@@ -6,10 +6,15 @@ import {
   PostComposerState,
 } from "@/types/dashboard/dashboard.type";
 import { Lead, LeadSortField, LeadFilter } from "@/types/dashboard/lead.type";
-import { ContactRequest, ContactRequestSortField } from "@/types/dashboard/contact-request.type";
+import {
+  ContactRequest,
+  ContactRequestSortField,
+  ContactRequestFilter,
+} from "@/types/dashboard/contact-request.type";
 import { SortDirection, PaginationParams } from "@/types/common.type";
 import { DASHBOARD_PAGINATION } from "@/constants/dashboard.constants";
 import { fetchLeads } from "@/services/leads.service";
+import { fetchContactRequests } from "@/services/contact-requests.service";
 
 /**
  * Initial dashboard state
@@ -336,6 +341,198 @@ export const contactRequestsDataAtom = atom(
         error: null,
       },
     });
+  }
+);
+
+/**
+ * Contact requests error atom
+ */
+export const contactRequestsErrorAtom = atom(
+  get => get(dashboardStateAtom).contactRequests.error,
+  (get, set, error: string | null) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      contactRequests: {
+        ...current.contactRequests,
+        error,
+        isLoading: false,
+      },
+    });
+  }
+);
+
+/**
+ * Pagination atoms for contact requests
+ */
+export const contactRequestsPageAtom = atom(
+  get => get(dashboardStateAtom).contactRequests.page,
+  (get, set, page: number) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      contactRequests: {
+        ...current.contactRequests,
+        page,
+      },
+    });
+  }
+);
+
+export const contactRequestsPageSizeAtom = atom(
+  get => get(dashboardStateAtom).contactRequests.pageSize,
+  (get, set, pageSize: number) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      contactRequests: {
+        ...current.contactRequests,
+        pageSize,
+        page: 1, // Reset to first page when changing page size
+      },
+    });
+  }
+);
+
+export const contactRequestsTotalCountAtom = atom(
+  get => get(dashboardStateAtom).contactRequests.totalCount,
+  (get, set, totalCount: number) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      contactRequests: {
+        ...current.contactRequests,
+        totalCount,
+      },
+    });
+  }
+);
+
+/**
+ * Computed pagination metadata atoms for contact requests
+ */
+export const contactRequestsTotalPagesAtom = atom(get => {
+  const { totalCount, pageSize } = get(dashboardStateAtom).contactRequests;
+  return pageSize > 0 ? Math.ceil(totalCount / pageSize) : 1;
+});
+
+export const contactRequestsHasNextPageAtom = atom(get => {
+  const { page } = get(dashboardStateAtom).contactRequests;
+  const totalPages = get(contactRequestsTotalPagesAtom);
+  return page < totalPages;
+});
+
+export const contactRequestsHasPreviousPageAtom = atom(get => {
+  const { page } = get(dashboardStateAtom).contactRequests;
+  return page > 1;
+});
+
+/**
+ * Pagination action atoms for contact requests
+ */
+export const contactRequestsNextPageAtom = atom(null, (get, set) => {
+  const hasNext = get(contactRequestsHasNextPageAtom);
+  if (hasNext) {
+    const currentPage = get(contactRequestsPageAtom);
+    set(contactRequestsPageAtom, currentPage + 1);
+  }
+});
+
+export const contactRequestsPreviousPageAtom = atom(null, (get, set) => {
+  const hasPrevious = get(contactRequestsHasPreviousPageAtom);
+  if (hasPrevious) {
+    const currentPage = get(contactRequestsPageAtom);
+    set(contactRequestsPageAtom, currentPage - 1);
+  }
+});
+
+export const contactRequestsGoToPageAtom = atom(null, (get, set, page: number) => {
+  const totalPages = get(contactRequestsTotalPagesAtom);
+  if (page >= 1 && page <= totalPages) {
+    set(contactRequestsPageAtom, page);
+  }
+});
+
+/**
+ * Search atoms for contact requests
+ */
+export const contactRequestsSearchAtom = atom(
+  get => get(dashboardStateAtom).contactRequests.filter.search || "",
+  (get, set, search: string) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      contactRequests: {
+        ...current.contactRequests,
+        filter: {
+          ...current.contactRequests.filter,
+          search,
+        },
+        page: 1, // Reset to first page when search changes
+      },
+    });
+  }
+);
+
+/**
+ * Filter atoms for contact requests
+ */
+export const contactRequestsFilterAtom = atom(
+  get => get(dashboardStateAtom).contactRequests.filter,
+  (get, set, filter: ContactRequestFilter) => {
+    const current = get(dashboardStateAtom);
+    set(dashboardStateAtom, {
+      ...current,
+      contactRequests: {
+        ...current.contactRequests,
+        filter,
+        page: 1, // Reset to first page when filter changes
+      },
+    });
+  }
+);
+
+/**
+ * Fetch contact requests atom with pagination support
+ */
+export const fetchContactRequestsAtom = atom(
+  null,
+  async (get, set, caId?: string, filter?: ContactRequestFilter, pagination?: PaginationParams) => {
+    // Set loading state
+    set(contactRequestsLoadingAtom, true);
+
+    try {
+      // Use provided pagination or get from store
+      const paginationParams = pagination || {
+        page: get(contactRequestsPageAtom),
+        pageSize: get(contactRequestsPageSizeAtom),
+      };
+
+      const result = await fetchContactRequests(caId, filter, paginationParams);
+
+      if (result.error) {
+        set(contactRequestsErrorAtom, result.error.message || "Failed to fetch contact requests");
+        set(contactRequestsDataAtom, []);
+        set(contactRequestsTotalCountAtom, 0);
+      } else {
+        set(contactRequestsDataAtom, result.data || []);
+        set(contactRequestsErrorAtom, null);
+        set(contactRequestsTotalCountAtom, result.totalCount);
+
+        // Update pagination state if it was provided
+        if (pagination) {
+          set(contactRequestsPageAtom, pagination.page);
+          set(contactRequestsPageSizeAtom, pagination.pageSize);
+        }
+      }
+    } catch (error) {
+      console.error("Error in fetchContactRequestsAtom:", error);
+      set(contactRequestsErrorAtom, "An unexpected error occurred");
+      set(contactRequestsDataAtom, []);
+      set(contactRequestsTotalCountAtom, 0);
+    } finally {
+      set(contactRequestsLoadingAtom, false);
+    }
   }
 );
 
