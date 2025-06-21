@@ -9,3 +9,4 @@ export { atom, useAtom, useAtomValue, useSetAtom, Provider, atomWithStorage };
 // Export all atoms from other files
 export * from "./onboarding.store";
 export * from "./analytics.store";
+export * from "./dashboard.store";
