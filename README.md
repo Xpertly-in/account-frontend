@@ -17,10 +17,9 @@ The Xpertly Account Frontend is a modern web application built with Next.js that
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/)
-- **State Management**: React Context + Hooks
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/)
-- **Form Handling**: [React Hook Form](https://react-hook-form.com/)
-- **Validation**: [Zod](https://zod.dev/)
+- **State Management**: Jotai
+- **Authentication**: [Supabase Auth](https://supabase.com/auth)
+- **Analytics**: Google Analytics 4 (GA4)
 
 ## Getting Started
 
@@ -54,6 +53,7 @@ The Xpertly Account Frontend is a modern web application built with Next.js that
    NEXT_PUBLIC_API_URL=your_api_url
    NEXTAUTH_SECRET=your_nextauth_secret
    NEXTAUTH_URL=http://localhost:3000
+   NEXT_PUBLIC_GA_MEASUREMENT_ID=your_ga4_measurement_id
    ```
 
 4. Start the development server:
@@ -74,8 +74,27 @@ src/
 ├── app/                 # App router pages and layouts
 ├── components/          # Reusable UI components
 ├── lib/                 # Utility functions and configurations
-├── types/              # TypeScript type definitions
-└── styles/             # Global styles and Tailwind config
+├── types/               # TypeScript type definitions
+├── helper/              # Helper functions and utilities
+├── store/               # State management (Jotai atoms)
+│   ├── jotai/           # Jotai atoms
+│   └── context/         # Context providers (legacy)
+└── styles/              # Global styles and Tailwind config
+```
+
+## Analytics Implementation
+
+The application uses Google Analytics 4 for tracking user behavior:
+
+1. Page views are automatically tracked on route changes
+2. User interactions (clicks, searches) are tracked with custom events
+3. Form submissions are tracked with success/failure states
+4. User privacy is respected with an opt-out mechanism
+
+To enable analytics, add your GA4 Measurement ID to the `.env.local` file:
+
+```env
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
 ## Contributing
@@ -101,4 +120,41 @@ To learn more about the technologies used in this project:
 
 ## Deployment
 
-The application is deployed on Vercel. For more information about deploying Next.js apps, check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying).
+### Automated Vercel Deployments
+
+This project is configured for automated deployments to Vercel using GitHub Actions.
+
+#### Setup Instructions
+
+1. **Vercel Environment Variables Setup:**
+   - Go to your Vercel project dashboard
+   - Navigate to Project Settings > Environment Variables
+   - Add all your environment variables here
+   - For each variable, select which environments it applies to (Production, Preview, Development)
+   - No need to expose sensitive environment variables in your repository
+
+2. **GitHub Secrets:**
+   Add the following secrets to your GitHub repository:
+   - `VERCEL_TOKEN`: Your Vercel API token (create in Vercel account settings)
+   - `VERCEL_ORG_ID`: Your Vercel organization ID
+   - `VERCEL_PROJECT_ID`: Your Vercel project ID
+
+3. **Branch Configuration:**
+   - Pushing to `main` or `master` will deploy to production
+   - Pushing to `development` or `dev` will deploy to development/preview
+
+4. **Finding Vercel Project Information:**
+   - To find your Vercel Project ID and Org ID, run `vercel whoami` and `vercel projects list` in your terminal after installing and logging in to the Vercel CLI
+   - Alternatively, you can find these in your project settings on the Vercel dashboard
+
+### Manual Deployments
+
+For manual deployments, use the following scripts:
+
+```bash
+# Development deployment
+npm run vercel-deploy:dev
+
+# Production deployment
+npm run vercel-deploy:prod
+```

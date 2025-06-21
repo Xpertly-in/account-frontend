@@ -5,11 +5,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthFormData } from "@/types/auth.type";
 import { useAuth } from "@/store/context/Auth.provider";
+import { useGoogleAuth } from "@/store/context/GoogleAuth.provider";
 import { Button } from "@/ui/Button.ui";
+import { GoogleButton } from "@/ui/GoogleButton.ui";
+import { AuthDivider } from "@/ui/AuthDivider.ui";
 import { ArrowRight } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import LoginFormFields from "./LoginFormFields.component";
 import LoginFormSecurity from "./LoginFormSecurity.component";
+import { supabase } from "@/lib/supabase";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { EventCategory } from "@/helper/googleAnalytics.helper";
+import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
+import { UserRole } from "@/types/onboarding.type";
 
 interface LoginFormProps {
   hideContainer?: boolean;
@@ -18,12 +26,19 @@ interface LoginFormProps {
 export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   const router = useRouter();
   const { signIn } = useAuth();
+  const {
+    signIn: signInWithGoogle,
+    isLoading: isGoogleLoading,
+    error: googleError,
+  } = useGoogleAuth();
+  const { trackFormSubmission, trackEvent, trackUserInteraction } = useAnalytics();
   const [formData, setFormData] = useState<AuthFormData>({
     email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const { auth } = useAuth();
 
   // Validate form when inputs change
   useEffect(() => {
@@ -42,28 +57,136 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      const { error } = await signIn(formData.email, formData.password);
+    // Track login attempt
+    trackEvent({
+      name: "login_attempt",
+      category: EventCategory.FORM_SUBMISSION,
+      action: "submit",
+      label: "login_form",
+      params: {
+        method: "email",
+        email_domain: formData.email.split("@")[1],
+      },
+    });
 
-      if (error) {
+    try {
+      const { error: signInError, data } = await signIn(formData.email, formData.password);
+      const user = data?.user;
+
+      if (signInError) {
+        // Track failed login
+        trackFormSubmission("login_form", false, {
+          method: "email",
+          error: signInError.message,
+        });
+
+        if (signInError.message === "Invalid login credentials") {
+          toast.error("Invalid credentials", {
+            description: "Please check your email and password and try again.",
+          });
+        } else {
+          toast.error("Login failed", {
+            description: signInError.message || "Please check your credentials and try again.",
+          });
+        }
+        return;
+      }
+
+      if (!user) {
+        // Track failed login
+        trackFormSubmission("login_form", false, {
+          method: "email",
+          error: "No user data received",
+        });
+
         toast.error("Login failed", {
-          description: error.message || "Please check your credentials and try again.",
+          description: "No user data received. Please try again.",
         });
         return;
       }
 
-      toast.success("Login successful", {
-        description: "Welcome back!",
+      // After successful login, first check role/profile
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role, onboarding_completed")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching profile:", error);
+        toast.error("An error occurred while checking your profile");
+        return;
+      }
+
+      // Check for stored redirect path
+      const storedRedirect = localStorage.getItem("postLoginRedirect");
+
+      // If no profile exists, redirect to role selection
+      if (!profile) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+        router.push("/role-select");
+        return;
+      }
+
+      // If no role is set, redirect to role selection
+      if (!profile.role) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+        router.push("/role-select");
+        return;
+      }
+
+      // If role exists, then check onboarding status
+      if (!profile.onboarding_completed) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+        router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+        return;
+      }
+
+      // If both role exists and onboarding is completed, check for stored redirect
+      if (storedRedirect) {
+        localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
+        router.push(storedRedirect);
+      } else {
+        // Default redirect based on role
+        if (profile.role === UserRole.ACCOUNTANT) {
+          router.push("/ca/dashboard");
+        } else {
+          router.push("/user/dashboard");
+        }
+      }
+    } catch (error) {
+      // Track login error
+      trackFormSubmission("login_form", false, {
+        method: "email",
+        error: "Unexpected error",
       });
 
-      router.push("/dashboard");
-    } catch (error) {
       toast.error("An unexpected error occurred");
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // The auth callback page will handle the role check and redirect
+    } catch (error) {
+      toast.error("Failed to sign in with Google");
+      console.error("Google sign-in error:", error);
+    }
+  };
+
+  // Remove the useEffect for role checking since it's now handled in the callback
+  useEffect(() => {
+    if (auth.user) {
+      // Only handle non-Google auth redirects here
+      if (!window.location.pathname.includes('/auth/callback')) {
+        // checkAndRedirect(); // Remove this line, logic is now in handleSubmit
+      }
+    }
+  }, [auth.user]);
 
   const formContent = (
     <>
@@ -95,17 +218,15 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
           )}
         </Button>
 
-        <LoginFormSecurity />
+        <AuthDivider />
 
-        {!hideContainer && (
-          <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-border dark:border-blue-800/50"></div>
-            <span className="mx-3 flex-shrink text-xs text-muted-foreground dark:text-blue-100/50">
-              OR
-            </span>
-            <div className="flex-grow border-t border-border dark:border-blue-800/50"></div>
-          </div>
-        )}
+        <GoogleButton
+          onClick={handleGoogleSignIn}
+          isLoading={isGoogleLoading}
+          error={googleError || undefined}
+        />
+
+        <LoginFormSecurity />
 
         {!hideContainer && (
           <div className="text-center text-sm text-muted-foreground dark:text-blue-100/70">

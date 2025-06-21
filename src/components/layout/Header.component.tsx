@@ -1,27 +1,58 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/helper/tw.helper";
 import Link from "next/link";
 import { Logo } from "@/ui/Logo.ui";
 import { Button } from "@/ui/Button.ui";
 import { ThemeToggle } from "@/ui/ThemeToggle.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { User, SignOut, List, X, Briefcase } from "@phosphor-icons/react";
+import { supabase } from "@/helper/supabase.helper";
+import { UserRole } from "@/types/onboarding.type";
 
 export function Header() {
   const { auth, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   // Wait for hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Check for Supabase session and user role
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setHasSession(!!session?.user);
+
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .single();
+
+        setUserRole(profile?.role || null);
+      }
+    };
+    checkSession();
+  }, []);
+
   const handleSignOut = async () => {
     await signOut();
     window.location.href = "/";
   };
+
+  const isLoggedIn = mounted && (auth.user || hasSession);
+  const pathname = usePathname() ?? '';
+  const dashboardPath = userRole === UserRole.ACCOUNTANT ? "/ca/dashboard" : "/user/dashboard";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/50 dark:bg-background/90">
@@ -34,19 +65,45 @@ export function Header() {
             <nav className="ml-8 hidden items-center space-x-8 md:flex">
               <Link
                 href="/search"
-                className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname?.startsWith("/search")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
               >
                 Find CA
               </Link>
               <Link
                 href="/about"
-                className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname?.startsWith("/about")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
               >
                 About
               </Link>
               <Link
+                href="/feed"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname?.startsWith("/feed")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
+              >
+                Feed
+              </Link>
+              <Link
                 href="/contact"
-                className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                className={cn(
+                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
+                  pathname?.startsWith("/contact")
+                    ? "text-primary dark:text-primary"
+                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+                )}
               >
                 Contact
               </Link>
@@ -65,9 +122,9 @@ export function Header() {
           <div className="hidden items-center space-x-4 md:flex">
             <ThemeToggle />
 
-            {mounted && auth.user ? (
+            {isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <Link href="/dashboard">
+                <Link href={dashboardPath}>
                   <Button
                     variant="outline"
                     className="rounded-lg border-primary/20 px-4 py-2 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
@@ -85,14 +142,14 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link href="/login/ca">
+              <div className="flex items-center">
+                <Link href="/login">
                   <Button
                     variant="default"
-                    className="rounded-lg bg-gradient-to-r from-primary to-secondary text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
+                    className="rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
                   >
-                    <Briefcase weight="bold" className="mr-2 h-4 w-4" />
-                    CA Login
+                    <Briefcase weight="bold" className="h-4 w-4" />
+                    Login
                   </Button>
                 </Link>
               </div>
@@ -120,6 +177,13 @@ export function Header() {
               About
             </Link>
             <Link
+              href="/feed"
+              className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Feed
+            </Link>
+            <Link
               href="/contact"
               className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
@@ -131,12 +195,12 @@ export function Header() {
               <ThemeToggle />
             </div>
 
-            {mounted && auth.user ? (
+            {isLoggedIn ? (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Link href={dashboardPath} onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="outline"
-                    className="w-full justify-start rounded-lg border-primary/20 px-4 py-2 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
+                    className="w-full justify-start rounded-lg border-primary/20 px-4 py-2.5 text-primary transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:border-primary/30 dark:text-primary/90 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary"
                   >
                     <User size={20} weight="bold" className="mr-2" />
                     Dashboard
@@ -156,13 +220,13 @@ export function Header() {
               </div>
             ) : (
               <div className="flex flex-col space-y-3 pt-2">
-                <Link href="/login/ca" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="default"
-                    className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
+                    className="w-full justify-start rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-white transition-all hover:shadow-md dark:from-blue-500 dark:to-blue-600"
                   >
                     <Briefcase weight="bold" className="mr-2 h-4 w-4" />
-                    CA Login
+                    Login
                   </Button>
                 </Link>
               </div>
