@@ -55,7 +55,7 @@ export function Header() {
   const dashboardPath = userRole === UserRole.ACCOUNTANT ? "/ca/dashboard" : "/user/dashboard";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/50 dark:bg-background/90">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background shadow-sm supports-[backdrop-filter]:bg-background dark:border-border/50 dark:bg-background">
       <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between md:h-20">
           <div className="flex items-center">
