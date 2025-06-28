@@ -13,7 +13,8 @@ type UserRole = 'ACCOUNTANT' | 'customer';
 
 // Default profile images for CAs
 const DEFAULT_CA_IMAGES = [
-'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'
+  'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'
+];
 
 /**
  * Get a default profile image for a CA
