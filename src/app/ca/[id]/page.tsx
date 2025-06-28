@@ -82,7 +82,7 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
 
     // Transform the data to match our CA type
     const transformedCA = {
-      id: caProfile.id,
+      id: params.id, // Use the URL parameter as the ID
       name: caProfile.name,
       email: caProfile.email,
       phone: caProfile.phone,
@@ -94,7 +94,9 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
       state: addressResult.data?.state || "",
       specialization: socialProfileResult.data?.areas_of_expertise?.split(",") || [],
       qualification: socialProfileResult.data?.ica_membership_number ? "CA" : "",
-      firm_name: socialProfileResult.data?.practice_license_number ? `${caProfile.name} & Associates` : "",
+      firm_name: socialProfileResult.data?.practice_license_number
+        ? `${caProfile.name} & Associates`
+        : "",
       member_since: new Date(caProfile.created_at).getFullYear().toString(),
       clients: "120+", // This should come from a separate table if available
       services: servicesResult.data?.map(service => service.service_name) || [],
