@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Card } from "@/ui/Card.ui";
 import { Input } from "@/ui/Input.ui";
-import { Button } from "@/ui/Button.ui"; // Assuming Button.ui.tsx exists for button elements
+import { Button } from "@/ui/Button.ui";
 import { MagnifyingGlass, Plus, TrashSimple } from "@phosphor-icons/react";
 import { PostCard } from "./post/PostCard.component";
 import { Container } from "@/components/layout/Container.component";
@@ -14,7 +14,7 @@ import { usePosts, useDeletePost } from "@/services/posts.service";
 import { useCategories } from "@/services/categories.service";
 import { useTags } from "@/services/tags.service";
 import { useAuth } from "@/store/context/Auth.provider";
-import { Select } from "@/ui/Select.ui";
+import { CustomSelect as Select } from "@/ui/Select.ui";
 import { Combobox } from "@/ui/Combobox.ui";
 import { PostCardSkeleton } from "./post/PostCardSkeleton.component";
 import { PostFilter } from "@/types/feed/post.type";
@@ -37,8 +37,8 @@ export const Feed: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   // replace manual effect+state with React-Query hooks:
-  const { data: categoriesList = [] } = useCategories();
-  const { data: tagsList = [] } = useTags();
+  const { data: categoriesList = [], error: categoriesError } = useCategories();
+  const { data: tagsList = [], error: tagsError } = useTags();
 
   // memoize filter object so queryKey stays stable
   const filterOpts = useMemo<PostFilter>(
@@ -50,14 +50,19 @@ export const Feed: React.FC = () => {
     }),
     [debouncedSearchTerm, filterCategory, filterTags, sortOption]
   );
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts(
+  
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage, error: postsError } = usePosts(
     filterOpts,
     10
   );
   const posts = data?.pages.flatMap(p => p.data) || [];
 
   // subscribe to Supabase Realtime in a service hook
-  useFeedRealtimeUpdates();
+  try {
+    useFeedRealtimeUpdates();
+  } catch (error) {
+    console.warn("Failed to initialize realtime updates:", error);
+  }
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -73,6 +78,28 @@ export const Feed: React.FC = () => {
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Handle errors gracefully
+  if (postsError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+            Unable to load posts
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            There was an error loading the feed. Please try again later.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-6">
@@ -107,7 +134,6 @@ export const Feed: React.FC = () => {
         </div>
 
         {/* Category, Tags & Sort inline filters */}
-        {/* Category, Tags & Sort inline filters */}
         <div className="flex items-center mb-4">
           {/* horizontal divider */}
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700" />
@@ -118,7 +144,7 @@ export const Feed: React.FC = () => {
               <Combobox
                 options={[
                   { value: "", label: "All" },
-                  ...categoriesList.map(c => ({ value: c, label: c })),
+                  ...(categoriesList || []).map(c => ({ value: c, label: c })),
                 ]}
                 value={filterCategory}
                 onValueChange={v => setFilterCategory(v as string)}
@@ -132,7 +158,7 @@ export const Feed: React.FC = () => {
               <span>Tags:</span>
               <Combobox
                 multiple
-                options={tagsList.map(tag => ({ value: tag, label: tag }))}
+                options={(tagsList || []).map(tag => ({ value: tag, label: tag }))}
                 value={filterTags}
                 onValueChange={v => setFilterTags(v as string[])}
                 placeholder="All"
@@ -169,7 +195,7 @@ export const Feed: React.FC = () => {
                 No posts found
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-                We couldn’t find any posts matching your search or filters.
+                We couldn't find any posts matching your search or filters.
               </p>
               <Button
                 variant="outline"
@@ -187,6 +213,7 @@ export const Feed: React.FC = () => {
           {!isLoading &&
             posts.map(post => (
               <Card
+                key={post.id}
                 className="overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition py-2"
                 onClick={() => router.push(`/feed/${post.id}`)}
               >
@@ -208,7 +235,7 @@ export const Feed: React.FC = () => {
             ))}
           {/* Sentinel for infinite scroll */}
           <div ref={sentinelRef} className="h-1" />
-          {/* “Load more” skeleton */}
+          {/* "Load more" skeleton */}
           {isFetchingNextPage && <PostCardSkeleton />}
           {/* End‐of‐feed message */}
           {!hasNextPage && !isLoading && !isFetchingNextPage && posts.length > 0 && (
