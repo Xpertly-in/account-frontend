@@ -96,17 +96,6 @@ export function Header() {
               >
                 Feed
               </Link>
-              <Link
-                href="/contact"
-                className={cn(
-                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname?.startsWith("/contact")
-                    ? "text-primary dark:text-primary"
-                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
-                )}
-              >
-                Contact
-              </Link>
             </nav>
           </div>
 
@@ -182,13 +171,6 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               Feed
-            </Link>
-            <Link
-              href="/contact"
-              className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact
             </Link>
 
             <div className="pt-2">

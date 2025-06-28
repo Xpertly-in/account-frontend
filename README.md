@@ -120,6 +120,41 @@ To learn more about the technologies used in this project:
 
 ## Deployment
 
-The application is deployed on Vercel. For more information about deploying Next.js apps, check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying).
+### Automated Vercel Deployments
 
-update
+This project is configured for automated deployments to Vercel using GitHub Actions.
+
+#### Setup Instructions
+
+1. **Vercel Environment Variables Setup:**
+   - Go to your Vercel project dashboard
+   - Navigate to Project Settings > Environment Variables
+   - Add all your environment variables here
+   - For each variable, select which environments it applies to (Production, Preview, Development)
+   - No need to expose sensitive environment variables in your repository
+
+2. **GitHub Secrets:**
+   Add the following secrets to your GitHub repository:
+   - `VERCEL_TOKEN`: Your Vercel API token (create in Vercel account settings)
+   - `VERCEL_ORG_ID`: Your Vercel organization ID
+   - `VERCEL_PROJECT_ID`: Your Vercel project ID
+
+3. **Branch Configuration:**
+   - Pushing to `main` or `master` will deploy to production
+   - Pushing to `development` or `dev` will deploy to development/preview
+
+4. **Finding Vercel Project Information:**
+   - To find your Vercel Project ID and Org ID, run `vercel whoami` and `vercel projects list` in your terminal after installing and logging in to the Vercel CLI
+   - Alternatively, you can find these in your project settings on the Vercel dashboard
+
+### Manual Deployments
+
+For manual deployments, use the following scripts:
+
+```bash
+# Development deployment
+npm run vercel-deploy:dev
+
+# Production deployment
+npm run vercel-deploy:prod
+```

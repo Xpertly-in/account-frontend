@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { ContactRequest, ContactRequestStatus } from "@/types/dashboard/contact-request.type";
 import { cn } from "@/helper/tw.helper";
 import { Toast } from "@/ui/Toast.ui";
-import { ContactRequestContent } from "./ContactRequestContent.component";
-import { ContactRequestContactInfo } from "./ContactRequestContactInfo.component";
-import { ContactRequestNotes } from "./ContactRequestNotes.component";
+import { ContactRequestContent } from "./Content.component";
+import { ContactRequestContactInfo } from "./ContactInfo.component";
+import { ContactRequestNotes } from "./Notes.component";
 
 interface ContactRequestCardProps {
   contactRequest: ContactRequest;
@@ -84,6 +84,42 @@ export const ContactRequestCard: React.FC<ContactRequestCardProps> = ({
         {/* Card Content with Mobile-Optimized Spacing */}
         <div className="p-4 space-y-4 sm:p-6 sm:space-y-6">
           {/* Header Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 mb-1">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+                  {contactRequest.customer_name}
+                </h3>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  <span>•</span>
+                  <span>{getRelativeTime(contactRequest.created_at)}</span>
+                </div>
+              </div>
+              <p className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300 truncate">
+                {contactRequest.subject}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 ml-4">
+              <select
+                value={currentStatus}
+                onChange={handleStatusChange}
+                disabled={isUpdatingStatus}
+                className={cn(
+                  "text-xs sm:text-sm font-medium rounded-lg border px-2 py-1 sm:px-3 sm:py-1.5 transition-colors",
+                  currentStatus === ContactRequestStatus.NEW &&
+                    "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300",
+                  currentStatus === ContactRequestStatus.REPLIED &&
+                    "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-300",
+                  currentStatus === ContactRequestStatus.IGNORED &&
+                    "bg-gray-50 border-gray-200 text-gray-700 dark:bg-gray-900/20 dark:border-gray-700 dark:text-gray-300"
+                )}
+              >
+                <option value={ContactRequestStatus.NEW}>New</option>
+                <option value={ContactRequestStatus.REPLIED}>Replied</option>
+                <option value={ContactRequestStatus.IGNORED}>Ignored</option>
+              </select>
+            </div>
+          </div>
 
           {/* Content Section */}
           <ContactRequestContent contactRequest={contactRequest} />

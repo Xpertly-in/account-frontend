@@ -90,6 +90,7 @@ export const ContactRequestNotes: React.FC<ContactRequestNotesProps> = ({
             <NotePencil
               className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600 dark:text-amber-400"
               weight="bold"
+              data-testid="note-pencil-icon"
             />
           </div>
           <div className="flex flex-col">
@@ -108,7 +109,10 @@ export const ContactRequestNotes: React.FC<ContactRequestNotesProps> = ({
             onClick={() => setIsEditingNotes(true)}
             className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm font-medium hover:bg-amber-50 hover:border-amber-300 dark:hover:bg-amber-900/20 dark:hover:border-amber-600 transition-colors rounded-lg"
           >
-            <NotePencil className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+            <NotePencil
+              className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2"
+              data-testid="note-pencil-icon"
+            />
             {notes ? "Edit" : "Add"}
           </Button>
         )}
@@ -149,7 +153,10 @@ export const ContactRequestNotes: React.FC<ContactRequestNotesProps> = ({
                 disabled={isSavingNotes}
                 className="h-8 sm:h-9 px-3 sm:px-5 text-xs sm:text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 rounded-lg"
               >
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                <CheckCircle
+                  className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2"
+                  data-testid="check-circle-icon"
+                />
                 {isSavingNotes ? "Saving..." : "Save"}
               </Button>
               <Button

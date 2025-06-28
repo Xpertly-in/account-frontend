@@ -1,6 +1,6 @@
 import React from "react";
 import { ContactRequest, ContactRequestStatus } from "@/types/dashboard/contact-request.type";
-import { ContactRequestCard } from "./ContactRequestCard.component";
+import { ContactRequestCard } from "./Card.component";
 
 interface ContactRequestsListProps {
   contactRequests: ContactRequest[];

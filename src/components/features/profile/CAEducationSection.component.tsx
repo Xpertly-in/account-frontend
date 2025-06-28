@@ -1,4 +1,4 @@
-import { GraduationCap, Calendar, Award } from "@phosphor-icons/react";
+import { GraduationCap, Calendar, Medal } from "@phosphor-icons/react";
 import { CAEducationSectionProps } from "@/types/ca.type";
 
 export const CAEducationSection = ({ educations, isLoaded }: CAEducationSectionProps) => {
@@ -14,13 +14,13 @@ export const CAEducationSection = ({ educations, isLoaded }: CAEducationSectionP
       </h2>
 
       <div className="space-y-6">
-        {educations.map((education) => (
+        {educations.map(education => (
           <div
             key={education.id}
             className="relative pl-6 border-l-2 border-blue-100 dark:border-blue-800/40"
           >
             <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 dark:bg-blue-400"></div>
-            
+
             <div className="space-y-3">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <h3 className="text-base md:text-lg font-semibold text-gray-800 dark:text-white">
@@ -39,7 +39,7 @@ export const CAEducationSection = ({ educations, isLoaded }: CAEducationSectionP
               </div>
 
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <Award className="h-4 w-4" weight="fill" />
+                <Medal className="h-4 w-4" weight="fill" />
                 <span>{education.fieldOfStudy}</span>
               </div>
 
@@ -61,4 +61,4 @@ export const CAEducationSection = ({ educations, isLoaded }: CAEducationSectionP
       </div>
     </div>
   );
-}; 
+};
