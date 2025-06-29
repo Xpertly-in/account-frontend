@@ -2,7 +2,7 @@
 
 import { Button } from "@/ui/Button.ui";
 import { Card, CardContent } from "@/ui/Card.ui";
-import { FileText, Calculator, Shield, TrendingUp, Rocket } from "lucide-react";
+import { FileText, Calculator, Shield, TrendUp, Rocket } from "@phosphor-icons/react";
 
 const CategorySection = () => {
   const categories = [
@@ -11,36 +11,36 @@ const CategorySection = () => {
       title: "GST",
       description: "GST Registration, Filing & Compliance",
       color: "bg-blue-500",
-      hoverColor: "hover:bg-blue-600"
+      hoverColor: "hover:bg-blue-600",
     },
     {
       icon: Calculator,
       title: "ITR Filing",
       description: "Income Tax Return Filing & Planning",
       color: "bg-blue-600",
-      hoverColor: "hover:bg-blue-700"
+      hoverColor: "hover:bg-blue-700",
     },
     {
       icon: Shield,
       title: "Audit",
       description: "Statutory & Internal Audit Services",
       color: "bg-blue-700",
-      hoverColor: "hover:bg-blue-800"
+      hoverColor: "hover:bg-blue-800",
     },
     {
-      icon: TrendingUp,
+      icon: TrendUp,
       title: "Investment",
       description: "Financial Planning & Investment Advisory",
       color: "bg-blue-500",
-      hoverColor: "hover:bg-blue-600"
+      hoverColor: "hover:bg-blue-600",
     },
     {
       icon: Rocket,
       title: "Startup",
       description: "Business Registration & Compliance",
       color: "bg-blue-600",
-      hoverColor: "hover:bg-blue-700"
-    }
+      hoverColor: "hover:bg-blue-700",
+    },
   ];
 
   return (

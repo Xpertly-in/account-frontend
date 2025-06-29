@@ -1,17 +1,78 @@
 "use client";
 
 import React from "react";
-import Select from "react-select";
+import ReactSelect from "react-select";
 
 export interface SelectOption {
   value: string;
   label: string;
 }
 
+// Simple HTML-based Select component for traditional usage
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  className?: string;
+  children: React.ReactNode;
+  multiple?: boolean;
+  style?: React.CSSProperties;
+}
+
+const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+  ({ className = "", children, multiple, style, ...props }, ref) => {
+    return (
+      <div className="relative">
+        <select
+          ref={ref}
+          multiple={multiple}
+          className={`
+            w-full px-3 py-2 text-sm
+            bg-white dark:bg-gray-800
+            border border-gray-300 dark:border-gray-600
+            rounded-md shadow-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:ring-ring
+            dark:focus:ring-blue-400 dark:focus:border-blue-400
+            text-gray-900 dark:text-gray-100
+            disabled:opacity-50 disabled:cursor-not-allowed
+            appearance-none
+            ${multiple ? "pr-3" : "pr-8"}
+            ${className}
+          `}
+          style={{ appearance: "none", ...style }}
+          {...props}
+        >
+          {children}
+        </select>
+        {!multiple && (
+          <div
+            className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"
+            data-testid="caret-down-icon"
+          >
+            <svg
+              className="w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+Select.displayName = "Select";
+
+// CustomSelect component for advanced usage with react-select
 interface CustomSelectProps {
   options: SelectOption[];
-  value?: SelectOption | null;
-  onChange: (option: SelectOption | null) => void;
+  value?: SelectOption | SelectOption[] | null;
+  onChange: (option: SelectOption | SelectOption[] | null) => void;
   placeholder?: string;
   isSearchable?: boolean;
   isClearable?: boolean;
@@ -33,37 +94,31 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   className = "",
   icon,
   isLoading = false,
-  noOptionsMessage = () => "No options found"
+  noOptionsMessage = () => "No options found",
 }) => {
   const customStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
       minHeight: "48px",
       backgroundColor: "var(--background)",
-      border: state.isFocused 
-        ? "2px solid #3b82f6" 
-        : "1px solid #e5e7eb",
+      border: state.isFocused ? "2px solid #3b82f6" : "1px solid #e5e7eb",
       borderRadius: "8px",
       boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
       "&:hover": {
-        borderColor: "#3b82f6"
+        borderColor: "#3b82f6",
       },
       paddingLeft: icon ? "40px" : "12px",
       transition: "all 0.2s ease",
     }),
     option: (provided: any, state: any) => ({
       ...provided,
-      backgroundColor: state.isSelected 
-        ? "#3b82f6" 
-        : state.isFocused 
-        ? "#f3f4f6" 
-        : "transparent",
+      backgroundColor: state.isSelected ? "#3b82f6" : state.isFocused ? "#f3f4f6" : "transparent",
       color: state.isSelected ? "white" : "var(--foreground)",
       padding: "12px 16px",
       cursor: "pointer",
       "&:hover": {
-        backgroundColor: state.isSelected ? "#3b82f6" : "#f3f4f6"
-      }
+        backgroundColor: state.isSelected ? "#3b82f6" : "#f3f4f6",
+      },
     }),
     menu: (provided: any) => ({
       ...provided,
@@ -133,25 +188,19 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     control: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: "#1f2937",
-      border: state.isFocused 
-        ? "2px solid #60a5fa" 
-        : "1px solid #374151",
+      border: state.isFocused ? "2px solid #60a5fa" : "1px solid #374151",
       "&:hover": {
-        borderColor: "#60a5fa"
+        borderColor: "#60a5fa",
       },
       boxShadow: state.isFocused ? "0 0 0 3px rgba(96, 165, 250, 0.1)" : "none",
     }),
     option: (provided: any, state: any) => ({
       ...provided,
-      backgroundColor: state.isSelected 
-        ? "#60a5fa" 
-        : state.isFocused 
-        ? "#374151" 
-        : "transparent",
+      backgroundColor: state.isSelected ? "#60a5fa" : state.isFocused ? "#374151" : "transparent",
       color: state.isSelected ? "white" : "#f9fafb",
       "&:hover": {
-        backgroundColor: state.isSelected ? "#60a5fa" : "#374151"
-      }
+        backgroundColor: state.isSelected ? "#60a5fa" : "#374151",
+      },
     }),
     menu: (provided: any) => ({
       ...provided,
@@ -197,10 +246,19 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           {icon}
         </div>
       )}
-      <Select
+      <ReactSelect
         options={options}
         value={value}
-        onChange={onChange}
+        onChange={newValue => {
+          // Handle both single and multi-select scenarios
+          if (isMulti) {
+            // For multi-select, convert readonly array to regular array
+            onChange(newValue ? [...(newValue as readonly SelectOption[])] : null);
+          } else {
+            // For single-select, pass the single value or null
+            onChange(newValue as SelectOption | null);
+          }
+        }}
         placeholder={placeholder}
         isSearchable={isSearchable}
         isClearable={isClearable}
@@ -209,17 +267,19 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         noOptionsMessage={noOptionsMessage}
         styles={{
           ...customStyles,
-          ...(typeof window !== 'undefined' && document.documentElement.classList.contains('dark') ? darkModeStyles : {})
+          ...(typeof window !== "undefined" && document.documentElement.classList.contains("dark")
+            ? darkModeStyles
+            : {}),
         }}
         classNamePrefix="react-select"
-        theme={(theme) => ({
+        theme={theme => ({
           ...theme,
           colors: {
             ...theme.colors,
-            primary: '#3b82f6',
-            primary75: '#60a5fa',
-            primary50: '#93c5fd',
-            primary25: '#dbeafe',
+            primary: "#3b82f6",
+            primary75: "#60a5fa",
+            primary50: "#93c5fd",
+            primary25: "#dbeafe",
           },
         })}
       />
@@ -227,4 +287,4 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   );
 };
 
-export { CustomSelect };
+export { CustomSelect, Select };
