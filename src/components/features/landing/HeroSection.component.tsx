@@ -4,26 +4,24 @@ import { useState, useEffect } from "react";
 import { Button } from "@/ui/Button.ui";
 import { CustomSelect, SelectOption } from "@/ui/Select.ui";
 import {
-  MagnifyingGlass,
-  MapPin,
-  Buildings,
-  Bank,
-  Tree,
-  Waves,
-  Mountains,
-  Sun,
-  Star,
-  Calendar,
-  Medal,
-  Calculator,
-  FileText,
-  ChartPie,
-  TrendUp,
-  ArrowDown,
-  Shield,
-  Rocket,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  BuildingsIcon,
+  BankIcon,
+  TreeIcon,
+  WavesIcon,
+  MountainsIcon,
+  SunHorizonIcon,
+  StarIcon,
+  CalendarIcon,
+  MedalIcon,
+  CalculatorIcon,
+  FileTextIcon,
+  TrendUpIcon,
+  ArrowDownIcon,
+  ShieldIcon,
+  RocketIcon,
 } from "@phosphor-icons/react";
-import Image from "next/image";
 import { CAService } from "@/services/ca.service";
 import { CA } from "@/types/ca.type";
 
@@ -88,14 +86,24 @@ const HeroSection = () => {
   ];
 
   const popularCities = [
-    { name: "Mumbai", icon: Buildings, color: "text-blue-600", landmark: "Gateway of India" },
-    { name: "Delhi", icon: Bank, color: "text-red-600", landmark: "Red Fort" },
-    { name: "Bangalore", icon: Tree, color: "text-green-600", landmark: "Silicon Valley" },
-    { name: "Chennai", icon: Waves, color: "text-cyan-600", landmark: "Marina Beach" },
-    { name: "Kolkata", icon: Buildings, color: "text-yellow-600", landmark: "Victoria Memorial" },
-    { name: "Pune", icon: Mountains, color: "text-purple-600", landmark: "Shaniwar Wada" },
-    { name: "Hyderabad", icon: Sun, color: "text-orange-600", landmark: "Charminar" },
-    { name: "Ahmedabad", icon: Buildings, color: "text-pink-600", landmark: "Sabarmati Ashram" },
+    { name: "Mumbai", icon: BuildingsIcon, color: "text-blue-600", landmark: "Gateway of India" },
+    { name: "Delhi", icon: BankIcon, color: "text-red-600", landmark: "Red Fort" },
+    { name: "Bangalore", icon: TreeIcon, color: "text-green-600", landmark: "Silicon Valley" },
+    { name: "Chennai", icon: WavesIcon, color: "text-cyan-600", landmark: "Marina Beach" },
+    {
+      name: "Kolkata",
+      icon: BuildingsIcon,
+      color: "text-yellow-600",
+      landmark: "Victoria Memorial",
+    },
+    { name: "Pune", icon: MountainsIcon, color: "text-purple-600", landmark: "Shaniwar Wada" },
+    { name: "Hyderabad", icon: SunHorizonIcon, color: "text-orange-600", landmark: "Charminar" },
+    {
+      name: "Ahmedabad",
+      icon: BuildingsIcon,
+      color: "text-pink-600",
+      landmark: "Sabarmati Ashram",
+    },
   ];
 
   // Fetch featured CAs from Supabase
@@ -166,7 +174,7 @@ const HeroSection = () => {
                     }
                   }}
                   placeholder="What service do you need?"
-                  icon={<MagnifyingGlass className="h-5 w-5" />}
+                  icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                   noOptionsMessage={() => "No services found"}
                 />
                 <CustomSelect
@@ -181,7 +189,7 @@ const HeroSection = () => {
                     }
                   }}
                   placeholder="Enter your city"
-                  icon={<MapPin className="h-5 w-5" />}
+                  icon={<MapPinIcon className="h-5 w-5" />}
                   noOptionsMessage={() => "No cities found"}
                 />
               </div>
@@ -190,14 +198,14 @@ const HeroSection = () => {
                 className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-8 py-4 text-lg font-semibold rounded-lg"
                 onClick={handleSearch}
               >
-                <MagnifyingGlass className="mr-2 h-5 w-5" />
+                <MagnifyingGlassIcon className="mr-2 h-5 w-5" />
                 Find Your Perfect CA
               </Button>
             </div>
 
             <div className="mb-8 max-w-4xl">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-                <MapPin className="mr-2 h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <MapPinIcon className="mr-2 h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Find CAs in Popular Cities
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -219,7 +227,7 @@ const HeroSection = () => {
 
             <div className="mb-8 max-w-4xl">
               <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
-                <Medal className="mr-2 h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <MedalIcon className="mr-2 h-6 w-6 text-blue-600 dark:text-blue-400" />
                 Top Rated Chartered Accountants
               </h3>
 
@@ -267,7 +275,7 @@ const HeroSection = () => {
 
                       <div className="flex items-center mb-3">
                         <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <StarIcon className="h-4 w-4 text-yellow-400 fill-current" />
                           <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">
                             {ca.rating}
                           </span>
@@ -278,7 +286,7 @@ const HeroSection = () => {
                       </div>
 
                       <div className="flex items-center mb-4">
-                        <Calendar className="h-4 w-4 text-gray-400 mr-1" />
+                        <CalendarIcon className="h-4 w-4 text-gray-400 mr-1" />
                         <span className="text-sm text-gray-600 dark:text-gray-400">
                           {ca.experience} years experience
                         </span>
@@ -352,7 +360,7 @@ const HeroSection = () => {
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-blue-600 dark:bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <Calculator className="h-8 w-8 text-white" />
+                      <CalculatorIcon className="h-8 w-8 text-white" />
                     </div>
                     <p className="text-sm font-semibold text-gray-800 dark:text-white">Expert CA</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Services</p>
@@ -366,7 +374,7 @@ const HeroSection = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-white" />
+                      <FileTextIcon className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-xs font-semibold text-gray-800 dark:text-white">GST</span>
                   </div>
@@ -378,7 +386,7 @@ const HeroSection = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Calculator className="h-4 w-4 text-white" />
+                      <CalculatorIcon className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-xs font-semibold text-gray-800 dark:text-white">
                       ITR Filing
@@ -392,7 +400,7 @@ const HeroSection = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                      <Shield className="h-4 w-4 text-white" />
+                      <ShieldIcon className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-xs font-semibold text-gray-800 dark:text-white">
                       Auditing
@@ -406,7 +414,7 @@ const HeroSection = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                      <TrendUp className="h-4 w-4 text-white" />
+                      <TrendUpIcon className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-xs font-semibold text-gray-800 dark:text-white">
                       Investment
@@ -420,7 +428,7 @@ const HeroSection = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center">
-                      <Rocket className="h-4 w-4 text-white" />
+                      <RocketIcon className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-xs font-semibold text-gray-800 dark:text-white">
                       Startup
@@ -436,7 +444,7 @@ const HeroSection = () => {
       {/* Enhanced Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
         <div className="flex flex-col items-center">
-          <ArrowDown className="h-6 w-6 text-gray-400 animate-pulse" />
+          <ArrowDownIcon className="h-6 w-6 text-gray-400 animate-pulse" />
           <span className="text-xs text-gray-400 mt-1">Scroll to explore</span>
         </div>
       </div>
