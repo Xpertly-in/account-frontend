@@ -11,16 +11,7 @@ import { servicesConfig, FormField } from "@/constants/form-sections.config";
 import { validateService } from "@/helper/form.helper";
 import { Service } from "@/types/onboarding.type";
 import { ServiceSelect } from "./ServiceSelect.component";
-
-const DEFAULT_SERVICES = [
-  "Income Tax Filing",
-  "GST Filing",
-  "Company Incorporation",
-  "Accounting Services",
-  "Audit Services",
-  "Compliance Services",
-  "Financial Consulting",
-];
+import { getServiceLabels } from "@/constants/services.constants";
 
 interface ServicesFormProps {
   services: Service[];
@@ -32,18 +23,20 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
   const { auth } = useAuth();
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [newServiceName, setNewServiceName] = useState("");
-  const [suggestedServices, setSuggestedServices] = useState<string[]>(DEFAULT_SERVICES);
+  const [suggestedServices, setSuggestedServices] = useState<string[]>([...getServiceLabels()]);
   const [validationErrors, setValidationErrors] = useState<Record<string, any>>({});
 
   const handleAddService = () => {
     if (editingServiceId || !newServiceName.trim()) return;
-    
+
     const newId = `temp-${Date.now()}`;
     onServicesChange([
       ...services,
       {
         service_id: newId,
-        name: newServiceName.trim(),
+        ca_id: auth.user?.id || "",
+        service_name: newServiceName.trim(),
+        is_active: true,
       },
     ]);
     setNewServiceName("");
@@ -51,7 +44,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
   };
 
   const handleCancelEdit = () => {
-    if (editingServiceId?.startsWith('temp-')) {
+    if (editingServiceId?.startsWith("temp-")) {
       onServicesChange(services.filter(service => service.service_id !== editingServiceId));
     }
     setEditingServiceId(null);
@@ -59,39 +52,41 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
   };
 
   const handleSaveService = async (id: string, service: Service) => {
-    if (!auth.user || !service.name.trim()) return;
+    if (!auth.user || !service.service_name.trim()) return;
 
     try {
-      if (id.startsWith('temp-')) {
+      if (id.startsWith("temp-")) {
         const { data, error } = await supabase
           .from("services")
-          .insert([{
-            ca_id: auth.user.id,
-            service_name: service.name,
-            is_active: true,
-          }])
+          .insert([
+            {
+              ca_id: auth.user.id,
+              service_name: service.service_name,
+              is_active: true,
+            },
+          ])
           .select()
           .single();
 
         if (error) throw error;
 
-        onServicesChange(services.map(s => 
-          s.service_id === id ? { ...service, service_id: data.service_id } : s
-        ));
+        onServicesChange(
+          services.map(s => (s.service_id === id ? { ...service, service_id: data.service_id } : s))
+        );
         toast.success("Service added successfully");
       } else {
         const { error } = await supabase
           .from("services")
           .update({
-            service_name: service.name,
+            service_name: service.service_name,
           })
           .eq("service_id", service.service_id);
 
         if (error) throw error;
 
-        onServicesChange(services.map(s => 
-          s.service_id === id ? { ...service, service_id: id } : s
-        ));
+        onServicesChange(
+          services.map(s => (s.service_id === id ? { ...service, service_id: id } : s))
+        );
         toast.success("Service updated successfully");
       }
 
@@ -106,7 +101,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
     if (!auth.user) return;
 
     try {
-      if (id.startsWith('temp-')) {
+      if (id.startsWith("temp-")) {
         onServicesChange(services.filter(s => s.service_id !== id));
       } else {
         const { error } = await supabase
@@ -128,7 +123,7 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
   const handleServiceNameChange = (value: string) => {
     setNewServiceName(value);
     // Filter suggested services based on input
-    const filtered = DEFAULT_SERVICES.filter(service => 
+    const filtered = [...getServiceLabels()].filter(service =>
       service.toLowerCase().includes(value.toLowerCase())
     );
     setSuggestedServices(filtered);
@@ -154,9 +149,9 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
                   ...service,
                   [field.id]: e.target.value,
                 };
-                onServicesChange(services.map(s => 
-                  s.service_id === service.service_id ? updatedService : s
-                ));
+                onServicesChange(
+                  services.map(s => (s.service_id === service.service_id ? updatedService : s))
+                );
               }}
               required={field.required}
               className={error ? "border-red-500" : ""}
@@ -179,9 +174,9 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
                   ...service,
                   [field.id]: e.target.value,
                 };
-                onServicesChange(services.map(s => 
-                  s.service_id === service.service_id ? updatedService : s
-                ));
+                onServicesChange(
+                  services.map(s => (s.service_id === service.service_id ? updatedService : s))
+                );
               }}
               required={field.required}
               className={`min-h-[80px] ${error ? "border-red-500" : ""}`}
@@ -203,10 +198,11 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
 
       <div className="relative">
         <div className="mb-8">
-          
-
           <h2 className="text-xl font-semibold">Services</h2>
-          <p className="text-sm text-muted-foreground"> Showcase your expertise by adding the services you offer</p>
+          <p className="text-sm text-muted-foreground">
+            {" "}
+            Showcase your expertise by adding the services you offer
+          </p>
         </div>
 
         {/* Add New Service Input */}
@@ -215,10 +211,8 @@ export function ServicesForm({ services, onServicesChange, servicesLoading }: Se
             <div className="flex-1">
               <ServiceSelect disabled={!!editingServiceId} />
             </div>
-           
+          </div>
         </div>
-
-   </div>
       </div>
     </Card>
   );

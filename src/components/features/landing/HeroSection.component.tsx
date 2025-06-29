@@ -24,42 +24,13 @@ import {
 } from "@phosphor-icons/react";
 import { CAService } from "@/services/ca.service";
 import { CA } from "@/types/ca.type";
+import { getAllServices } from "@/constants/services.constants";
 
 const HeroSection = () => {
   const [selectedService, setSelectedService] = useState<SelectOption | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<SelectOption | null>(null);
   const [featuredCAs, setFeaturedCAs] = useState<CA[]>([]);
   const [isLoadingCAs, setIsLoadingCAs] = useState(true);
-
-  // Service options for autocomplete
-  const serviceOptions: SelectOption[] = [
-    { value: "gst-registration", label: "GST Registration" },
-    { value: "gst-filing", label: "GST Filing" },
-    { value: "gst-return-filing", label: "GST Return Filing" },
-    { value: "income-tax-filing", label: "Income Tax Filing" },
-    { value: "itr-filing", label: "ITR Filing" },
-    { value: "tax-planning", label: "Tax Planning" },
-    { value: "tax-consultation", label: "Tax Consultation" },
-    { value: "statutory-audit", label: "Statutory Audit" },
-    { value: "internal-audit", label: "Internal Audit" },
-    { value: "company-audit", label: "Company Audit" },
-    { value: "financial-audit", label: "Financial Audit" },
-    { value: "investment-planning", label: "Investment Planning" },
-    { value: "financial-planning", label: "Financial Planning" },
-    { value: "mutual-fund-advisory", label: "Mutual Fund Advisory" },
-    { value: "insurance-planning", label: "Insurance Planning" },
-    { value: "company-registration", label: "Company Registration" },
-    { value: "partnership-registration", label: "Partnership Registration" },
-    { value: "llp-registration", label: "LLP Registration" },
-    { value: "startup-registration", label: "Startup Registration" },
-    { value: "business-setup", label: "Business Setup" },
-    { value: "compliance-management", label: "Compliance Management" },
-    { value: "book-keeping", label: "Book Keeping" },
-    { value: "accounting-services", label: "Accounting Services" },
-    { value: "payroll-management", label: "Payroll Management" },
-    { value: "tds-filing", label: "TDS Filing" },
-    { value: "esi-pf-registration", label: "ESI & PF Registration" },
-  ];
 
   // City options for autocomplete
   const cityOptions: SelectOption[] = [
@@ -163,7 +134,7 @@ const HeroSection = () => {
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 mb-8 border border-gray-100 dark:border-gray-700 max-w-4xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <CustomSelect
-                  options={serviceOptions}
+                  options={getAllServices()}
                   value={selectedService}
                   onChange={option => {
                     // CustomSelect can return array for multi-select, but we only want single values

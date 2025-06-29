@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/ui/Button.ui";
 import { Input } from "@/ui/Input.ui";
 import { useAuth } from "@/store/context/Auth.provider";
+import { getServiceLabels } from "@/constants/services.constants";
 
 interface ServiceSelectProps {
   value?: string[]; // Not used, but for compatibility
@@ -14,15 +15,7 @@ interface ServiceSelectProps {
   disabled?: boolean;
 }
 
-const DEFAULT_SERVICES = [
-  "Income Tax Filing",
-  "GST Filing",
-  "Company Incorporation",
-  "Accounting Services",
-  "Audit Services",
-  "Compliance Services",
-  "Financial Consulting",
-];
+const SERVICE_OPTIONS = getServiceLabels();
 
 export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
   const { auth } = useAuth();
@@ -42,13 +35,13 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
           .from("services")
           .select("service_name")
           .eq("is_active", true);
-        let all = [...DEFAULT_SERVICES];
+        let all = [...SERVICE_OPTIONS];
         if (data) {
           all = [...all, ...data.map(service => service.service_name)];
         }
         setAvailableServices(Array.from(new Set(all)));
       } catch (error) {
-        setAvailableServices([...DEFAULT_SERVICES]);
+        setAvailableServices([...SERVICE_OPTIONS]);
         console.error("Error loading services:", error);
       } finally {
         setIsLoading(false);
@@ -103,13 +96,11 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
       }
     } else {
       // Insert into DB
-      const { error } = await supabase
-        .from("services")
-        .insert({
-          ca_id: auth.user.id,
-          service_name: service,
-          is_active: true,
-        });
+      const { error } = await supabase.from("services").insert({
+        ca_id: auth.user.id,
+        service_name: service,
+        is_active: true,
+      });
       if (!error) {
         setSelectedServices(prev => [...prev, service]);
       }
@@ -123,13 +114,11 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
     setIsLoading(true);
     const service = customService.trim();
     // Insert into DB
-    const { error } = await supabase
-      .from("services")
-      .insert({
-        ca_id: auth.user.id,
-        service_name: service,
-        is_active: true,
-      });
+    const { error } = await supabase.from("services").insert({
+      ca_id: auth.user.id,
+      service_name: service,
+      is_active: true,
+    });
     if (!error) {
       setAvailableServices(prev => Array.from(new Set([...prev, service])));
       setSelectedServices(prev => [...prev, service]);
@@ -150,7 +139,7 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
         {!isLoading && availableServices.length === 0 && (
           <span className="text-muted-foreground text-sm">No services available.</span>
         )}
-        {availableServices.map((service) => {
+        {availableServices.map(service => {
           const isActive = selectedServices.includes(service);
           return (
             <button
@@ -160,10 +149,12 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
               disabled={disabled || isLoading}
               tabIndex={0}
               className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-1 transition-all focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2
-                ${isActive
-                  ? 'bg-primary text-white shadow-md' 
-                  : 'bg-muted/70 text-foreground hover:bg-primary/10 hover:text-primary'}
-                ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                ${
+                  isActive
+                    ? "bg-primary text-white shadow-md"
+                    : "bg-muted/70 text-foreground hover:bg-primary/10 hover:text-primary"
+                }
+                ${disabled || isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
               `}
               aria-pressed={isActive}
               aria-label={service}
@@ -192,15 +183,15 @@ export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
           <Input
             ref={inputRef}
             value={customService}
-            onChange={(e) => setCustomService(e.target.value)}
+            onChange={e => setCustomService(e.target.value)}
             placeholder="Enter custom service..."
             className="flex-1 min-w-0"
-            onKeyDown={async (e) => {
-              if (e.key === 'Enter') {
+            onKeyDown={async e => {
+              if (e.key === "Enter") {
                 e.preventDefault();
                 await handleCustomServiceAdd();
               }
-              if (e.key === 'Escape') {
+              if (e.key === "Escape") {
                 setShowCustomInput(false);
                 setCustomService("");
               }
