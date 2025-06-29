@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/Card.ui";
 import { Button } from "@/ui/Button.ui";
-import { Calendar, ExternalLink, TrendingUp } from "lucide-react";
+import { Calendar, ArrowSquareOut, TrendUp } from "@phosphor-icons/react";
 
 const FinanceNewsSection = () => {
   const financeNews = [
@@ -44,61 +44,63 @@ const FinanceNewsSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 lg:mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900 rounded-full text-blue-800 dark:text-blue-200 text-sm font-medium mb-6">
-            <TrendingUp className="w-4 h-4 mr-2" />
+            <TrendUp className="w-4 h-4 mr-2" />
             Latest Updates
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Finance <span className="text-blue-600 dark:text-blue-400">News & Updates</span>
           </h2>
           <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Stay updated with the latest financial regulations, tax changes, and industry news from India
+            Stay updated with the latest financial regulations, tax changes, and industry news from
+            India
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {financeNews.map((article) => (
-            <Card key={article.id} className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden">
+          {financeNews.map(article => (
+            <Card
+              key={article.id}
+              className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
+            >
               <div className="relative">
-                <img 
-                  src={article.image} 
-                  alt={article.title}
-                  className="w-full h-48 object-cover"
-                />
+                <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
                 <div className="absolute top-4 left-4">
                   <span className="px-3 py-1 bg-blue-600 dark:bg-blue-500 text-white text-xs font-semibold rounded-full">
                     {article.category}
                   </span>
                 </div>
               </div>
-              
+
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight">
                   {article.title}
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent className="pt-0 pb-2">
                 <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3">
                   {article.excerpt}
                 </p>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs">
                     <Calendar className="h-4 w-4 mr-1" />
-                    <span>{new Date(article.date).toLocaleDateString('en-IN', { 
-                      day: 'numeric', 
-                      month: 'short', 
-                      year: 'numeric' 
-                    })}</span>
+                    <span>
+                      {new Date(article.date).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
                   </div>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     variant="outline"
                     className="border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
                     onClick={() => handleReadMore(article.url)}
                   >
-                    <ExternalLink className="h-3 w-3 mr-1" />
+                    <ArrowSquareOut className="h-3 w-3 mr-1" />
                     Read More
                   </Button>
                 </div>

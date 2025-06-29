@@ -18,6 +18,7 @@ export interface CA {
   clients?: string;
   about?: string;
   services?: string[];
+  language?: string[];
 }
 
 export interface ContactDetails {
