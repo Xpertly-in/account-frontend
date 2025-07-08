@@ -3,19 +3,9 @@ import { Input } from "@/ui/Input.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { getServiceLabels } from "@/constants/services.constants";
 
-const SERVICE_OPTIONS = [
-  "ITR Filing",
-  "GST Registration",
-  "GST Return Filing",
-  "Company Incorporation",
-  "Bookkeeping & Accounting",
-  "Tax Planning",
-  "Audit Services",
-  "TDS Filing",
-  "Startup Advisory",
-  "Other"
-];
+const SERVICE_OPTIONS = getServiceLabels();
 
 export default function CustomerServicesForm({ formData, setFormData, errors, setErrors }: any) {
   const { auth } = useAuth();
@@ -34,13 +24,11 @@ export default function CustomerServicesForm({ formData, setFormData, errors, se
       });
 
       // Update services in the database
-      const { error } = await supabase
-        .from("services")
-        .upsert({
-          ca_id: auth.user.id,
-          service_name: service === "Other" ? formData.otherService : service,
-          is_active: true
-        });
+      const { error } = await supabase.from("services").upsert({
+        ca_id: auth.user.id,
+        service_name: service === "Other" ? formData.otherService : service,
+        is_active: true,
+      });
 
       if (error) throw error;
       setErrors((e: any) => ({ ...e, services: "" }));
@@ -58,8 +46,8 @@ export default function CustomerServicesForm({ formData, setFormData, errors, se
             type="button"
             key={service}
             className={`px-3 py-1 rounded-full border text-sm font-medium transition-all shadow-sm ${
-              formData.services?.includes(service) 
-                ? "bg-primary text-white" 
+              formData.services?.includes(service)
+                ? "bg-primary text-white"
                 : "bg-background border-primary text-primary"
             }`}
             onClick={() => handleServiceToggle(service)}
@@ -77,10 +65,12 @@ export default function CustomerServicesForm({ formData, setFormData, errors, se
             onChange={e => setFormData((f: any) => ({ ...f, otherService: e.target.value }))}
             className={errors.otherService ? "border-red-500" : ""}
           />
-          {errors.otherService && <p className="text-xs text-red-500 mt-1">{errors.otherService}</p>}
+          {errors.otherService && (
+            <p className="text-xs text-red-500 mt-1">{errors.otherService}</p>
+          )}
         </div>
       )}
       {errors.services && <p className="text-xs text-red-500 mt-1">{errors.services}</p>}
     </div>
   );
-} 
+}

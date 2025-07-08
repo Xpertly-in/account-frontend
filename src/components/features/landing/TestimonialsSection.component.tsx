@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/ui/Card.ui";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 const TestimonialsSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -103,19 +103,19 @@ const TestimonialsSection = () => {
             onClick={prevTestimonial}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
           >
-            <ChevronLeft className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+            <CaretLeft className="h-6 w-6 text-gray-700 dark:text-gray-300" />
           </button>
           <button
             onClick={nextTestimonial}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
           >
-            <ChevronRight className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+            <CaretRight className="h-6 w-6 text-gray-700 dark:text-gray-300" />
           </button>
 
           {/* Testimonials Grid - Smaller Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 px-12">
             {getVisibleTestimonials().map((testimonial, index) => (
-              <Card 
+              <Card
                 key={`${testimonial.name}-${currentIndex}-${index}`}
                 className="bg-white dark:bg-gray-800 border-0 shadow-lg hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 group h-80"
               >
@@ -123,7 +123,9 @@ const TestimonialsSection = () => {
                   {/* Stars */}
                   <div className="flex justify-center mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <span key={i} className="text-yellow-400 text-lg">★</span>
+                      <span key={i} className="text-yellow-400 text-lg">
+                        ★
+                      </span>
                     ))}
                   </div>
 
@@ -156,7 +158,9 @@ const TestimonialsSection = () => {
                       </p>
                       {/* Savings Badge */}
                       <div className="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full">
-                        <span className="text-green-700 dark:text-green-300 text-xs font-semibold">💰 Saved {testimonial.savings}</span>
+                        <span className="text-green-700 dark:text-green-300 text-xs font-semibold">
+                          💰 Saved {testimonial.savings}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -172,9 +176,9 @@ const TestimonialsSection = () => {
                 key={index}
                 onClick={() => setCurrentIndex(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentIndex 
-                    ? 'bg-blue-600 w-8' 
-                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                  index === currentIndex
+                    ? "bg-blue-600 w-8"
+                    : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
                 }`}
                 aria-label={`View testimonial ${index + 1}`}
               />
@@ -185,19 +189,27 @@ const TestimonialsSection = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8 mt-12 lg:mt-16">
           <div className="text-center group">
-            <div className="text-2xl lg:text-3xl font-bold text-blue-900 dark:text-blue-300 mb-2 group-hover:scale-110 transition-transform duration-300">1000+</div>
+            <div className="text-2xl lg:text-3xl font-bold text-blue-900 dark:text-blue-300 mb-2 group-hover:scale-110 transition-transform duration-300">
+              1000+
+            </div>
             <div className="text-gray-600 dark:text-gray-400 font-medium">Verified CAs</div>
           </div>
           <div className="text-center group">
-            <div className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2 group-hover:scale-110 transition-transform duration-300">50,000+</div>
+            <div className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2 group-hover:scale-110 transition-transform duration-300">
+              50,000+
+            </div>
             <div className="text-gray-600 dark:text-gray-400 font-medium">Happy Clients</div>
           </div>
           <div className="text-center group">
-            <div className="text-2xl lg:text-3xl font-bold text-blue-700 dark:text-blue-500 mb-2 group-hover:scale-110 transition-transform duration-300">₹10Cr+</div>
+            <div className="text-2xl lg:text-3xl font-bold text-blue-700 dark:text-blue-500 mb-2 group-hover:scale-110 transition-transform duration-300">
+              ₹10Cr+
+            </div>
             <div className="text-gray-600 dark:text-gray-400 font-medium">Tax Savings</div>
           </div>
           <div className="text-center group">
-            <div className="text-2xl lg:text-3xl font-bold text-blue-800 dark:text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">4.9★</div>
+            <div className="text-2xl lg:text-3xl font-bold text-blue-800 dark:text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">
+              4.9★
+            </div>
             <div className="text-gray-600 dark:text-gray-400 font-medium">Average Rating</div>
           </div>
         </div>

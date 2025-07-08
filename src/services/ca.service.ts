@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { CA, FeaturedCA } from '@/types/ca.type';
-import { getCALocation, getPopularCities as getMockPopularCities } from '@/utils/ca-location.utils';
+import { CA } from "@/types/ca.type";
+import { getCALocation, getPopularCities as getMockPopularCities } from "@/utils/ca-location.utils";
 
 export interface CAWithServices extends CA {
   services: string[];
@@ -9,11 +9,11 @@ export interface CAWithServices extends CA {
 }
 
 // Define the role enum based on the database schema
-type UserRole = 'ACCOUNTANT' | 'customer';
+type UserRole = "ACCOUNTANT" | "customer";
 
 // Default profile images for CAs
 const DEFAULT_CA_IMAGES = [
-  'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'
+  "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png",
 ];
 
 /**
@@ -21,7 +21,8 @@ const DEFAULT_CA_IMAGES = [
  */
 const getDefaultCAImage = (userId: string): string => {
   // Use userId to consistently get the same image for the same user
-  const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % DEFAULT_CA_IMAGES.length;
+  const index =
+    userId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % DEFAULT_CA_IMAGES.length;
   return DEFAULT_CA_IMAGES[index];
 };
 
@@ -29,15 +30,15 @@ const getDefaultCAImage = (userId: string): string => {
  * Get a safe profile image URL with fallback
  */
 const getSafeProfileImage = (profilePicture: string | null, userId: string): string => {
-  if (!profilePicture || profilePicture.trim() === '') {
+  if (!profilePicture || profilePicture.trim() === "") {
     return getDefaultCAImage(userId);
   }
-  
+
   // If it's already a full URL, return as is
-  if (profilePicture.startsWith('http')) {
+  if (profilePicture.startsWith("http")) {
     return profilePicture;
   }
-  
+
   // If it's a relative path, assume it's from Supabase storage
   // For now, return default image to avoid broken images
   return getDefaultCAImage(userId);
@@ -47,12 +48,13 @@ export class CAService {
   /**
    * Fetch featured/top-rated CAs for the landing page
    */
-  static async getFeaturedCAs(limit: number = 3): Promise<FeaturedCA[]> {
+  static async getFeaturedCAs(limit: number = 3): Promise<CA[]> {
     try {
       // Get verified CAs with their services and basic info
       const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
+        .from("profiles")
+        .select(
+          `
           user_id,
           name,
           profile_picture,
@@ -63,14 +65,15 @@ export class CAService {
           language,
           type_of_user,
           created_at
-        `)
-        .eq('role', 'ACCOUNTANT' as UserRole)
-        .eq('is_verified', true)
-        .order('years_of_experience', { ascending: false })
+        `
+        )
+        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("is_verified", true)
+        .order("years_of_experience", { ascending: false })
         .limit(limit);
 
       if (profilesError) {
-        console.error('Error fetching CA profiles:', profilesError);
+        console.error("Error fetching CA profiles:", profilesError);
         return [];
       }
 
@@ -81,34 +84,37 @@ export class CAService {
       // Get services for each CA
       const caIds = profiles.map(ca => ca.user_id);
       const { data: services, error: servicesError } = await supabase
-        .from('services')
-        .select('ca_id, service_name')
-        .in('ca_id', caIds)
-        .eq('is_active', true);
+        .from("services")
+        .select("ca_id, service_name")
+        .in("ca_id", caIds)
+        .eq("is_active", true);
 
       if (servicesError) {
-        console.error('Error fetching CA services:', servicesError);
+        console.error("Error fetching CA services:", servicesError);
       }
 
       // Get reviews/ratings from contact_requests
       const { data: contactRequests, error: contactError } = await supabase
-        .from('contact_requests')
-        .select('ca_id, created_at, status')
-        .in('ca_id', caIds);
+        .from("contact_requests")
+        .select("ca_id, created_at, status")
+        .in("ca_id", caIds);
 
       if (contactError) {
-        console.error('Error fetching contact requests:', contactError);
+        console.error("Error fetching contact requests:", contactError);
       }
 
       // Process and combine the data
-      const featuredCAs: FeaturedCA[] = profiles.map((profile, index) => {
+      const featuredCAs: CA[] = profiles.map((profile, index) => {
         const caServices = services?.filter(s => s.ca_id === profile.user_id) || [];
         const serviceNames = caServices.map(s => s.service_name);
-        
+
         // Calculate rating and reviews based on contact requests
-        const contactCount = contactRequests?.filter(cr => cr.ca_id === profile.user_id).length || 0;
-        const completedContacts = contactRequests?.filter(cr => cr.ca_id === profile.user_id && cr.status === 'closed').length || 0;
-        
+        const contactCount =
+          contactRequests?.filter(cr => cr.ca_id === profile.user_id).length || 0;
+        const completedContacts =
+          contactRequests?.filter(cr => cr.ca_id === profile.user_id && cr.status === "closed")
+            .length || 0;
+
         // Calculate rating based on completion rate and experience
         const completionRate = contactCount > 0 ? completedContacts / contactCount : 0.8;
         const experienceBonus = Math.min((profile.years_of_experience || 0) * 0.1, 0.5);
@@ -119,20 +125,30 @@ export class CAService {
         const location = getCALocation(profile.user_id);
 
         return {
-          id: index + 1, // Using index for now, should use actual ID
-          name: profile.name || 'CA Professional',
-          experience: profile.years_of_experience || 0,
+          id: profile.user_id,
+          name: profile.name || "CA Professional",
+          imageUrl: getSafeProfileImage(profile.profile_picture, profile.user_id),
+          location: `${location.city}, ${location.state}`,
           rating: parseFloat(mockRating.toFixed(1)),
           reviews: mockReviews,
-          services: serviceNames.length > 0 ? serviceNames : ['GST Filing', 'Income Tax', 'Audit'],
-          image: getSafeProfileImage(profile.profile_picture, profile.user_id),
-          location: `${location.city}, ${location.state}`
+          verified: profile.is_verified || false,
+          specialization:
+            serviceNames.length > 0 ? serviceNames : ["GST Filing", "Income Tax", "Audit"],
+          experience: profile.years_of_experience || 0,
+          services: serviceNames.length > 0 ? serviceNames : ["GST Filing", "Income Tax", "Audit"],
+          email: profile.email,
+          phone: profile.phone,
+          qualification: "Chartered Accountant",
+          member_since: profile.created_at,
+          clients: `${contactCount}+`,
+          about: profile.about,
+          language: profile.language ? [profile.language] : ["English", "Hindi"],
         };
       });
 
       return featuredCAs;
     } catch (error) {
-      console.error('Error in getFeaturedCAs:', error);
+      console.error("Error in getFeaturedCAs:", error);
       return [];
     }
   }
@@ -143,8 +159,9 @@ export class CAService {
   static async getCAById(caId: string): Promise<CA | null> {
     try {
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
+        .from("profiles")
+        .select(
+          `
           user_id,
           name,
           profile_picture,
@@ -160,46 +177,47 @@ export class CAService {
           language,
           created_at,
           verified_at
-        `)
-        .eq('user_id', caId)
-        .eq('role', 'ACCOUNTANT' as UserRole)
+        `
+        )
+        .eq("user_id", caId)
+        .eq("role", "ACCOUNTANT" as UserRole)
         .single();
 
       if (profileError || !profile) {
-        console.error('Error fetching CA profile:', profileError);
+        console.error("Error fetching CA profile:", profileError);
         return null;
       }
 
       // Get services
       const { data: services } = await supabase
-        .from('services')
-        .select('service_name')
-        .eq('ca_id', caId)
-        .eq('is_active', true);
+        .from("services")
+        .select("service_name")
+        .eq("ca_id", caId)
+        .eq("is_active", true);
 
       // Get experiences
       const { data: experiences } = await supabase
-        .from('experiences')
-        .select('*')
-        .eq('ca_id', caId)
-        .eq('is_active', true)
-        .order('start_date', { ascending: false });
+        .from("experiences")
+        .select("*")
+        .eq("ca_id", caId)
+        .eq("is_active", true)
+        .order("start_date", { ascending: false });
 
       // Get social profile
       const { data: socialProfile } = await supabase
-        .from('social_profile')
-        .select('*')
-        .eq('ca_id', caId)
+        .from("social_profile")
+        .select("*")
+        .eq("ca_id", caId)
         .single();
 
       // Get contact requests for rating calculation
       const { data: contactRequests } = await supabase
-        .from('contact_requests')
-        .select('status, created_at')
-        .eq('ca_id', caId);
+        .from("contact_requests")
+        .select("status, created_at")
+        .eq("ca_id", caId);
 
       const totalContacts = contactRequests?.length || 0;
-      const completedContacts = contactRequests?.filter(cr => cr.status === 'closed').length || 0;
+      const completedContacts = contactRequests?.filter(cr => cr.status === "closed").length || 0;
       const rating = totalContacts > 0 ? 4.0 + (completedContacts / totalContacts) * 0.8 : 4.5;
 
       // Get location using the utility function
@@ -218,18 +236,18 @@ export class CAService {
         email: profile.email,
         phone: profile.phone,
         website: socialProfile?.professional_website,
-        qualification: 'Chartered Accountant',
+        qualification: "Chartered Accountant",
         firm_name: socialProfile?.areas_of_expertise,
         member_since: profile.created_at,
         clients: `${totalContacts}+`,
         about: profile.about,
         services: services?.map(s => s.service_name) || [],
-        language: profile.language ? [profile.language] : ['English', 'Hindi']
+        language: profile.language ? [profile.language] : ["English", "Hindi"],
       };
 
       return ca;
     } catch (error) {
-      console.error('Error in getCAById:', error);
+      console.error("Error in getCAById:", error);
       return null;
     }
   }
@@ -237,11 +255,16 @@ export class CAService {
   /**
    * Search CAs by location and services
    */
-  static async searchCAs(location?: string, services?: string[], limit: number = 10): Promise<CA[]> {
+  static async searchCAs(
+    location?: string,
+    services?: string[],
+    limit: number = 10
+  ): Promise<CA[]> {
     try {
       let query = supabase
-        .from('profiles')
-        .select(`
+        .from("profiles")
+        .select(
+          `
           user_id,
           name,
           profile_picture,
@@ -251,30 +274,31 @@ export class CAService {
           available_for_leads,
           language,
           type_of_user
-        `)
-        .eq('role', 'ACCOUNTANT' as UserRole)
-        .eq('is_verified', true);
+        `
+        )
+        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("is_verified", true);
 
       const { data: profiles, error } = await query.limit(limit);
 
       if (error || !profiles) {
-        console.error('Error searching CAs:', error);
+        console.error("Error searching CAs:", error);
         return [];
       }
 
       // Get services for all CAs
       const caIds = profiles.map(ca => ca.user_id);
       const { data: allServices } = await supabase
-        .from('services')
-        .select('ca_id, service_name')
-        .in('ca_id', caIds)
-        .eq('is_active', true);
+        .from("services")
+        .select("ca_id, service_name")
+        .in("ca_id", caIds)
+        .eq("is_active", true);
 
       // Get contact requests for rating calculation
       const { data: contactRequests } = await supabase
-        .from('contact_requests')
-        .select('ca_id, status')
-        .in('ca_id', caIds);
+        .from("contact_requests")
+        .select("ca_id, status")
+        .in("ca_id", caIds);
 
       // Filter by services if provided
       let filteredProfiles = profiles;
@@ -289,8 +313,8 @@ export class CAService {
 
         filteredProfiles = profiles.filter(profile => {
           const caServices = serviceMap.get(profile.user_id) || [];
-          return services.some(service => 
-            caServices.some((caService: string) => 
+          return services.some(service =>
+            caServices.some((caService: string) =>
               caService.toLowerCase().includes(service.toLowerCase())
             )
           );
@@ -301,7 +325,7 @@ export class CAService {
       const cas: CA[] = filteredProfiles.map(profile => {
         const profileContacts = contactRequests?.filter(cr => cr.ca_id === profile.user_id) || [];
         const totalContacts = profileContacts.length;
-        const completedContacts = profileContacts.filter(cr => cr.status === 'closed').length;
+        const completedContacts = profileContacts.filter(cr => cr.status === "closed").length;
         const rating = totalContacts > 0 ? 4.0 + (completedContacts / totalContacts) * 0.8 : 4.5;
 
         // Get location using the utility function
@@ -315,14 +339,15 @@ export class CAService {
           rating: parseFloat(rating.toFixed(1)),
           reviews: totalContacts + Math.floor(Math.random() * 30),
           verified: profile.is_verified,
-          specialization: allServices?.filter(s => s.ca_id === profile.user_id).map(s => s.service_name) || [],
-          experience: profile.years_of_experience || 0
+          specialization:
+            allServices?.filter(s => s.ca_id === profile.user_id).map(s => s.service_name) || [],
+          experience: profile.years_of_experience || 0,
         };
       });
 
       return cas;
     } catch (error) {
-      console.error('Error in searchCAs:', error);
+      console.error("Error in searchCAs:", error);
       return [];
     }
   }
@@ -337,10 +362,10 @@ export class CAService {
       return mockCities.map(city => ({
         city: city.city,
         state: city.state,
-        count: city.count
+        count: city.count,
       }));
     } catch (error) {
-      console.error('Error in getPopularCities:', error);
+      console.error("Error in getPopularCities:", error);
       return [];
     }
   }
@@ -357,43 +382,43 @@ export class CAService {
     try {
       // Get total CAs
       const { count: totalCAs } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'ACCOUNTANT' as UserRole);
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "ACCOUNTANT" as UserRole);
 
       // Get verified CAs
       const { count: verifiedCAs } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'ACCOUNTANT' as UserRole)
-        .eq('is_verified', true);
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("is_verified", true);
 
       // Get active CAs (available for leads)
       const { count: activeCAs } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'ACCOUNTANT' as UserRole)
-        .eq('is_verified', true);
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("is_verified", true);
 
       // Get total services
       const { count: totalServices } = await supabase
-        .from('services')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .from("services")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true);
 
       return {
         totalCAs: totalCAs || 0,
         verifiedCAs: verifiedCAs || 0,
         activeCAs: activeCAs || 0,
-        totalServices: totalServices || 0
+        totalServices: totalServices || 0,
       };
     } catch (error) {
-      console.error('Error in getCAStats:', error);
+      console.error("Error in getCAStats:", error);
       return {
         totalCAs: 0,
         verifiedCAs: 0,
         activeCAs: 0,
-        totalServices: 0
+        totalServices: 0,
       };
     }
   }
