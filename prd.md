@@ -291,6 +291,14 @@ src/
 
 The project implements a clear separation between helper functions and data fetching operations:
 
+#### Supabase Client Configuration
+
+- **Import Standard**: All services must import from `@/lib/supabase` for consistency
+- **Single Source**: One Supabase client configuration across the entire application  
+- **Environment Validation**: Client includes validation warnings for missing environment variables
+- **No Helper Files**: Direct import from lib directory following Next.js conventions
+- **Example**: `import { supabase } from "@/lib/supabase";`
+
 #### Services Layer (`/services`)
 
 - **Purpose**: Handle all data fetching, API communication, and external service integration
@@ -2151,7 +2159,7 @@ import { ProfileAvatar } from "@/components/profile/shared";
 #### **File Structure Pattern**:
 ```typescript
 // 1. Import structure
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
 import { TypeImports } from "@/types/[domain]/[entity].type";

@@ -1,5 +1,5 @@
 // src/services/posts.service.ts
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import type { PostCardProps, PostFilter, PostPayload, PostsPage } from "@/types/feed/post.type";
 import { POST_SELECT } from "@/constants/feed.constants";

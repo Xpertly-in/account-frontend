@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/ui/Card.ui";
 import { useAuth } from "@/store/context/Auth.provider";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { CustomerProfile } from "@/types/customer-profile.type";
 import { Camera } from "@phosphor-icons/react";
 import { toast } from "sonner";

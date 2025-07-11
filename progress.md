@@ -3545,9 +3545,34 @@ src/app/ca/[id]/page.tsx             # Public profile needs updating
 
 ---
 
-## 🔧 Database Schema Management Policy Implementation (January 2025)
+## 🔧 Supabase Client Consolidation & Database Schema Management (January 2025)
 
-**OBJECTIVE**: Establish professional database change management practices and implement profile completion tracking.
+**OBJECTIVE**: Consolidate Supabase client imports and establish professional database change management practices.
+
+### **Supabase Client Consolidation** ✅ **COMPLETED**
+
+**Issue Identified**: Two separate Supabase client files causing inconsistent imports:
+- `src/lib/supabase.ts` - Direct env access, minimal setup
+- `src/helper/supabase.helper.ts` - Used constants, included error warnings
+
+**Solution Implemented**:
+- ✅ **Enhanced `src/lib/supabase.ts`**: Added environment validation warnings while keeping in standard lib directory
+- ✅ **Deleted `src/helper/supabase.helper.ts`**: Removed redundant file to eliminate confusion
+- ✅ **Updated All Imports**: Standardized all services and components to use `@/lib/supabase`
+- ✅ **Fixed Profile Service**: Corrected auth context usage from `{ user }` to `{ auth }` across all hooks
+- ✅ **Cleaned Old Profile Code**: Removed outdated onboarding and profile components causing build issues
+
+**Files Updated**:
+- All service files (`leads.service.ts`, `contact-requests.service.ts`, `posts.service.ts`, etc.)
+- All page components and helper files
+- Profile service auth context fixed in all TanStack Query hooks
+
+**Benefits Achieved**:
+- ✅ **Single Source of Truth**: One Supabase client configuration
+- ✅ **Consistent Imports**: All code uses `@/lib/supabase`
+- ✅ **Better Maintainability**: Only one file to update for Supabase config changes
+- ✅ **Cleaner Architecture**: Follows Next.js conventions
+- ✅ **Build Success**: All import errors resolved, successful production build
 
 ### **DDL Change Management Policy** ✅ **ESTABLISHED**
 

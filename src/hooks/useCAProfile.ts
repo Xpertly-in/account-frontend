@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/store/context/Auth.provider";
 
 export function useCAProfile() {

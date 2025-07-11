@@ -1,6 +1,4 @@
-// Profile type definitions matching supabase.sql schema
-// Supports both CA and Customer profiles with role-based differentiation
-
+// Profile Types - TypeScript interfaces aligned with supabase.sql schema
 export interface Profile {
   id: string;
   auth_user_id: string;
@@ -21,14 +19,24 @@ export interface Profile {
   phone?: string;
   whatsapp_available: boolean;
   is_active: boolean;
-  // Profile completion tracking fields (to be added via migration)
-  profile_completion_percentage?: number;
+  profile_completion_percentage: number;
   last_completed_section?: string;
   completion_updated_at?: string;
   created_at: string;
   updated_at: string;
 }
-
+export interface CAProfile extends Profile {
+  role: UserRole.CA;
+  experiences?: Experience[];
+  educations?: Education[];
+  social_profile?: SocialProfile;
+  verification?: CAVerification;
+  total_experience_years?: number;
+  completion_status?: ProfileCompletionStatus;
+}
+export interface CustomerProfile extends Profile {
+  role: UserRole.CUSTOMER;
+}
 export interface Experience {
   id: string;
   profile_id: string;
@@ -42,7 +50,6 @@ export interface Experience {
   created_at: string;
   updated_at: string;
 }
-
 export interface Education {
   id: string;
   profile_id: string;
@@ -56,7 +63,6 @@ export interface Education {
   created_at: string;
   updated_at: string;
 }
-
 export interface SocialProfile {
   id: string;
   profile_id: string;
@@ -77,89 +83,50 @@ export interface CAVerification {
   verified_at?: string;
   verified_by?: string;
 }
-
-// Enums for type safety
 export enum UserRole {
-  CA = 'CA',
-  CUSTOMER = 'CUSTOMER'
+  CA = "ca",
+  CUSTOMER = "customer",
+  ADMIN = "admin",
 }
-
-export enum Gender {
-  MALE = 'Male',
-  FEMALE = 'Female',
-  OTHER = 'Other',
-  PREFER_NOT_TO_SAY = 'Prefer not to say'
-}
-
 export enum ProfileSection {
-  BASIC_INFO = 'basic_info',
-  PROFESSIONAL_DETAILS = 'professional_details',
-  EXPERIENCE = 'experience',
-  EDUCATION = 'education',
-  SOCIAL_CONTACT = 'social_contact'
+  BASIC_INFO = "basic_info",
+  PROFESSIONAL_DETAILS = "professional_details",
+  EXPERIENCE = "experience",
+  EDUCATION = "education",
+  SOCIAL_CONTACT = "social_contact",
+  VERIFICATION = "verification",
 }
 
-// Extended interfaces for CA-specific data
-export interface CAProfile extends Profile {
-  role: UserRole.CA;
-  experiences?: Experience[];
-  educations?: Education[];
-  social_profile?: SocialProfile;
-  verification?: CAVerification;
-  // CA-specific computed fields
-  years_of_experience?: number;
-  total_clients?: number;
-  average_rating?: number;
-  response_rate?: number;
+export enum ProfileCompletionStatus {
+  INCOMPLETE = "incomplete",
+  BASIC = "basic",
+  INTERMEDIATE = "intermediate",
+  COMPLETE = "complete",
+  EXCELLENT = "excellent",
 }
-
-// Extended interfaces for Customer-specific data
-export interface CustomerProfile extends Profile {
-  role: UserRole.CUSTOMER;
-  preferred_services?: string[];
-  urgency_preference?: string;
-  budget_range?: string;
-  communication_preference?: string[];
-}
-
-// Profile completion calculation interface
-export interface ProfileCompletion {
-  percentage: number;
-  sections: {
-    [key in ProfileSection]: {
-      completed: boolean;
-      weight: number;
-      fields: string[];
-    };
-  };
-  next_steps: string[];
-}
-
-// Profile update interfaces
-export interface ProfileUpdate {
+export interface ProfileFormData {
   first_name?: string;
   middle_name?: string;
   last_name?: string;
   bio?: string;
   city?: string;
   state?: string;
+  country?: string;
   languages?: string[];
   specialization?: string[];
   phone?: string;
   whatsapp_available?: boolean;
 }
-
-export interface ExperienceCreate {
+export interface ExperienceFormData {
   title: string;
   company_name: string;
   location?: string;
   is_current: boolean;
-  start_date: string;
+  start_date?: string;
   end_date?: string;
   description?: string;
 }
-
-export interface EducationCreate {
+export interface EducationFormData {
   institute_name: string;
   degree?: string;
   field_of_study?: string;
@@ -168,8 +135,7 @@ export interface EducationCreate {
   grade?: string;
   description?: string;
 }
-
-export interface SocialProfileUpdate {
+export interface SocialProfileFormData {
   linkedin_profile?: string;
   professional_website?: string;
   instagram_profile?: string;
@@ -177,19 +143,48 @@ export interface SocialProfileUpdate {
   twitter_profile?: string;
   youtube_profile?: string;
 }
-
-// Form state interfaces for profile editing
-export interface ProfileFormState {
-  profile: Partial<ProfileUpdate>;
-  experiences: Experience[];
-  educations: Education[];
-  social_profile: Partial<SocialProfileUpdate>;
-  isDirty: boolean;
-  isSubmitting: boolean;
-  errors: Record<string, string>;
+export interface ProfileCompletionResult {
+  percentage: number;
+  status: ProfileCompletionStatus;
+  completed_sections: ProfileSection[];
+  missing_sections: ProfileSection[];
+  suggestions: string[];
+}
+export interface ProfileUpdateResponse {
+  success: boolean;
+  profile?: Profile;
+  completion?: ProfileCompletionResult;
+  error?: string;
 }
 
-// Helper types for component props
-export type ProfileDisplay = Pick<Profile, 'first_name' | 'middle_name' | 'last_name' | 'profile_picture_url' | 'bio' | 'city' | 'state' | 'role'>;
-export type ContactInfo = Pick<Profile, 'email' | 'phone' | 'whatsapp_available'>;
-export type ProfessionalInfo = Pick<Profile, 'specialization' | 'languages' | 'bio'>; 
+export interface ProfileValidationErrors {
+  [field: string]: string[];
+}
+export type ProfileUpdatePayload = Partial<ProfileFormData>;
+
+export type ProfileCreatePayload = Required<
+  Pick<Profile, "auth_user_id" | "email" | "role" | "country">
+> &
+  Partial<ProfileFormData>;
+export interface ProfileQueryFilters {
+  role?: UserRole;
+  city?: string;
+  state?: string;
+  specialization?: string[];
+  is_active?: boolean;
+  completion_min?: number;
+  search?: string;
+}
+export function isCAProfile(profile: Profile): profile is CAProfile {
+  return profile.role === UserRole.CA;
+}
+
+export function isCustomerProfile(profile: Profile): profile is CustomerProfile {
+  return profile.role === UserRole.CUSTOMER;
+}
+
+export function hasVerification(
+  profile: CAProfile
+): profile is CAProfile & { verification: CAVerification } {
+  return profile.verification !== undefined;
+}

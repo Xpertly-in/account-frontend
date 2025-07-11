@@ -1,4 +1,7 @@
-import { supabase } from "@/helper/supabase.helper";
+// Profile Service - CRUD operations and TanStack Query integration
+// Following established patterns from leads.service.ts
+
+import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
 import {
@@ -8,744 +11,677 @@ import {
   Experience,
   Education,
   SocialProfile,
-  ProfileUpdate,
-  ExperienceCreate,
-  EducationCreate,
-  SocialProfileUpdate,
-  ProfileCompletion,
+  CAVerification,
+  ProfileFormData,
+  ExperienceFormData,
+  EducationFormData,
+  SocialProfileFormData,
+  ProfileCompletionResult,
+  ProfileCompletionStatus,
   ProfileSection,
   UserRole,
+  ProfileUpdateResponse,
+  ProfileValidationErrors,
+  isCAProfile,
+  isCustomerProfile,
 } from "@/types/profile.type";
 
-// ============================================================================
+// =============================================================================
 // CORE SERVICE FUNCTIONS
-// ============================================================================
+// =============================================================================
 
 /**
- * Interface for profile fetch response with related data
+ * Fetch complete profile with related data
  */
-export interface ProfileResponse {
-  profile: Profile | null;
-  experiences: Experience[];
-  educations: Education[];
-  social_profile: SocialProfile | null;
-  error: any;
-}
-
-/**
- * Fetches complete profile data including related entities
- */
-export const fetchCompleteProfile = async (userId: string): Promise<ProfileResponse> => {
+export async function fetchProfile(userId: string): Promise<CAProfile | CustomerProfile | null> {
   try {
-    // Fetch main profile data
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select(
-        `
-        id,
-        auth_user_id,
-        username,
-        first_name,
-        middle_name,
-        last_name,
-        profile_picture_url,
-        bio,
-        gender,
-        role,
-        city,
-        state,
-        country,
-        languages,
-        specialization,
-        email,
-        phone,
-        whatsapp_available,
-        is_active,
-        profile_completion_percentage,
-        last_completed_section,
-        completion_updated_at,
-        created_at,
-        updated_at
-      `
-      )
-      .eq("auth_user_id", userId)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
-      return {
-        profile: null,
-        experiences: [],
-        educations: [],
-        social_profile: null,
-        error: profileError,
-      };
-    }
-
-    if (!profileData) {
-      return {
-        profile: null,
-        experiences: [],
-        educations: [],
-        social_profile: null,
-        error: new Error("Profile not found"),
-      };
-    }
-
-    // Fetch related data in parallel
-    const [experiencesResult, educationsResult, socialProfileResult] = await Promise.all([
-      supabase
-        .from("experiences")
-        .select("*")
-        .eq("profile_id", profileData.id)
-        .order("start_date", { ascending: false }),
-
-      supabase
-        .from("educations")
-        .select("*")
-        .eq("profile_id", profileData.id)
-        .order("start_date", { ascending: false }),
-
-      supabase.from("social_profile").select("*").eq("profile_id", profileData.id).single(),
-    ]);
-
-    // Log any errors but don't fail the entire request
-    if (experiencesResult.error)
-      console.warn("Error fetching experiences:", experiencesResult.error);
-    if (educationsResult.error) console.warn("Error fetching educations:", educationsResult.error);
-    if (socialProfileResult.error)
-      console.warn("Error fetching social profile:", socialProfileResult.error);
-
-    return {
-      profile: profileData as Profile,
-      experiences: experiencesResult.data || [],
-      educations: educationsResult.data || [],
-      social_profile: socialProfileResult.data || null,
-      error: null,
-    };
-  } catch (error) {
-    console.error("Error in fetchCompleteProfile:", error);
-    return {
-      profile: null,
-      experiences: [],
-      educations: [],
-      social_profile: null,
-      error,
-    };
-  }
-};
-
-/**
- * Fetches basic profile data only
- */
-export const fetchProfile = async (
-  userId: string
-): Promise<{ data: Profile | null; error: any }> => {
-  try {
-    const { data, error } = await supabase
+    // Fetch base profile
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("auth_user_id", userId)
       .single();
 
-    if (error) {
-      console.error("Error fetching profile:", error);
-      return { data: null, error };
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      return null;
     }
 
-    return { data: data as Profile, error: null };
+    if (!profile) return null;
+
+    // For CA profiles, fetch related data
+    if (profile.role === UserRole.CA) {
+      const [experiencesResult, educationsResult, socialResult, verificationResult] =
+        await Promise.all([
+          supabase
+            .from("experiences")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .order("start_date", { ascending: false }),
+          supabase
+            .from("educations")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .order("start_date", { ascending: false }),
+          supabase.from("social_profile").select("*").eq("profile_id", profile.id).single(),
+          supabase.from("ca_verifications").select("*").eq("profile_id", profile.id).single(),
+        ]);
+
+      const caProfile: CAProfile = {
+        ...profile,
+        role: UserRole.CA,
+        experiences: experiencesResult.data || [],
+        educations: educationsResult.data || [],
+        social_profile: socialResult.data || undefined,
+        verification: verificationResult.data || undefined,
+        total_experience_years: calculateTotalExperience(experiencesResult.data || []),
+        completion_status: getCompletionStatus(profile.profile_completion_percentage || 0),
+      };
+
+      return caProfile;
+    }
+
+    // For customer profiles, return base profile
+    const customerProfile: CustomerProfile = {
+      ...profile,
+      role: UserRole.CUSTOMER,
+    };
+
+    return customerProfile;
   } catch (error) {
     console.error("Error in fetchProfile:", error);
-    return { data: null, error };
+    return null;
   }
-};
+}
 
 /**
- * Updates profile basic information
+ * Update profile basic information
  */
-const updateProfile = async (userId: string, profileData: ProfileUpdate): Promise<Profile> => {
-  const updateData = {
-    ...profileData,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .update(updateData)
-    .eq("auth_user_id", userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as Profile;
-};
-
-/**
- * Creates a new experience entry
- */
-const createExperience = async (
+export async function updateProfile(
   profileId: string,
-  experienceData: ExperienceCreate
-): Promise<Experience> => {
-  const experience = {
-    profile_id: profileId,
-    ...experienceData,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase.from("experiences").insert(experience).select().single();
-
-  if (error) throw error;
-  return data as Experience;
-};
-
-/**
- * Updates an existing experience entry
- */
-const updateExperience = async (
-  experienceId: string,
-  experienceData: Partial<ExperienceCreate>
-): Promise<Experience> => {
-  const updateData = {
-    ...experienceData,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase
-    .from("experiences")
-    .update(updateData)
-    .eq("id", experienceId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as Experience;
-};
-
-/**
- * Deletes an experience entry
- */
-const deleteExperience = async (experienceId: string): Promise<void> => {
-  const { error } = await supabase.from("experiences").delete().eq("id", experienceId);
-
-  if (error) throw error;
-};
-
-/**
- * Creates a new education entry
- */
-const createEducation = async (
-  profileId: string,
-  educationData: EducationCreate
-): Promise<Education> => {
-  const education = {
-    profile_id: profileId,
-    ...educationData,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase.from("educations").insert(education).select().single();
-
-  if (error) throw error;
-  return data as Education;
-};
-
-/**
- * Updates an existing education entry
- */
-const updateEducation = async (
-  educationId: string,
-  educationData: Partial<EducationCreate>
-): Promise<Education> => {
-  const updateData = {
-    ...educationData,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase
-    .from("educations")
-    .update(updateData)
-    .eq("id", educationId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as Education;
-};
-
-/**
- * Deletes an education entry
- */
-const deleteEducation = async (educationId: string): Promise<void> => {
-  const { error } = await supabase.from("educations").delete().eq("id", educationId);
-
-  if (error) throw error;
-};
-
-/**
- * Updates or creates social profile
- */
-const updateSocialProfile = async (
-  profileId: string,
-  socialData: SocialProfileUpdate
-): Promise<SocialProfile> => {
-  // First, try to find existing social profile
-  const { data: existingData } = await supabase
-    .from("social_profile")
-    .select("id")
-    .eq("profile_id", profileId)
-    .single();
-
-  if (existingData) {
-    // Update existing
-    const { data, error } = await supabase
-      .from("social_profile")
+  data: ProfileFormData
+): Promise<ProfileUpdateResponse> {
+  try {
+    const { data: updatedProfile, error } = await supabase
+      .from("profiles")
       .update({
-        ...socialData,
+        ...data,
         updated_at: new Date().toISOString(),
       })
-      .eq("profile_id", profileId)
+      .eq("id", profileId)
       .select()
       .single();
 
-    if (error) throw error;
-    return data as SocialProfile;
-  } else {
-    // Create new
-    const { data, error } = await supabase
-      .from("social_profile")
+    if (error) {
+      console.error("Error updating profile:", error);
+      return { success: false, error: error.message };
+    }
+
+    // Calculate new completion percentage
+    const completion = await calculateProfileCompletion(profileId);
+
+    // Update completion percentage if changed
+    if (completion.percentage !== updatedProfile.profile_completion_percentage) {
+      await supabase
+        .from("profiles")
+        .update({
+          profile_completion_percentage: completion.percentage,
+          last_completed_section: ProfileSection.BASIC_INFO,
+          completion_updated_at: new Date().toISOString(),
+        })
+        .eq("id", profileId);
+    }
+
+    return {
+      success: true,
+      profile: { ...updatedProfile, profile_completion_percentage: completion.percentage },
+      completion,
+    };
+  } catch (error) {
+    console.error("Error in updateProfile:", error);
+    return { success: false, error: "Failed to update profile" };
+  }
+}
+
+/**
+ * Create new experience entry
+ */
+export async function createExperience(
+  profileId: string,
+  data: ExperienceFormData
+): Promise<Experience | null> {
+  try {
+    const { data: experience, error } = await supabase
+      .from("experiences")
       .insert({
         profile_id: profileId,
-        ...socialData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        ...data,
       })
       .select()
       .single();
 
-    if (error) throw error;
-    return data as SocialProfile;
-  }
-};
-
-/**
- * Calculates profile completion percentage
- */
-export const calculateProfileCompletion = (
-  profile: Profile,
-  experiences: Experience[],
-  educations: Education[],
-  socialProfile: SocialProfile | null
-): ProfileCompletion => {
-  const sections: ProfileCompletion["sections"] = {
-    [ProfileSection.BASIC_INFO]: {
-      completed: false,
-      weight: 20,
-      fields: ["first_name", "last_name", "email", "phone", "city", "state"],
-    },
-    [ProfileSection.PROFESSIONAL_DETAILS]: {
-      completed: false,
-      weight: 20,
-      fields: ["bio", "specialization", "languages"],
-    },
-    [ProfileSection.EXPERIENCE]: {
-      completed: false,
-      weight: 20,
-      fields: ["experiences"],
-    },
-    [ProfileSection.EDUCATION]: {
-      completed: false,
-      weight: 20,
-      fields: ["educations"],
-    },
-    [ProfileSection.SOCIAL_CONTACT]: {
-      completed: false,
-      weight: 20,
-      fields: ["social_profile"],
-    },
-  };
-
-  // Check basic info completion
-  const basicInfoFields = [
-    profile.first_name,
-    profile.last_name,
-    profile.email,
-    profile.phone,
-    profile.city,
-    profile.state,
-  ];
-  sections[ProfileSection.BASIC_INFO].completed = basicInfoFields.every(
-    field => field && field.length > 0
-  );
-
-  // Check professional details completion
-  const hasBio = profile.bio && profile.bio.length > 10;
-  const hasSpecialization = profile.specialization && profile.specialization.length > 0;
-  const hasLanguages = profile.languages && profile.languages.length > 0;
-  sections[ProfileSection.PROFESSIONAL_DETAILS].completed =
-    hasBio && hasSpecialization && hasLanguages;
-
-  // Check experience completion
-  sections[ProfileSection.EXPERIENCE].completed = experiences.length > 0;
-
-  // Check education completion
-  sections[ProfileSection.EDUCATION].completed = educations.length > 0;
-
-  // Check social/contact completion
-  const hasSocialLinks =
-    socialProfile &&
-    (socialProfile.linkedin_profile ||
-      socialProfile.professional_website ||
-      socialProfile.instagram_profile ||
-      socialProfile.facebook_profile ||
-      socialProfile.twitter_profile ||
-      socialProfile.youtube_profile);
-  sections[ProfileSection.SOCIAL_CONTACT].completed = !!hasSocialLinks;
-
-  // Calculate overall percentage
-  const completedWeight = Object.values(sections)
-    .filter(section => section.completed)
-    .reduce((total, section) => total + section.weight, 0);
-
-  // Generate next steps
-  const nextSteps: string[] = [];
-  Object.entries(sections).forEach(([key, section]) => {
-    if (!section.completed) {
-      switch (key) {
-        case ProfileSection.BASIC_INFO:
-          nextSteps.push("Complete your basic information (name, contact details, location)");
-          break;
-        case ProfileSection.PROFESSIONAL_DETAILS:
-          nextSteps.push("Add your professional bio, specializations, and languages");
-          break;
-        case ProfileSection.EXPERIENCE:
-          nextSteps.push("Add your work experience");
-          break;
-        case ProfileSection.EDUCATION:
-          nextSteps.push("Add your educational qualifications");
-          break;
-        case ProfileSection.SOCIAL_CONTACT:
-          nextSteps.push("Add your social media links or professional website");
-          break;
-      }
+    if (error) {
+      console.error("Error creating experience:", error);
+      return null;
     }
-  });
 
-  return {
-    percentage: completedWeight,
-    sections,
-    next_steps: nextSteps,
-  };
-};
+    // Update profile completion
+    await updateProfileCompletion(profileId, ProfileSection.EXPERIENCE);
 
-/**
- * Updates profile completion percentage in database
- */
-const updateProfileCompletion = async (
-  userId: string,
-  percentage: number,
-  lastSection?: string
-): Promise<void> => {
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      profile_completion_percentage: percentage,
-      last_completed_section: lastSection,
-      completion_updated_at: new Date().toISOString(),
-    })
-    .eq("auth_user_id", userId);
-
-  if (error) {
-    console.error("Error updating profile completion:", error);
-    throw error;
+    return experience;
+  } catch (error) {
+    console.error("Error in createExperience:", error);
+    return null;
   }
-};
+}
 
-// ============================================================================
+/**
+ * Update existing experience
+ */
+export async function updateExperience(
+  experienceId: string,
+  data: Partial<ExperienceFormData>
+): Promise<Experience | null> {
+  try {
+    const { data: experience, error } = await supabase
+      .from("experiences")
+      .update({
+        ...data,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", experienceId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating experience:", error);
+      return null;
+    }
+
+    return experience;
+  } catch (error) {
+    console.error("Error in updateExperience:", error);
+    return null;
+  }
+}
+
+/**
+ * Delete experience entry
+ */
+export async function deleteExperience(experienceId: string, profileId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from("experiences").delete().eq("id", experienceId);
+
+    if (error) {
+      console.error("Error deleting experience:", error);
+      return false;
+    }
+
+    // Update profile completion
+    await updateProfileCompletion(profileId, ProfileSection.EXPERIENCE);
+
+    return true;
+  } catch (error) {
+    console.error("Error in deleteExperience:", error);
+    return false;
+  }
+}
+
+/**
+ * Create new education entry
+ */
+export async function createEducation(
+  profileId: string,
+  data: EducationFormData
+): Promise<Education | null> {
+  try {
+    const { data: education, error } = await supabase
+      .from("educations")
+      .insert({
+        profile_id: profileId,
+        ...data,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating education:", error);
+      return null;
+    }
+
+    // Update profile completion
+    await updateProfileCompletion(profileId, ProfileSection.EDUCATION);
+
+    return education;
+  } catch (error) {
+    console.error("Error in createEducation:", error);
+    return null;
+  }
+}
+
+/**
+ * Update existing education
+ */
+export async function updateEducation(
+  educationId: string,
+  data: Partial<EducationFormData>
+): Promise<Education | null> {
+  try {
+    const { data: education, error } = await supabase
+      .from("educations")
+      .update({
+        ...data,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", educationId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating education:", error);
+      return null;
+    }
+
+    return education;
+  } catch (error) {
+    console.error("Error in updateEducation:", error);
+    return null;
+  }
+}
+
+/**
+ * Delete education entry
+ */
+export async function deleteEducation(educationId: string, profileId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from("educations").delete().eq("id", educationId);
+
+    if (error) {
+      console.error("Error deleting education:", error);
+      return false;
+    }
+
+    // Update profile completion
+    await updateProfileCompletion(profileId, ProfileSection.EDUCATION);
+
+    return true;
+  } catch (error) {
+    console.error("Error in deleteEducation:", error);
+    return false;
+  }
+}
+
+/**
+ * Update social profile
+ */
+export async function updateSocialProfile(
+  profileId: string,
+  data: SocialProfileFormData
+): Promise<SocialProfile | null> {
+  try {
+    // Try to update existing social profile, or create new one
+    const { data: existingSocial } = await supabase
+      .from("social_profile")
+      .select("id")
+      .eq("profile_id", profileId)
+      .single();
+
+    let result;
+    if (existingSocial) {
+      // Update existing
+      result = await supabase
+        .from("social_profile")
+        .update({
+          ...data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("profile_id", profileId)
+        .select()
+        .single();
+    } else {
+      // Create new
+      result = await supabase
+        .from("social_profile")
+        .insert({
+          profile_id: profileId,
+          ...data,
+        })
+        .select()
+        .single();
+    }
+
+    if (result.error) {
+      console.error("Error updating social profile:", result.error);
+      return null;
+    }
+
+    // Update profile completion
+    await updateProfileCompletion(profileId, ProfileSection.SOCIAL_CONTACT);
+
+    return result.data;
+  } catch (error) {
+    console.error("Error in updateSocialProfile:", error);
+    return null;
+  }
+}
+
+/**
+ * Calculate profile completion percentage and status
+ */
+export async function calculateProfileCompletion(
+  profileId: string
+): Promise<ProfileCompletionResult> {
+  try {
+    const [profileResult, experiencesResult, educationsResult, socialResult] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", profileId).single(),
+      supabase.from("experiences").select("id").eq("profile_id", profileId),
+      supabase.from("educations").select("id").eq("profile_id", profileId),
+      supabase.from("social_profile").select("*").eq("profile_id", profileId).single(),
+    ]);
+
+    const profile = profileResult.data;
+    if (!profile) {
+      return {
+        percentage: 0,
+        status: ProfileCompletionStatus.INCOMPLETE,
+        completed_sections: [],
+        missing_sections: Object.values(ProfileSection),
+        suggestions: ["Complete basic profile information"],
+      };
+    }
+
+    let completedSections: ProfileSection[] = [];
+    let suggestions: string[] = [];
+
+    // Basic Info (20%) - Name, email, phone, location
+    if (profile.first_name && profile.last_name && profile.email && profile.city && profile.state) {
+      completedSections.push(ProfileSection.BASIC_INFO);
+    } else {
+      suggestions.push("Add your full name and location details");
+    }
+
+    // Professional Details (20%) - Bio, specializations, languages
+    if (profile.bio && profile.specialization?.length > 0 && profile.languages?.length > 0) {
+      completedSections.push(ProfileSection.PROFESSIONAL_DETAILS);
+    } else {
+      suggestions.push("Add your bio, specializations, and language skills");
+    }
+
+    // Experience (20%) - At least one complete experience
+    if (experiencesResult.data && experiencesResult.data.length > 0) {
+      completedSections.push(ProfileSection.EXPERIENCE);
+    } else {
+      suggestions.push("Add your work experience");
+    }
+
+    // Education (20%) - At least one complete education
+    if (educationsResult.data && educationsResult.data.length > 0) {
+      completedSections.push(ProfileSection.EDUCATION);
+    } else {
+      suggestions.push("Add your educational qualifications");
+    }
+
+    // Social/Contact (20%) - At least one social link or professional website
+    if (
+      socialResult.data &&
+      (socialResult.data.linkedin_profile ||
+        socialResult.data.professional_website ||
+        socialResult.data.instagram_profile)
+    ) {
+      completedSections.push(ProfileSection.SOCIAL_CONTACT);
+    } else {
+      suggestions.push("Add your professional social media links");
+    }
+
+    const percentage = (completedSections.length / 5) * 100;
+    const status = getCompletionStatus(percentage);
+    const missingSections = Object.values(ProfileSection).filter(
+      section => !completedSections.includes(section)
+    );
+
+    return {
+      percentage,
+      status,
+      completed_sections: completedSections,
+      missing_sections: missingSections,
+      suggestions,
+    };
+  } catch (error) {
+    console.error("Error calculating profile completion:", error);
+    return {
+      percentage: 0,
+      status: ProfileCompletionStatus.INCOMPLETE,
+      completed_sections: [],
+      missing_sections: Object.values(ProfileSection),
+      suggestions: ["Error calculating completion - please try again"],
+    };
+  }
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Calculate total years of experience
+ */
+function calculateTotalExperience(experiences: Experience[]): number {
+  if (!experiences.length) return 0;
+
+  return experiences.reduce((total, exp) => {
+    if (!exp.start_date) return total;
+
+    const startDate = new Date(exp.start_date);
+    const endDate = exp.is_current
+      ? new Date()
+      : exp.end_date
+      ? new Date(exp.end_date)
+      : new Date();
+    const years = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+    return total + Math.max(0, years);
+  }, 0);
+}
+
+/**
+ * Get completion status from percentage
+ */
+function getCompletionStatus(percentage: number): ProfileCompletionStatus {
+  if (percentage < 25) return ProfileCompletionStatus.INCOMPLETE;
+  if (percentage < 50) return ProfileCompletionStatus.BASIC;
+  if (percentage < 75) return ProfileCompletionStatus.INTERMEDIATE;
+  if (percentage < 90) return ProfileCompletionStatus.COMPLETE;
+  return ProfileCompletionStatus.EXCELLENT;
+}
+
+/**
+ * Update profile completion after section changes
+ */
+async function updateProfileCompletion(
+  profileId: string,
+  lastSection: ProfileSection
+): Promise<void> {
+  try {
+    const completion = await calculateProfileCompletion(profileId);
+
+    await supabase
+      .from("profiles")
+      .update({
+        profile_completion_percentage: completion.percentage,
+        last_completed_section: lastSection,
+        completion_updated_at: new Date().toISOString(),
+      })
+      .eq("id", profileId);
+  } catch (error) {
+    console.error("Error updating profile completion:", error);
+  }
+}
+
+// =============================================================================
 // TANSTACK QUERY HOOKS
-// ============================================================================
+// =============================================================================
 
 /**
- * Hook to fetch complete profile data with related entities
+ * Hook to fetch user's profile with related data
  */
-export const useCompleteProfile = (userId?: string) => {
+export function useProfile() {
   const { auth } = useAuth();
-  const targetUserId = userId || auth.user?.id;
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["profile", "complete", targetUserId],
-    queryFn: () => fetchCompleteProfile(targetUserId || ""),
-    enabled: !!targetUserId,
-    staleTime: 30 * 60 * 1000, // 30 minutes cache for profile data
-    refetchOnWindowFocus: false,
+  return useQuery({
+    queryKey: ["profile", auth.user?.id],
+    queryFn: () => (auth.user?.id ? fetchProfile(auth.user.id) : null),
+    enabled: !!auth.user?.id,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
   });
-
-  // Calculate completion if data is available
-  const completion = data?.profile
-    ? calculateProfileCompletion(
-        data.profile,
-        data.experiences,
-        data.educations,
-        data.social_profile
-      )
-    : null;
-
-  return {
-    profile: data?.profile || null,
-    experiences: data?.experiences || [],
-    educations: data?.educations || [],
-    socialProfile: data?.social_profile || null,
-    completion,
-    isLoading,
-    isError,
-    error: data?.error || error,
-    refetch,
-  };
-};
-
-/**
- * Hook to fetch basic profile data only
- */
-export const useProfile = (userId?: string) => {
-  const { auth } = useAuth();
-  const targetUserId = userId || auth.user?.id;
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["profile", "basic", targetUserId],
-    queryFn: () => fetchProfile(targetUserId || ""),
-    enabled: !!targetUserId,
-    staleTime: 30 * 60 * 1000, // 30 minutes cache
-    refetchOnWindowFocus: false,
-  });
-
-  return {
-    profile: data?.data || null,
-    isLoading,
-    isError,
-    error: data?.error || error,
-    refetch,
-  };
-};
+}
 
 /**
  * Hook to update profile information
  */
-export const useUpdateProfile = () => {
-  const { auth } = useAuth();
+export function useUpdateProfile() {
   const queryClient = useQueryClient();
-
-  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
-    mutationFn: (profileData: ProfileUpdate) => updateProfile(auth.user?.id || "", profileData),
-    onSuccess: updatedProfile => {
-      // Invalidate all profile-related queries
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-
-      // Optionally, update the cache directly for immediate UI updates
-      queryClient.setQueryData(["profile", "basic", auth.user?.id], (oldData: any) => ({
-        ...oldData,
-        data: updatedProfile,
-      }));
-    },
-  });
-
-  return {
-    data,
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    updateProfile: mutate,
-  };
-};
-
-/**
- * Hook to create experience entry
- */
-export const useCreateExperience = () => {
   const { auth } = useAuth();
-  const queryClient = useQueryClient();
 
-  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
-    mutationFn: ({
-      profileId,
-      experienceData,
-    }: {
-      profileId: string;
-      experienceData: ExperienceCreate;
-    }) => createExperience(profileId, experienceData),
+  return useMutation({
+    mutationFn: ({ profileId, data }: { profileId: string; data: ProfileFormData }) =>
+      updateProfile(profileId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
     },
   });
-
-  return {
-    data,
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    createExperience: mutate,
-  };
-};
+}
 
 /**
- * Hook to update experience entry
+ * Hook to create new experience
  */
-export const useUpdateExperience = () => {
+export function useCreateExperience() {
   const queryClient = useQueryClient();
+  const { auth } = useAuth();
 
-  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
+  return useMutation({
+    mutationFn: ({ profileId, data }: { profileId: string; data: ExperienceFormData }) =>
+      createExperience(profileId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
+    },
+  });
+}
+
+/**
+ * Hook to update experience
+ */
+export function useUpdateExperience() {
+  const queryClient = useQueryClient();
+  const { auth } = useAuth();
+
+  return useMutation({
     mutationFn: ({
       experienceId,
-      experienceData,
+      data,
     }: {
       experienceId: string;
-      experienceData: Partial<ExperienceCreate>;
-    }) => updateExperience(experienceId, experienceData),
+      data: Partial<ExperienceFormData>;
+    }) => updateExperience(experienceId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
     },
   });
-
-  return {
-    data,
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    updateExperience: mutate,
-  };
-};
+}
 
 /**
- * Hook to delete experience entry
+ * Hook to delete experience
  */
-export const useDeleteExperience = () => {
+export function useDeleteExperience() {
   const queryClient = useQueryClient();
+  const { auth } = useAuth();
 
-  const { isPending, isSuccess, isError, error, mutate } = useMutation({
-    mutationFn: (experienceId: string) => deleteExperience(experienceId),
+  return useMutation({
+    mutationFn: ({ experienceId, profileId }: { experienceId: string; profileId: string }) =>
+      deleteExperience(experienceId, profileId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
     },
   });
-
-  return {
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    deleteExperience: mutate,
-  };
-};
+}
 
 /**
- * Hook to create education entry
+ * Hook to create new education
  */
-export const useCreateEducation = () => {
+export function useCreateEducation() {
   const queryClient = useQueryClient();
+  const { auth } = useAuth();
 
-  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
-    mutationFn: ({
-      profileId,
-      educationData,
-    }: {
-      profileId: string;
-      educationData: EducationCreate;
-    }) => createEducation(profileId, educationData),
+  return useMutation({
+    mutationFn: ({ profileId, data }: { profileId: string; data: EducationFormData }) =>
+      createEducation(profileId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
     },
   });
-
-  return {
-    data,
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    createEducation: mutate,
-  };
-};
+}
 
 /**
- * Hook to update education entry
+ * Hook to update education
  */
-export const useUpdateEducation = () => {
+export function useUpdateEducation() {
   const queryClient = useQueryClient();
+  const { auth } = useAuth();
 
-  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
+  return useMutation({
     mutationFn: ({
       educationId,
-      educationData,
+      data,
     }: {
       educationId: string;
-      educationData: Partial<EducationCreate>;
-    }) => updateEducation(educationId, educationData),
+      data: Partial<EducationFormData>;
+    }) => updateEducation(educationId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
     },
   });
-
-  return {
-    data,
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    updateEducation: mutate,
-  };
-};
+}
 
 /**
- * Hook to delete education entry
+ * Hook to delete education
  */
-export const useDeleteEducation = () => {
+export function useDeleteEducation() {
   const queryClient = useQueryClient();
+  const { auth } = useAuth();
 
-  const { isPending, isSuccess, isError, error, mutate } = useMutation({
-    mutationFn: (educationId: string) => deleteEducation(educationId),
+  return useMutation({
+    mutationFn: ({ educationId, profileId }: { educationId: string; profileId: string }) =>
+      deleteEducation(educationId, profileId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
     },
   });
-
-  return {
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    deleteEducation: mutate,
-  };
-};
+}
 
 /**
  * Hook to update social profile
  */
-export const useUpdateSocialProfile = () => {
+export function useUpdateSocialProfile() {
   const queryClient = useQueryClient();
+  const { auth } = useAuth();
 
-  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
-    mutationFn: ({
-      profileId,
-      socialData,
-    }: {
-      profileId: string;
-      socialData: SocialProfileUpdate;
-    }) => updateSocialProfile(profileId, socialData),
+  return useMutation({
+    mutationFn: ({ profileId, data }: { profileId: string; data: SocialProfileFormData }) =>
+      updateSocialProfile(profileId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", auth.user?.id] });
     },
   });
+}
 
-  return {
-    data,
-    isLoading: isPending,
-    isSuccess,
-    isError,
-    error,
-    updateSocialProfile: mutate,
-  };
-};
+/**
+ * Hook to calculate profile completion
+ */
+export function useProfileCompletion(profileId?: string) {
+  return useQuery({
+    queryKey: ["profileCompletion", profileId],
+    queryFn: () => (profileId ? calculateProfileCompletion(profileId) : null),
+    enabled: !!profileId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}

@@ -1,5 +1,5 @@
 // src/services/comments.service.ts
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { getSignedUrls } from "./storage.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";

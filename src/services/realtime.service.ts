@@ -1,6 +1,6 @@
 // src/services/realtime.service.ts
 import { useEffect } from "react";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**

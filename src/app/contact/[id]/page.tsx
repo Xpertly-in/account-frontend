@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Container } from "@/components/layout/Container.component";
 import { ContactForm } from "@/components/contact/ContactForm.component";
 import { CAContactSidebar } from "@/components/contact-requests/CAContactSidebar.component";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/ui/Skeleton.ui";
 import { Button } from "@/ui/Button.ui";
 import { ArrowLeft } from "@phosphor-icons/react";
