@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import CAProfileDetails from "@/components/features/profile/CAProfileDetails.component";
 
 // Required for static export

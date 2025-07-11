@@ -9,7 +9,7 @@ import { Button } from "@/ui/Button.ui";
 import { ThemeToggle } from "@/ui/ThemeToggle.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { User, SignOut, List, X, Briefcase } from "@phosphor-icons/react";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { UserRole } from "@/types/onboarding.type";
 
 export function Header() {

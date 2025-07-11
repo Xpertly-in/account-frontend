@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
 import { User, EnvelopeSimple, ChatCenteredText } from "@phosphor-icons/react";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { UserRole } from "@/types/onboarding.type";
 
 export default function CADashboardPage() {

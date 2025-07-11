@@ -1,5 +1,5 @@
 // src/services/storage.service.ts
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Upload a single file to Supabase Storage and return its public URL

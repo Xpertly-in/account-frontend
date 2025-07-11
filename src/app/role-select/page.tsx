@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/store/context/Auth.provider";
 import { Briefcase, Handshake } from "@phosphor-icons/react";
 import { UserRole } from "@/types/onboarding.type";

@@ -1,5 +1,5 @@
 // src/services/tags.service.ts
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // fetch all tag names

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { UserRole } from "@/types/onboarding.type";
 
 export function useProtectedRoute() {
