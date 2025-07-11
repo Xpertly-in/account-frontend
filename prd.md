@@ -232,7 +232,7 @@
 - **shadcn UI:** To provide a set of pre-built UI components following TailwindCSS design principles.
 - **react-query:** For managing asynchronous data flows, caching, and error handling.
 - **Prettier:** To maintain consistent code formatting.
-- **@phosphor-icons/react:** For consistent, scalable and customizable icons throughout the application. This should be the ONLY icon library used.
+- **@phosphor-icons/react:** For consistent, scalable and customizable icons throughout the application. This should be the ONLY icon library used. **IMPORTANT**: All icons must be imported with the "Icon" suffix (e.g., `UserIcon`, `CameraIcon`, `UploadIcon`).
 - **Supabase:** Backend-as-a-Service for PostgreSQL, Authentication, and Storage.
 - **Vercel:** For deployment.
 
@@ -388,6 +388,7 @@ Tests follow the same domain-based organization as the source code:
 - **Iconography:**
 
   - Use **Phosphor Icons** exclusively for all icon needs throughout the application.
+  - **Icon Import Pattern**: All icons must be imported with the "Icon" suffix (e.g., `import { UserIcon, CameraIcon } from "@phosphor-icons/react"`).
   - Maintain icon consistency in size, style, and color schemes.
   - Icons should be properly sized for touch targets on mobile devices.
 

@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { Avatar } from "@/ui/Avatar.ui";
-import { Camera, CheckCircle, Upload } from "@phosphor-icons/react";
+import { CameraIcon, CheckCircleIcon, UploadIcon } from "@phosphor-icons/react";
 import { Button } from "@/ui/Button.ui";
 import { cn } from "@/helper/tw.helper";
 import { useAtom } from "jotai";
@@ -155,7 +155,7 @@ export default function ProfileAvatar({
               "transition-all duration-300 opacity-0 group-hover:opacity-100"
             )}
           >
-            <Camera size={config.icon} weight="bold" className="text-white drop-shadow-lg" />
+            <CameraIcon size={config.icon} weight="bold" className="text-white drop-shadow-lg" />
           </div>
         )}
 
@@ -168,7 +168,7 @@ export default function ProfileAvatar({
               "border-2 border-dashed border-white"
             )}
           >
-            <Upload size={config.icon} weight="bold" className="text-white drop-shadow-lg" />
+            <UploadIcon size={config.icon} weight="bold" className="text-white drop-shadow-lg" />
           </div>
         )}
       </div>
@@ -176,7 +176,7 @@ export default function ProfileAvatar({
       {/* Completion Badge */}
       {showCompletionBadge && isCompleted && (
         <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full p-1.5 border-2 border-white shadow-lg dark:border-gray-800">
-          <CheckCircle size={14} weight="fill" className="text-white" />
+          <CheckCircleIcon size={14} weight="fill" className="text-white" />
         </div>
       )}
 
@@ -201,7 +201,7 @@ export default function ProfileAvatar({
           {isUploading ? (
             <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Camera size={16} weight="bold" className="text-primary" />
+            <CameraIcon size={16} weight="bold" className="text-primary" />
           )}
         </Button>
       )}

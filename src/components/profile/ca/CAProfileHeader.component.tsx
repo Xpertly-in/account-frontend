@@ -5,14 +5,14 @@ import { Badge } from "@/ui/Badge.ui";
 import { Button } from "@/ui/Button.ui";
 import { Card } from "@/ui/Card.ui";
 import { 
-  CheckCircle, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  Star,
-  ChatCenteredText,
-  Envelope,
-  Phone
+  CheckCircleIcon, 
+  MapPinIcon, 
+  CalendarIcon, 
+  UsersIcon, 
+  StarIcon,
+  ChatCenteredTextIcon,
+  EnvelopeIcon,
+  PhoneIcon
 } from "@phosphor-icons/react";
 import { cn } from "@/helper/tw.helper";
 import ProfileAvatar from "../shared/ProfileAvatar.component";
@@ -99,7 +99,7 @@ export default function CAProfileHeader({
               
               {/* Verification Badge */}
               <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full p-2 border-4 border-white shadow-lg dark:border-gray-900">
-                <CheckCircle size={24} weight="fill" className="text-white" />
+                <CheckCircleIcon size={24} weight="fill" className="text-white" />
               </div>
             </div>
 
@@ -140,13 +140,13 @@ export default function CAProfileHeader({
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 text-sm text-gray-600 dark:text-gray-400">
                 {location && (
                   <div className="flex items-center gap-2">
-                    <MapPin size={16} weight="bold" />
+                    <MapPinIcon size={16} weight="bold" />
                     <span>{location}</span>
                   </div>
                 )}
                 
                 <div className="flex items-center gap-2">
-                  <Calendar size={16} weight="bold" />
+                  <CalendarIcon size={16} weight="bold" />
                   <span>Member since {memberSince}</span>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function CAProfileHeader({
                 
                 <div className="text-center lg:text-left">
                   <div className="flex items-center justify-center lg:justify-start gap-1">
-                    <Star size={16} weight="fill" className="text-amber-400" />
+                    <StarIcon size={16} weight="fill" className="text-amber-400" />
                     <span className="text-2xl font-bold text-gray-900 dark:text-white">
                       {rating.toFixed(1)}
                     </span>
@@ -201,7 +201,7 @@ export default function CAProfileHeader({
                   onClick={onContactClick}
                   className="bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transition-all duration-200"
                 >
-                  <ChatCenteredText size={18} weight="bold" className="mr-2" />
+                  <ChatCenteredTextIcon size={18} weight="bold" className="mr-2" />
                   Contact CA
                 </Button>
               )}
@@ -226,7 +226,7 @@ export default function CAProfileHeader({
                       className="flex-1 p-2"
                       onClick={() => window.open(`mailto:${email}`, '_blank')}
                     >
-                      <Envelope size={16} weight="bold" />
+                      <EnvelopeIcon size={16} weight="bold" />
                     </Button>
                   )}
                   
@@ -237,7 +237,7 @@ export default function CAProfileHeader({
                       className="flex-1 p-2"
                       onClick={() => window.open(`tel:${phone}`, '_blank')}
                     >
-                      <Phone size={16} weight="bold" />
+                      <PhoneIcon size={16} weight="bold" />
                     </Button>
                   )}
                 </div>

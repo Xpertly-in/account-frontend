@@ -3,7 +3,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "@/ui/Button.ui";
 import { Card } from "@/ui/Card.ui";
-import { AlertTriangle, RefreshCw, Home } from "@phosphor-icons/react";
+import { AlertTriangleIcon, RefreshCwIcon, HomeIcon } from "@phosphor-icons/react";
 
 interface Props {
   children: ReactNode;
@@ -64,7 +64,7 @@ export default class ProfileErrorBoundary extends Component<Props, State> {
             {/* Error Icon */}
             <div className="flex justify-center">
               <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
-                <AlertTriangle 
+                <AlertTriangleIcon 
                   size={48} 
                   weight="bold" 
                   className="text-red-500 dark:text-red-400"
@@ -107,7 +107,7 @@ export default class ProfileErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRetry}
                 className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white"
               >
-                <RefreshCw size={16} weight="bold" />
+                <RefreshCwIcon size={16} weight="bold" />
                 Try Again
               </Button>
               
@@ -116,7 +116,7 @@ export default class ProfileErrorBoundary extends Component<Props, State> {
                 onClick={this.handleGoHome}
                 className="flex items-center gap-2"
               >
-                <Home size={16} weight="bold" />
+                <HomeIcon size={16} weight="bold" />
                 Go Home
               </Button>
             </div>
@@ -161,7 +161,7 @@ export function ProfileSectionErrorBoundary({ children }: { children: ReactNode 
       fallback={
         <Card className="p-6 text-center">
           <div className="space-y-4">
-            <AlertTriangle size={32} className="text-amber-500 mx-auto" />
+            <AlertTriangleIcon size={32} className="text-amber-500 mx-auto" />
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white">
                 Section Unavailable
@@ -186,7 +186,7 @@ export function ProfileFormErrorBoundary({ children }: { children: ReactNode }) 
       fallback={
         <Card className="p-6 text-center">
           <div className="space-y-4">
-            <AlertTriangle size={32} className="text-red-500 mx-auto" />
+            <AlertTriangleIcon size={32} className="text-red-500 mx-auto" />
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white">
                 Form Error
