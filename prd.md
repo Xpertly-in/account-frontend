@@ -1614,3 +1614,700 @@ Every phase reaffirms the mobile-first design approach, component line limits, l
 - [x] **Role-based Routing** - Protected routes based on user roles
 - [x] **Profile Management** - User profile creation and editing
 - [x] **Session Management** - Persistent authentication state
+
+## 11. Profile Pages Complete Redesign (NEW - January 2025)
+
+**OBJECTIVE**: Completely redesign and rebuild both CA and Customer profile pages from scratch following modern design principles, proper component architecture, and enhanced user experience patterns.
+
+### 11.1 Current State Analysis
+
+**Issues with Existing Implementation**:
+- **Complex Component Architecture**: Current profile components are overly complex with poor separation of concerns
+- **Inconsistent Design**: Multiple design patterns and styling approaches across different profile components
+- **Poor Mobile Experience**: Profile pages not properly optimized for mobile-first design
+- **Code Duplication**: Redundant logic across CA and Customer profile implementations
+- **Large Component Sizes**: Many components exceed the 200-line limit established in project guidelines
+- **Outdated Data Flow**: Profile data fetching and state management not following current best practices
+- **Accessibility Issues**: Profile pages lack proper accessibility features and semantic HTML
+
+**Technology Debt**:
+- Old component patterns not following current project standards
+- Inconsistent use of Phosphor icons vs other icon libraries
+- Mixed styling approaches (inline styles vs TailwindCSS classes)
+- Outdated form validation and state management
+- Missing TypeScript strict typing in several components
+
+### 11.2 Redesign Principles
+
+**Core Design Philosophy**:
+- **Mobile-First Responsive Design**: Every component designed for mobile devices first, then enhanced for larger screens
+- **Component Size Limit**: Strict adherence to 200-line maximum per component
+- **Modern UI Patterns**: Implement glassmorphism, gradient accents, and smooth animations
+- **Accessibility-First**: WCAG AA compliance as a baseline requirement
+- **Performance Optimized**: Lazy loading, efficient re-rendering, and optimized bundle sizes
+
+**Visual Design Standards**:
+- **Vibrant Gradients**: Bold gradient backgrounds for hero sections and accent elements
+- **Glassmorphism Effects**: Subtle transparency and backdrop blur for modern card designs
+- **Interactive Elements**: Smooth hover states, micro-animations, and visual feedback
+- **Typography Hierarchy**: Clear font size scales and consistent text styling
+- **Spacing System**: Consistent spacing using TailwindCSS spacing scale
+- **Shadow Depth**: Proper shadow layering for visual hierarchy and depth perception
+
+### 11.3 Profile Architecture Redesign
+
+#### 11.3.1 New Component Structure
+
+**CA Profile Pages**:
+```
+src/app/ca/profile/
+├── page.tsx                           # Main CA profile page (< 200 lines)
+├── edit/
+│   └── page.tsx                       # CA profile edit page (< 200 lines)
+└── public/
+    └── [id]/
+        └── page.tsx                   # Public CA profile view (< 200 lines)
+
+src/components/profile/ca/
+├── CAProfileHeader.component.tsx      # Hero section with avatar and basic info (< 200 lines)
+├── CAProfileStats.component.tsx       # Statistics and metrics display (< 200 lines)
+├── CAProfileContact.component.tsx     # Contact information and CTA buttons (< 200 lines)
+├── CAProfileAbout.component.tsx       # About section with bio and specializations (< 200 lines)
+├── CAProfileExperience.component.tsx  # Work experience timeline (< 200 lines)
+├── CAProfileEducation.component.tsx   # Education and certifications (< 200 lines)
+├── CAProfileServices.component.tsx    # Services offered with pricing (< 200 lines)
+├── CAProfileReviews.component.tsx     # Client reviews and ratings (< 200 lines)
+├── CAProfileSocial.component.tsx      # Social media links and portfolio (< 200 lines)
+└── index.ts                           # Component exports
+```
+
+**Customer Profile Pages**:
+```
+src/app/user/profile/
+├── page.tsx                           # Main customer profile page (< 200 lines)
+└── edit/
+    └── page.tsx                       # Customer profile edit page (< 200 lines)
+
+src/components/profile/customer/
+├── CustomerProfileHeader.component.tsx    # Hero section with avatar and basic info (< 200 lines)
+├── CustomerProfileInfo.component.tsx      # Personal information display (< 200 lines)
+├── CustomerProfileServices.component.tsx  # Required services and preferences (< 200 lines)
+├── CustomerProfileHistory.component.tsx   # Interaction history with CAs (< 200 lines)
+├── CustomerProfileSettings.component.tsx  # Account settings and preferences (< 200 lines)
+└── index.ts                               # Component exports
+```
+
+**Shared Profile Components**:
+```
+src/components/profile/shared/
+├── ProfileAvatar.component.tsx        # Reusable avatar component (< 200 lines)
+├── ProfileForm.component.tsx          # Shared form components (< 200 lines)
+├── ProfileLoader.component.tsx        # Loading states and skeletons (< 200 lines)
+├── ProfileErrorBoundary.component.tsx # Error handling wrapper (< 200 lines)
+└── index.ts                           # Component exports
+```
+
+#### 11.3.2 Data Flow Architecture
+
+**Service Layer Integration**:
+```typescript
+// src/services/profile.service.ts
+export const ProfileService = {
+  // CA Profile Operations
+  getCAProfile: (id: string) => Promise<CAProfile>,
+  updateCAProfile: (id: string, data: Partial<CAProfile>) => Promise<CAProfile>,
+  
+  // Customer Profile Operations
+  getCustomerProfile: (id: string) => Promise<CustomerProfile>,
+  updateCustomerProfile: (id: string, data: Partial<CustomerProfile>) => Promise<CustomerProfile>,
+  
+  // Shared Operations
+  uploadProfilePicture: (file: File) => Promise<string>,
+  deleteProfilePicture: (url: string) => Promise<void>,
+};
+```
+
+**State Management with Jotai**:
+```typescript
+// src/store/jotai/profile.store.ts
+export const profileAtom = atom<Profile | null>(null);
+export const profileLoadingAtom = atom<boolean>(false);
+export const profileErrorAtom = atom<string | null>(null);
+
+// Derived atoms for computed values
+export const profileCompletionAtom = atom((get) => {
+  const profile = get(profileAtom);
+  return calculateProfileCompletion(profile);
+});
+```
+
+### 11.4 Database Schema Alignment
+
+**Profile Data Structure** (aligned with `supabase.sql`):
+```typescript
+// src/types/profile.type.ts
+export interface Profile {
+  id: string;
+  auth_user_id: string;
+  username?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  profile_picture_url?: string;
+  bio?: string;
+  gender?: string;
+  role: 'CA' | 'CUSTOMER';
+  city?: string;
+  state?: string;
+  country: string;
+  languages?: string[];
+  specialization?: string[];
+  email: string;
+  phone?: string;
+  whatsapp_available: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Experience {
+  id: string;
+  profile_id: string;
+  title?: string;
+  company_name?: string;
+  location?: string;
+  is_current: boolean;
+  start_date?: string;
+  end_date?: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Education {
+  id: string;
+  profile_id: string;
+  institute_name: string;
+  degree?: string;
+  field_of_study?: string;
+  start_date?: string;
+  end_date?: string;
+  grade?: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SocialProfile {
+  id: string;
+  profile_id: string;
+  linkedin_profile?: string;
+  professional_website?: string;
+  instagram_profile?: string;
+  facebook_profile?: string;
+  twitter_profile?: string;
+  youtube_profile?: string;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+### 11.5 Feature Requirements
+
+#### 11.5.1 CA Profile Features
+
+**Public CA Profile** (`/ca/profile/public/[id]`):
+- **Hero Section**: Large profile picture, name, credentials, verification status, rating display
+- **Contact Section**: Email, phone, website with prominent "Contact Now" CTA button
+- **About Section**: Professional bio, specializations, languages spoken
+- **Experience Timeline**: Work history with company logos and role descriptions
+- **Education Section**: Qualifications, certifications, and continuing education
+- **Services & Pricing**: Detailed service offerings with transparent pricing
+- **Client Reviews**: Authentic reviews with ratings and testimonials
+- **Social Proof**: Social media links, professional portfolio, and case studies
+
+**CA Profile Management** (`/ca/profile` and `/ca/profile/edit`):
+- **Profile Completion Tracker**: Visual progress indicator with completion percentage
+- **Real-time Validation**: Form validation with immediate feedback
+- **Photo Upload**: Drag-and-drop profile picture upload with crop functionality
+- **Experience Manager**: Add/edit/delete work experience with rich text editor
+- **Education Manager**: Manage qualifications and certifications
+- **Service Configuration**: Set up services with descriptions and pricing
+- **Social Media Integration**: Connect and manage social media profiles
+- **Preview Mode**: Live preview of public profile during editing
+
+#### 11.5.2 Customer Profile Features
+
+**Customer Profile Dashboard** (`/user/profile`):
+- **Profile Overview**: Basic information, contact preferences, and account status
+- **Service Preferences**: Saved service types and preferred communication methods
+- **Interaction History**: Past interactions with CAs and service requests
+- **Saved CAs**: Bookmarked CAs and favorite service providers
+- **Account Settings**: Privacy settings, notification preferences, and account management
+
+**Customer Profile Editing** (`/user/profile/edit`):
+- **Personal Information**: Name, contact details, and profile picture
+- **Location Settings**: Address, preferred service locations, and distance preferences
+- **Service Needs**: Types of services needed and urgency preferences
+- **Communication Preferences**: Preferred contact methods and availability
+- **Privacy Controls**: Profile visibility and data sharing preferences
+
+### 11.6 Technical Implementation Standards
+
+#### 11.6.1 Component Development Guidelines
+
+**Component Structure**:
+```typescript
+// Example component structure
+interface ComponentProps {
+  // Properly typed props with JSDoc comments
+}
+
+export default function ComponentName({ ...props }: ComponentProps) {
+  // State management with proper typing
+  // Effect hooks with cleanup
+  // Event handlers with TypeScript support
+  // Conditional rendering with proper loading states
+  // Error boundaries and fallback UI
+  
+  return (
+    <div className="mobile-first responsive classes">
+      {/* Properly structured JSX with semantic HTML */}
+    </div>
+  );
+}
+```
+
+**Styling Standards**:
+- **TailwindCSS Only**: No inline styles or CSS modules
+- **Mobile-First**: All responsive classes start with base mobile styles
+- **Consistent Spacing**: Use TailwindCSS spacing scale (4, 6, 8, 12, 16, 24)
+- **Color System**: Use theme colors defined in `tailwind.config.js`
+- **Typography**: Consistent font sizes and line heights across components
+
+**Performance Requirements**:
+- **Bundle Size**: Each component must be under 200 lines and optimize for tree-shaking
+- **Loading States**: Proper skeleton loaders for all async content
+- **Image Optimization**: Use Next.js Image component for all profile pictures
+- **Lazy Loading**: Implement lazy loading for non-critical profile sections
+
+#### 11.6.2 Testing Requirements
+
+**Component Testing**:
+- **Unit Tests**: 90%+ test coverage for all profile components
+- **Integration Tests**: Test component interactions and data flow
+- **Accessibility Tests**: Automated a11y testing with jest-axe
+- **Visual Regression Tests**: Snapshot testing for component rendering
+- **Mobile Testing**: Dedicated tests for mobile-specific interactions
+
+**Test Structure**:
+```typescript
+// src/tests/components/profile/ca/CAProfileHeader.test.tsx
+describe('CAProfileHeader', () => {
+  describe('Rendering', () => {
+    // Basic rendering tests
+  });
+  
+  describe('User Interactions', () => {
+    // Event handling tests
+  });
+  
+  describe('Accessibility', () => {
+    // A11y compliance tests
+  });
+  
+  describe('Responsive Design', () => {
+    // Mobile-first responsive tests
+  });
+});
+```
+
+### 11.7 Migration Strategy
+
+#### Phase 1: Foundation Setup (Week 1)
+- **Database Schema Updates**: Ensure alignment with current `supabase.sql`
+- **Type System Creation**: Define comprehensive TypeScript interfaces
+- **Service Layer Development**: Create profile service functions
+- **Component Architecture**: Set up new component directory structure
+
+#### Phase 2: Core Components (Week 2)
+- **Shared Components**: Build reusable profile components (Avatar, Forms, Loaders)
+- **CA Profile Components**: Develop CA-specific profile components
+- **Customer Profile Components**: Build customer profile components
+- **Testing Infrastructure**: Set up testing framework and utilities
+
+#### Phase 3: Page Integration (Week 3)
+- **CA Profile Pages**: Integrate components into CA profile pages
+- **Customer Profile Pages**: Build customer profile page layouts
+- **Navigation Updates**: Update routing and navigation components
+- **Error Handling**: Implement comprehensive error boundaries
+
+#### Phase 4: Features & Polish (Week 4)
+- **Advanced Features**: Photo upload, form validation, social integration
+- **Performance Optimization**: Lazy loading, bundle optimization
+- **Accessibility Audit**: Complete a11y testing and fixes
+- **Mobile Testing**: Comprehensive mobile device testing
+
+#### Phase 5: Cleanup & Documentation (Week 5)
+- **Legacy Code Removal**: Delete old profile components and pages
+- **Documentation Updates**: Update component documentation and guidelines
+- **Performance Monitoring**: Set up performance tracking and monitoring
+- **Final Testing**: End-to-end testing and bug fixes
+
+### 11.8 Success Metrics
+
+**Technical Metrics**:
+- **Component Size Compliance**: 100% of components under 200 lines
+- **Test Coverage**: 90%+ code coverage across all profile components
+- **Performance**: Profile pages load in under 2 seconds on 3G networks
+- **Accessibility**: 100% WCAG AA compliance
+- **Mobile Optimization**: Perfect Lighthouse mobile scores (90+)
+
+**User Experience Metrics**:
+- **Profile Completion Rate**: 80%+ completion rate for new users
+- **User Engagement**: 50% increase in profile views and interactions
+- **Contact Conversion**: 25% increase in contact form submissions
+- **User Satisfaction**: 4.5+ star rating in user feedback surveys
+
+**Development Metrics**:
+- **Code Maintainability**: Reduced cyclomatic complexity and improved code quality scores
+- **Development Velocity**: 50% faster feature development with reusable components
+- **Bug Reduction**: 70% reduction in profile-related bugs and issues
+- **Team Productivity**: Improved developer experience with better component architecture
+
+## 12. Database Schema Management Policy (NEW - January 2025)
+
+**OBJECTIVE**: Establish clear guidelines for database schema changes and maintain proper versioning control for production environments.
+
+### 12.1 DDL Change Management Policy
+
+**Core Principle**: Once a table exists in production or shared development environments, all schema changes MUST use `ALTER` statements rather than modifying the original `CREATE` statements.
+
+**Rationale**:
+- **Production Safety**: Prevents accidental data loss in production environments
+- **Version Control**: Maintains clear history of schema evolution
+- **Team Collaboration**: Enables safe schema changes across multiple developers
+- **Migration Tracking**: Provides clear audit trail of all database modifications
+- **Rollback Capability**: Allows for easier rollback strategies when needed
+
+### 12.2 Schema Change Implementation
+
+**For New Features Requiring Schema Changes**:
+
+1. **Create Migration Files**: 
+   ```sql
+   -- File location: src/migrations/<feature-name>-YYYY-MM-DD.sql
+   -- Example: src/migrations/profile-completion-tracking-2025-01-15.sql
+   ```
+
+2. **Use ALTER Statements Only**:
+   ```sql
+   -- ✅ CORRECT: Adding new column
+   ALTER TABLE public.profiles 
+   ADD COLUMN profile_completion_percentage INTEGER DEFAULT 0;
+
+   -- ❌ INCORRECT: Modifying CREATE statement
+   -- Don't modify the original CREATE TABLE statement
+   ```
+
+3. **Include Rollback Instructions**:
+   ```sql
+   -- Forward migration
+   ALTER TABLE public.profiles ADD COLUMN profile_completion_percentage INTEGER DEFAULT 0;
+   
+   -- Rollback (if needed)
+   -- ALTER TABLE public.profiles DROP COLUMN profile_completion_percentage;
+   ```
+
+4. **Document in Progress Tracker**: All schema changes must be documented with rationale and impact assessment
+
+### 12.3 Profile Completion Tracking Implementation
+
+**Required Schema Addition**:
+```sql
+-- Add profile completion tracking to existing profiles table
+ALTER TABLE public.profiles 
+ADD COLUMN profile_completion_percentage INTEGER DEFAULT 0 CHECK (profile_completion_percentage >= 0 AND profile_completion_percentage <= 100);
+
+-- Add completion tracking metadata
+ALTER TABLE public.profiles 
+ADD COLUMN last_completed_section TEXT,
+ADD COLUMN completion_updated_at TIMESTAMP WITH TIME ZONE DEFAULT now();
+
+-- Create index for completion queries
+CREATE INDEX idx_profiles_completion_percentage ON public.profiles(profile_completion_percentage);
+
+-- Create trigger to update completion timestamp
+CREATE OR REPLACE FUNCTION update_completion_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.profile_completion_percentage IS DISTINCT FROM NEW.profile_completion_percentage THEN
+        NEW.completion_updated_at = now();
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_completion_timestamp
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_completion_timestamp();
+```
+
+**Profile Completion Calculation Logic**:
+- **Basic Info**: 20% (name, email, phone, location)
+- **Professional Details**: 20% (bio, specializations, languages)
+- **Experience**: 20% (at least one experience entry)
+- **Education**: 20% (at least one education entry)
+- **Social/Contact**: 20% (at least one social link or professional website)
+
+### 12.4 Schema Change Workflow
+
+**Development Process**:
+1. **Identify Need**: Feature requires database schema changes
+2. **Create Migration File**: Write ALTER statements in migration file
+3. **Test Locally**: Verify migration works on local development database
+4. **Document Changes**: Update progress tracker with schema change details
+5. **Peer Review**: Have schema changes reviewed before merging
+6. **Apply to Staging**: Test migration on staging environment
+7. **Production Deployment**: Apply migration during deployment window
+
+**File Organization**:
+```
+src/migrations/
+├── profile-completion-tracking-2025-01-15.sql
+├── contact-request-priority-2025-01-20.sql
+└── ca-verification-fields-2025-01-25.sql
+```
+
+**File Naming Convention**: `<feature-description>-YYYY-MM-DD.sql`
+
+### 12.5 Emergency Schema Changes
+
+**For Critical Hotfixes**:
+- Emergency changes still follow ALTER statement policy
+- Document rationale for emergency change
+- Create proper migration file post-deployment
+- Update all environments to match production schema
+
+### 12.6 Schema Documentation Maintenance
+
+**Requirements**:
+- **Living Documentation**: Keep `database-schema.md` updated with current state
+- **Change Log**: Maintain chronological log of all schema modifications
+- **Version Tracking**: Tag schema versions with application releases
+- **Impact Assessment**: Document performance and breaking change implications
+
+**Benefits of This Policy**:
+- **Risk Mitigation**: Reduces chance of accidental data loss
+- **Professional Standards**: Follows industry best practices for database management
+- **Team Coordination**: Enables safe concurrent development
+- **Production Stability**: Ensures reliable deployment processes
+- **Compliance Ready**: Meets enterprise-level change management requirements
+
+### 12.6 Index File Usage Policy
+
+**Core Principle**: Minimize the use of index.ts files to reduce confusion and improve code clarity.
+
+**Rationale**:
+- **Import Clarity**: Direct imports are more explicit and easier to trace
+- **IDE Support**: Better IntelliSense and auto-import functionality
+- **Debugging**: Easier to locate actual component files during debugging
+- **Maintenance**: Reduces the overhead of maintaining multiple index files
+- **Bundle Analysis**: Clearer understanding of import dependencies
+
+**Guidelines**:
+1. **Avoid Index Files**: Prefer direct imports over index file re-exports
+2. **Limited Usage**: Only use index files for major module boundaries (e.g., main package exports)
+3. **No Nested Indexes**: Avoid creating index files within subdirectories
+4. **Explicit Imports**: Use full component paths instead of index shortcuts
+5. **Documentation**: When index files are necessary, document the reasoning
+
+**Examples**:
+```typescript
+// PREFERRED: Direct imports
+import { CAProfileHeader } from "@/components/profile/ca/CAProfileHeader.component";
+import { ProfileAvatar } from "@/components/profile/shared/ProfileAvatar.component";
+
+// AVOID: Index file shortcuts
+import { CAProfileHeader } from "@/components/profile/ca";
+import { ProfileAvatar } from "@/components/profile/shared";
+```
+
+**Exception Cases**:
+- Main package exports (e.g., `src/ui/index.ts` for UI component library)
+- External library compatibility requirements
+- Large module boundaries with stable interfaces
+
+## 13. Service Layer Architecture Patterns (NEW - January 2025)
+
+**OBJECTIVE**: Document the established service layer architecture patterns from the leads service to ensure consistency across all future service implementations.
+
+### 13.1 Service Architecture Analysis
+
+**Established Patterns from leads.service.ts**:
+
+#### **File Structure Pattern**:
+```typescript
+// 1. Import structure
+import { supabase } from "@/helper/supabase.helper";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/store/context/Auth.provider";
+import { TypeImports } from "@/types/[domain]/[entity].type";
+
+// 2. Core Service Functions (Pure async functions)
+// 3. TanStack Query Hooks (React hooks using the core functions)
+```
+
+#### **Core Service Functions Pattern**:
+- **Pure Async Functions**: No React dependencies, can be tested independently
+- **Comprehensive Error Handling**: Try-catch blocks with detailed error logging
+- **Data Transformation**: Raw Supabase data → Application-specific interfaces
+- **Complex Query Building**: Dynamic query construction based on parameters
+- **Pagination Support**: Built-in pagination with metadata
+- **Client-Side Processing**: Handle complex filtering/sorting when Supabase joins are problematic
+
+#### **TanStack Query Integration Pattern**:
+- **Separate Hooks for Different Operations**: `useLeads`, `useCreateEngagement`, `useHideLead`
+- **Consistent Query Keys**: `["entity", userId, ...parameters]`
+- **Authentication Integration**: Use `useAuth` hook for user context
+- **Cache Invalidation**: Proper `queryClient.invalidateQueries` on mutations
+- **Error and Loading States**: Consistent return structure with `isLoading`, `isError`, `error`
+
+### 13.2 Service Function Architecture
+
+#### **Data Fetching Functions**:
+```typescript
+export const fetchEntity = async (
+  userId?: string,
+  filter?: EntityFilter,
+  pagination?: PaginationParams,
+  sort?: EntitySort
+): Promise<PaginatedEntityResponse> => {
+  try {
+    // 1. Build Supabase query dynamically
+    // 2. Apply filters and joins
+    // 3. Execute query
+    // 4. Transform raw data to application format
+    // 5. Apply client-side processing if needed
+    // 6. Calculate pagination metadata
+    // 7. Return structured response
+  } catch (error) {
+    // Comprehensive error handling with fallback data
+  }
+};
+```
+
+#### **Mutation Functions**:
+```typescript
+const createEntity = async (data: CreateEntityData) => {
+  // 1. Transform input data for database
+  // 2. Execute mutation with proper error handling
+  // 3. Return transformed result
+};
+
+const updateEntity = async (id: string, data: UpdateEntityData) => {
+  // 1. Update with optimistic timestamps
+  // 2. Handle partial updates
+  // 3. Return updated entity
+};
+```
+
+### 13.3 TanStack Query Hook Patterns
+
+#### **Query Hooks**:
+```typescript
+export const useEntity = (filter?: EntityFilter, pagination?: PaginationParams, sort?: EntitySort) => {
+  const { auth } = useAuth();
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["entity", auth.user?.id, filter, pagination, sort],
+    queryFn: () => fetchEntity(auth.user?.id, filter, pagination, sort),
+    enabled: !!auth.user?.id,
+    staleTime: 0, // or appropriate cache time
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    // Destructured data with fallbacks
+    entities: data?.data || [],
+    totalCount: data?.totalCount || 0,
+    // ... pagination metadata
+    isLoading,
+    isError,
+    error,
+    refetch,
+  };
+};
+```
+
+#### **Mutation Hooks**:
+```typescript
+export const useCreateEntity = () => {
+  const { auth } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data, isPending, isSuccess, isError, error, mutate } = useMutation({
+    mutationFn: (entityData: CreateEntityData) => createEntity(entityData, auth.user?.id || ""),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity"] });
+    },
+  });
+
+  return {
+    data,
+    isLoading: isPending,
+    isSuccess,
+    isError,
+    error,
+    createEntity: mutate,
+  };
+};
+```
+
+### 13.4 Key Implementation Principles
+
+#### **Separation of Concerns**:
+- **Core Functions**: Handle data logic, no React dependencies
+- **Hooks**: Provide React integration and state management
+- **Components**: Use hooks, no direct service calls
+
+#### **Error Handling Strategy**:
+- **Service Level**: Comprehensive try-catch with logging
+- **Hook Level**: Pass through errors to components
+- **Component Level**: Display user-friendly error messages
+
+#### **Performance Optimization**:
+- **Query Optimization**: Smart query building to avoid N+1 problems
+- **Client-Side Processing**: When database queries become too complex
+- **Caching Strategy**: Appropriate `staleTime` based on data volatility
+- **Pagination**: Server-side with client-side metadata calculation
+
+#### **Type Safety Requirements**:
+- **Interface Definitions**: All data structures typed in separate type files
+- **Response Interfaces**: Consistent paginated response structure
+- **Error Types**: Proper error type definitions
+- **Query Key Types**: Type-safe query key construction
+
+### 13.5 Profile Service Implementation Guidelines
+
+Based on the established patterns, the ProfileService should follow:
+
+1. **Core Functions**: `fetchProfile`, `updateProfile`, `uploadProfilePicture`, `calculateProfileCompletion`
+2. **Mutation Functions**: `updateBasicInfo`, `addExperience`, `updateExperience`, `deleteExperience`
+3. **Query Hooks**: `useProfile`, `useExperiences`, `useEducations`, `useSocialProfile`
+4. **Mutation Hooks**: `useUpdateProfile`, `useCreateExperience`, `useUpdateExperience`, `useDeleteExperience`
+5. **Data Transformation**: Database schema → TypeScript interfaces
+6. **Authentication Integration**: User-specific profile data fetching
+7. **Cache Strategy**: Longer cache times for profile data, immediate invalidation on updates
+
+### 13.6 Benefits of This Architecture
+
+- **Testability**: Core functions can be unit tested independently
+- **Reusability**: Service functions can be used outside of React components
+- **Consistency**: Predictable patterns across all services
+- **Performance**: Optimal caching and query strategies
+- **Maintainability**: Clear separation of concerns and responsibilities
+- **Type Safety**: Full TypeScript integration throughout the stack
+
+This architecture ensures scalable, maintainable, and performant data management across the entire application.

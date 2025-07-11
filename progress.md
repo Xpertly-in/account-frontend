@@ -3288,3 +3288,478 @@ const mockContactRequests = [
 **Impact**: Achieved complete Contact Requests feature testing with 194 tests and 98.29% statement coverage, establishing robust testing patterns for complex page components and integration scenarios
 
 ---
+
+## 🔄 Profile Pages Complete Redesign Initiative (January 2025)
+
+**OBJECTIVE**: Complete redesign and rebuild of both CA and Customer profile pages from scratch, implementing modern design patterns, proper component architecture, and enhanced user experience.
+
+### **Current State Analysis** ✅ **COMPLETED**
+
+**Issues Identified with Existing Implementation**:
+- **Component Architecture Problems**: 
+  - `CAProfileContent.tsx` - 125 lines but overly complex with poor separation of concerns
+  - `CAProfileDetails.component.tsx` - 382+ lines, severely exceeding 200-line limit
+  - `CAProfileWrapper.tsx` - 84 lines with unnecessary complexity
+  - Multiple components with mixed styling approaches and inconsistent patterns
+
+- **Design Inconsistencies**:
+  - Multiple design languages across different profile components
+  - Inconsistent use of TailwindCSS vs inline styles
+  - Poor mobile-first responsive implementation
+  - Outdated visual patterns not matching current design system
+
+- **Technical Debt**:
+  - Old component patterns not following current project standards
+  - Inconsistent icon usage (mix of Phosphor and other libraries)
+  - Missing TypeScript strict typing in several components
+  - Outdated form validation and state management approaches
+
+- **Database Alignment Issues**:
+  - Components using outdated field names and data structures
+  - Missing alignment with current `supabase.sql` schema
+  - Inconsistent data flow patterns
+
+### **Redesign Strategy** ✅ **PLANNED**
+
+**Core Principles**:
+- **Mobile-First Design**: Every component designed for mobile devices first
+- **Component Size Compliance**: Strict 200-line maximum per component
+- **Modern UI Patterns**: Glassmorphism, vibrant gradients, smooth animations
+- **Accessibility-First**: WCAG AA compliance as baseline requirement
+- **Performance Optimized**: Lazy loading, efficient re-rendering, optimized bundles
+
+**Architecture Improvements**:
+- **Separation of Concerns**: Clear distinction between CA and Customer profile components
+- **Shared Components**: Reusable components for common profile functionality
+- **Service Layer Integration**: Proper integration with ProfileService for data operations
+- **State Management**: Jotai atoms for profile state with derived computations
+
+### **Implementation Plan**
+
+#### **Phase 1: Foundation Setup** ⚠️ **READY TO START**
+
+**Tasks Required:**
+1. **Database Schema Verification**: Ensure alignment with current `supabase.sql`
+2. **Type System Creation**: Comprehensive TypeScript interfaces for all profile data
+3. **Service Layer Development**: ProfileService with CRUD operations
+4. **Component Architecture Setup**: New directory structure for profile components
+
+**Dependencies**: Database consolidation completed, current schema finalized
+
+#### **Phase 2: Shared Components Development**
+
+**Core Shared Components**:
+1. **ProfileAvatar.component.tsx**: Reusable avatar with upload/crop functionality
+2. **ProfileForm.component.tsx**: Form components with validation and auto-save
+3. **ProfileLoader.component.tsx**: Skeleton loading states for profile sections
+4. **ProfileErrorBoundary.component.tsx**: Error handling and recovery UI
+
+**Success Criteria**: All shared components under 200 lines, 90%+ test coverage
+
+#### **Phase 3: CA Profile Components**
+
+**CA-Specific Components**:
+1. **CAProfileHeader.component.tsx**: Hero section with credentials and verification
+2. **CAProfileStats.component.tsx**: Metrics, ratings, and professional statistics
+3. **CAProfileContact.component.tsx**: Contact information with CTA buttons
+4. **CAProfileAbout.component.tsx**: Bio, specializations, and professional summary
+5. **CAProfileExperience.component.tsx**: Work history with timeline layout
+6. **CAProfileEducation.component.tsx**: Qualifications and certifications
+7. **CAProfileServices.component.tsx**: Service offerings with pricing
+8. **CAProfileReviews.component.tsx**: Client testimonials and ratings
+9. **CAProfileSocial.component.tsx**: Social media links and portfolio
+
+**Component Standards**: Each component under 200 lines, mobile-first responsive
+
+#### **Phase 4: Customer Profile Components**
+
+**Customer-Specific Components**:
+1. **CustomerProfileHeader.component.tsx**: Customer avatar and basic information
+2. **CustomerProfileInfo.component.tsx**: Personal information display
+3. **CustomerProfileServices.component.tsx**: Service preferences and needs
+4. **CustomerProfileHistory.component.tsx**: Interaction history with CAs
+5. **CustomerProfileSettings.component.tsx**: Account and privacy settings
+
+**Integration Points**: Service preferences, CA interaction tracking, privacy controls
+
+#### **Phase 5: Page Integration & Testing**
+
+**Page Development**:
+1. **CA Profile Pages**: Main, edit, and public profile pages
+2. **Customer Profile Pages**: Dashboard and edit pages
+3. **Navigation Updates**: Header and routing integration
+4. **Error Handling**: Comprehensive error boundaries
+
+**Testing Requirements**: 90%+ code coverage, accessibility compliance, mobile testing
+
+#### **Phase 6: Performance & Polish**
+
+**Optimization Tasks**:
+1. **Performance**: Lazy loading, image optimization, bundle size reduction
+2. **Accessibility**: Complete WCAG AA compliance audit and fixes
+3. **Mobile Testing**: Comprehensive testing across devices
+4. **Legacy Cleanup**: Remove old profile components and pages
+
+### **Database Schema Alignment**
+
+**Current Schema** (from `supabase.sql`):
+```sql
+-- Profiles table structure
+CREATE TABLE public.profiles (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  auth_user_id uuid NOT NULL UNIQUE REFERENCES auth.users(id),
+  username text UNIQUE,
+  first_name text,
+  middle_name text,
+  last_name text,
+  profile_picture_url text,
+  bio text,
+  gender text,
+  role text,
+  city text,
+  state text,
+  country text DEFAULT 'India',
+  languages text[],
+  specialization text[],
+  email text UNIQUE,
+  phone text UNIQUE,
+  whatsapp_available boolean DEFAULT false,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
+-- Supporting tables: experiences, educations, social_profile
+```
+
+**Type Definitions Required**:
+- **Profile Interface**: Core user profile data
+- **Experience Interface**: Work history information  
+- **Education Interface**: Academic qualifications
+- **SocialProfile Interface**: Social media and professional links
+
+### **Component Architecture Standards**
+
+**File Naming Convention**:
+```
+src/components/profile/
+├── ca/                                 # CA-specific components
+│   ├── CAProfileHeader.component.tsx
+│   ├── CAProfileStats.component.tsx
+│   └── index.ts
+├── customer/                           # Customer-specific components
+│   ├── CustomerProfileHeader.component.tsx
+│   ├── CustomerProfileInfo.component.tsx
+│   └── index.ts
+└── shared/                             # Shared profile components
+    ├── ProfileAvatar.component.tsx
+    ├── ProfileForm.component.tsx
+    └── index.ts
+```
+
+**Development Standards**:
+- **Component Size**: Maximum 200 lines per component
+- **Mobile-First**: TailwindCSS responsive classes starting with mobile
+- **TypeScript**: Strict typing with proper interfaces
+- **Testing**: 90%+ code coverage with accessibility testing
+- **Performance**: Optimized for loading speed and bundle size
+
+### **Files to Remove After Migration**
+
+**Legacy Profile Components**:
+```
+src/components/features/profile/
+├── CAProfileContent.tsx              # 125 lines - Replace with modular components
+├── CAProfileDetails.component.tsx    # 382+ lines - Violates size limit, replace
+├── CAProfileWrapper.tsx              # 84 lines - Unnecessary wrapper, remove
+├── CAProfessionalDetails.component.tsx # Replace with CA-specific component
+├── CAAboutSection.component.tsx      # Merge into CAProfileAbout
+├── CAProfileHero.component.tsx       # Replace with CAProfileHeader
+├── CAContactInfo.component.tsx       # Replace with CAProfileContact
+├── CAExperienceSection.component.tsx # Replace with CAProfileExperience
+├── CAEducationSection.component.tsx  # Replace with CAProfileEducation
+├── CAServicesSection.component.tsx   # Replace with CAProfileServices
+├── CAReviewsSection.component.tsx    # Replace with CAProfileReviews
+└── index.ts                          # Remove after component migration
+```
+
+**Legacy Profile Pages**:
+```
+src/app/ca/profile/page.tsx           # 57 lines - Rebuild with new architecture
+src/app/user/profile/page.tsx         # 505 lines - Severely oversized, rebuild
+src/app/user/dashboard/page.tsx       # Profile integration needs updating
+src/app/dashboard/page.tsx            # Generic dashboard needs review
+src/app/ca/[id]/page.tsx             # Public profile needs updating
+```
+
+**Legacy Dependencies**:
+- Remove unused imports from profile components
+- Clean up outdated type definitions
+- Remove mock data and outdated service calls
+- Update navigation and routing references
+
+### **Success Metrics & Targets**
+
+**Technical Compliance**:
+- ✅ **Component Size**: 100% compliance with 200-line limit
+- ✅ **Test Coverage**: 90%+ coverage across all profile components
+- ✅ **Performance**: <2s load time on 3G networks
+- ✅ **Accessibility**: 100% WCAG AA compliance
+- ✅ **Mobile Optimization**: Lighthouse mobile scores 90+
+
+**User Experience Goals**:
+- ✅ **Profile Completion**: 80%+ completion rate for new users
+- ✅ **User Engagement**: 50% increase in profile views and interactions
+- ✅ **Contact Conversion**: 25% increase in contact form submissions
+- ✅ **User Satisfaction**: 4.5+ star rating in feedback surveys
+
+**Development Benefits**:
+- ✅ **Code Maintainability**: Reduced complexity and improved quality scores
+- ✅ **Development Velocity**: 50% faster feature development
+- ✅ **Bug Reduction**: 70% reduction in profile-related issues
+- ✅ **Team Productivity**: Improved developer experience
+
+### **Next Steps**
+
+1. **Start Phase 1**: Begin with database schema verification and type system creation
+2. **Component Audit**: Review and document all current profile components for removal
+3. **Architecture Setup**: Create new directory structure and development guidelines
+4. **Service Development**: Build ProfileService with proper CRUD operations
+5. **Progressive Migration**: Implement new components while maintaining current functionality
+
+**Implementation Timeline**: 5-week timeline with weekly milestones and deliverables
+
+**Risk Mitigation**: Maintain current functionality during migration, comprehensive testing at each phase, rollback strategy for any issues
+
+---
+
+## 🔧 Database Schema Management Policy Implementation (January 2025)
+
+**OBJECTIVE**: Establish professional database change management practices and implement profile completion tracking.
+
+### **DDL Change Management Policy** ✅ **ESTABLISHED**
+
+**New Development Standard**: All future database schema changes must use `ALTER` statements rather than modifying existing `CREATE` statements in `supabase.sql`.
+
+**Rationale**:
+- **Production Safety**: Prevents accidental data loss in live environments
+- **Version Control**: Maintains clear history of schema evolution over time
+- **Team Collaboration**: Enables safe concurrent development across team members
+- **Migration Tracking**: Provides audit trail for all database modifications
+- **Rollback Capability**: Allows for easier rollback strategies when needed
+
+**Implementation Process**:
+1. **Migration Files**: Create migration files in `src/migrations/` directory with format `<feature-name>-YYYY-MM-DD.sql`
+2. **ALTER Statements Only**: Use `ALTER TABLE` commands for all schema modifications
+3. **Rollback Documentation**: Include commented rollback instructions in each migration
+4. **Progress Tracking**: Document all schema changes in this progress tracker
+
+### **Profile Completion Tracking Implementation** ⚠️ **READY TO IMPLEMENT**
+
+**Schema Addition Required**:
+```sql
+-- File: src/migrations/profile-completion-tracking-2025-01-15.sql
+
+-- Add profile completion tracking to existing profiles table
+ALTER TABLE public.profiles 
+ADD COLUMN profile_completion_percentage INTEGER DEFAULT 0 CHECK (profile_completion_percentage >= 0 AND profile_completion_percentage <= 100);
+
+-- Add completion tracking metadata
+ALTER TABLE public.profiles 
+ADD COLUMN last_completed_section TEXT,
+ADD COLUMN completion_updated_at TIMESTAMP WITH TIME ZONE DEFAULT now();
+
+-- Create index for completion queries
+CREATE INDEX idx_profiles_completion_percentage ON public.profiles(profile_completion_percentage);
+
+-- Create trigger to update completion timestamp
+CREATE OR REPLACE FUNCTION update_completion_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.profile_completion_percentage IS DISTINCT FROM NEW.profile_completion_percentage THEN
+        NEW.completion_updated_at = now();
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_completion_timestamp
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_completion_timestamp();
+
+-- Rollback Instructions (if needed):
+-- DROP TRIGGER IF EXISTS trigger_update_completion_timestamp ON public.profiles;
+-- DROP FUNCTION IF EXISTS update_completion_timestamp();
+-- DROP INDEX IF EXISTS idx_profiles_completion_percentage;
+-- ALTER TABLE public.profiles DROP COLUMN IF EXISTS completion_updated_at;
+-- ALTER TABLE public.profiles DROP COLUMN IF EXISTS last_completed_section;
+-- ALTER TABLE public.profiles DROP COLUMN IF EXISTS profile_completion_percentage;
+```
+
+**Profile Completion Calculation Logic**:
+- **Basic Info** (20%): Name, email, phone, location fields completed
+- **Professional Details** (20%): Bio, specializations, languages defined
+- **Experience** (20%): At least one experience entry with complete details
+- **Education** (20%): At least one education entry with complete details
+- **Social/Contact** (20%): At least one social link or professional website
+
+**Benefits for Profile Redesign**:
+- **Progress Tracking**: Visual completion percentage for users
+- **Engagement Metrics**: Track completion rates across user segments
+- **UX Optimization**: Identify common drop-off points in profile completion
+- **Gamification**: Encourage complete profile creation with progress indicators
+- **Analytics**: Measure effectiveness of profile completion strategies
+
+### **Migration File Structure** ✅ **ESTABLISHED**
+
+**Directory Organization**:
+```
+src/migrations/
+├── profile-completion-tracking-2025-01-15.sql
+├── contact-request-priority-2025-01-20.sql
+└── ca-verification-fields-2025-01-25.sql
+```
+
+**File Naming Convention**: `<feature-description>-YYYY-MM-DD.sql`
+
+**Migration Directory Structure**:
+- **Location**: All migration files must be stored in `src/migrations/` directory
+- **Naming**: Feature-first naming for better organization and searchability
+- **Versioning**: Date suffix ensures chronological ordering
+- **Tracking**: All migrations documented in progress tracker with implementation status
+
+**Content Structure**:
+1. **Header Comment**: Migration purpose and date
+2. **Forward Migration**: ALTER statements to implement changes
+3. **Rollback Instructions**: Commented commands to reverse changes
+4. **Index Creation**: Performance optimization indexes
+5. **Trigger/Function**: Business logic enforcement
+
+### **Schema Change Impact Assessment**
+
+**Current Database State**: Based on `supabase.sql` schema
+**Proposed Changes**: Profile completion tracking fields
+**Impact**: 
+- **Breaking Changes**: None (all additions with defaults)
+- **Performance**: Minimal impact, indexed completion percentage
+- **Storage**: ~12 bytes per profile (INTEGER + TEXT + TIMESTAMP)
+- **Application Changes**: ProfileService updates required
+
+**Next Steps**:
+1. **Create Migration File**: Write the profile completion tracking migration
+2. **Test Locally**: Verify migration on local development database
+3. **Update TypeScript Types**: Add completion fields to Profile interface
+4. **Implement Calculation Logic**: Create helper functions for completion percentage
+5. **UI Integration**: Add progress indicators to profile components
+
+---
+
+## 🔄 Profile Pages Complete Redesign Initiative (January 2025)
+
+## 🎯 Service Layer Architecture Analysis (January 2025)
+
+**OBJECTIVE**: Document established service layer patterns from leads.service.ts to ensure consistency in profile service implementation.
+
+### **Architecture Analysis Completed** ✅ **COMPLETED**
+
+**Key Patterns Identified from leads.service.ts**:
+
+#### **1. File Structure Pattern**:
+- **Import Organization**: Supabase, TanStack Query, Auth, and Types in logical order
+- **Section Division**: Core Service Functions → TanStack Query Hooks with clear separators
+- **Code Comments**: Comprehensive JSDoc comments for all functions
+
+#### **2. Core Service Functions**:
+- **Pure Async Functions**: No React dependencies, independently testable
+- **Comprehensive Error Handling**: Try-catch blocks with detailed error logging and fallback data
+- **Data Transformation**: Raw Supabase data converted to application-specific TypeScript interfaces
+- **Complex Query Building**: Dynamic Supabase query construction based on filter parameters
+- **Pagination Support**: Built-in server-side pagination with client-side metadata calculation
+- **Client-Side Processing**: Handle complex filtering/sorting when Supabase joins become problematic
+
+#### **3. TanStack Query Integration**:
+- **Separate Hooks**: Distinct hooks for different operations (`useLeads`, `useCreateEngagement`, `useHideLead`)
+- **Consistent Query Keys**: Pattern: `["entity", userId, ...parameters]`
+- **Authentication Integration**: Uses `useAuth` hook for user context and user-specific data
+- **Cache Management**: Proper `queryClient.invalidateQueries` on mutations
+- **State Management**: Consistent return structure with `isLoading`, `isError`, `error`, and `refetch`
+
+#### **4. Performance Optimizations**:
+- **Smart Query Building**: Avoid N+1 problems with proper joins
+- **Client-Side Processing**: When database queries become too complex (search, sorting)
+- **Caching Strategy**: Appropriate `staleTime` based on data volatility (0 for leads, 5min for filters)
+- **Pagination Metadata**: Efficient calculation of `hasNextPage`, `totalPages`, etc.
+
+#### **5. Error Handling Strategy**:
+- **Service Level**: Comprehensive try-catch with console.error logging
+- **Fallback Data**: Always return valid structure even on errors
+- **Hook Level**: Pass through errors to components for user feedback
+- **User Experience**: Maintain functionality even when some operations fail
+
+### **Profile Service Implementation Guidelines** ✅ **ESTABLISHED**
+
+Based on the analysis, the ProfileService will implement:
+
+1. **Core Functions**: `fetchProfile`, `updateProfile`, `uploadProfilePicture`, `calculateProfileCompletion`
+2. **Related Entity Functions**: `addExperience`, `updateExperience`, `deleteExperience`, `updateEducation`, `updateSocialProfile`
+3. **Query Hooks**: `useProfile`, `useExperiences`, `useEducations`, `useSocialProfile`
+4. **Mutation Hooks**: `useUpdateProfile`, `useCreateExperience`, `useUpdateExperience`, `useDeleteExperience`
+5. **Data Transformation**: Database schema fields → TypeScript interface properties
+6. **Authentication Integration**: User-specific profile data fetching with proper access control
+7. **Cache Strategy**: Longer cache times for profile data (30min), immediate invalidation on updates
+
+### **Benefits Achieved**:
+- ✅ **Consistency**: All services follow the same architectural patterns
+- ✅ **Testability**: Core functions can be unit tested independently of React
+- ✅ **Performance**: Optimal caching and query strategies established
+- ✅ **Maintainability**: Clear separation of concerns between services and components
+- ✅ **Type Safety**: Full TypeScript integration throughout the data flow
+- ✅ **Developer Experience**: Predictable patterns for implementing new services
+
+### **Next Steps**:
+With the architecture analysis complete, we can now implement the ProfileService following these established patterns, ensuring consistency and reliability across the entire application.
+
+---
+
+## 📋 Development Standards & Guidelines (Updated January 2025)
+
+### **Index File Usage Policy** ✅ **ESTABLISHED**
+
+**Core Principle**: Minimize the use of index.ts files to reduce confusion and improve code clarity.
+
+**Issues with Excessive Index Files**:
+- **Import Confusion**: Multiple index files create ambiguity about actual component locations
+- **IDE Problems**: Poor IntelliSense and auto-import functionality
+- **Debugging Difficulty**: Harder to locate actual component files during debugging
+- **Maintenance Overhead**: Extra files to maintain and keep in sync
+- **Bundle Analysis**: Obscures actual import dependencies
+
+**New Development Standards**:
+1. **Avoid Index Files**: Prefer direct imports over index file re-exports
+2. **Limited Usage**: Only use index files for major module boundaries
+3. **No Nested Indexes**: Avoid creating index files within subdirectories
+4. **Explicit Imports**: Use full component paths instead of index shortcuts
+5. **Documentation**: When index files are necessary, document the reasoning
+
+**Import Examples**:
+```typescript
+// PREFERRED: Direct imports (NEW STANDARD)
+import { CAProfileHeader } from "@/components/profile/ca/CAProfileHeader.component";
+import { ProfileAvatar } from "@/components/profile/shared/ProfileAvatar.component";
+import { ContactRequestCard } from "@/components/contact-requests/Card.component";
+
+// AVOID: Index file shortcuts (OLD APPROACH)
+import { CAProfileHeader } from "@/components/profile/ca";
+import { ProfileAvatar } from "@/components/profile/shared";
+import { ContactRequestCard } from "@/components/contact-requests";
+```
+
+**Exception Cases**:
+- Main UI component library exports (`src/ui/index.ts`)
+- External library compatibility requirements
+- Large module boundaries with stable interfaces (rare)
+
+**Action Required**: Remove the previously created index file and update component architecture to use direct imports.
+
+// ... existing code ...
