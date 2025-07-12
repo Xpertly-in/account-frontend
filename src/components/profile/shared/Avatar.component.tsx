@@ -4,7 +4,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { CameraIcon, CheckCircleIcon, UploadIcon } from "@phosphor-icons/react";
+import {
+  CameraIcon,
+  CheckCircleIcon,
+  UploadIcon,
+  PencilIcon,
+  TrashIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { Avatar } from "@/ui/Avatar.ui";
 import { Button } from "@/ui/Button.ui";
 import { Badge } from "@/ui/Badge.ui";
@@ -22,8 +29,12 @@ interface ProfileAvatarProps {
   editable?: boolean;
   /** Upload callback function */
   onUpload?: (file: File) => Promise<void>;
+  /** Delete callback function */
+  onDelete?: () => Promise<void>;
   /** Loading state during upload */
   isUploading?: boolean;
+  /** Loading state during delete */
+  isDeleting?: boolean;
   /** Additional CSS classes */
   className?: string;
   /** Whether to show verification badge */
@@ -37,17 +48,28 @@ const sizeClasses = {
   xl: "h-32 w-32 sm:h-40 sm:w-40",
 };
 
+const iconSizes = {
+  sm: "h-3 w-3",
+  md: "h-4 w-4",
+  lg: "h-5 w-5",
+  xl: "h-6 w-6",
+};
+
 export function ProfileAvatar({
   imageUrl,
   name,
   size = "lg",
   editable = false,
   onUpload,
+  onDelete,
   isUploading = false,
+  isDeleting = false,
   className,
   isVerified = false,
 }: ProfileAvatarProps) {
   const [dragOver, setDragOver] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const [hoveringAvatar, setHoveringAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (file: File) => {
@@ -71,6 +93,18 @@ export function ProfileAvatar({
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to update profile picture");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+
+    try {
+      await onDelete();
+      toast.success("Profile picture removed successfully");
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to remove profile picture");
     }
   };
 
@@ -104,6 +138,8 @@ export function ProfileAvatar({
     fileInputRef.current?.click();
   };
 
+  const hasImage = imageUrl && imageUrl !== "";
+
   return (
     <div className={cn("relative inline-block", className)}>
       {/* Avatar Container */}
@@ -117,7 +153,16 @@ export function ProfileAvatar({
         onDrop={editable ? handleDrop : undefined}
         onDragOver={editable ? handleDragOver : undefined}
         onDragLeave={editable ? handleDragLeave : undefined}
-        onClick={editable ? openFileDialog : undefined}
+        onMouseEnter={() => {
+          if (editable) {
+            setShowActions(true);
+            setHoveringAvatar(true);
+          }
+        }}
+        onMouseLeave={() => {
+          setShowActions(false);
+          setHoveringAvatar(false);
+        }}
       >
         {/* Avatar */}
         <Avatar
@@ -127,60 +172,167 @@ export function ProfileAvatar({
           className={cn(
             sizeClasses[size],
             "transition-all duration-200",
-            editable && "group-hover:brightness-75"
+            editable && hoveringAvatar && "brightness-90"
           )}
+          onClick={editable ? openFileDialog : undefined}
         />
 
-        {/* Upload Overlay */}
-        {editable && (
+        {/* Edit Indicator - Always visible pencil icon */}
+        {editable && !isUploading && !isDeleting && (
+          <div
+            className="absolute top-0 right-0 transform translate-x-1 -translate-y-1 z-10"
+            onMouseEnter={() => setHoveringAvatar(false)}
+            onMouseLeave={() => setHoveringAvatar(false)}
+          >
+            <div
+              className={cn(
+                "rounded-full p-1.5",
+                "bg-blue-600 hover:bg-blue-700",
+                "border-2 border-white dark:border-gray-800",
+                "shadow-lg hover:shadow-xl",
+                "cursor-pointer transition-all duration-200",
+                "hover:scale-110 active:scale-95"
+              )}
+              onClick={e => {
+                e.stopPropagation();
+                openFileDialog();
+              }}
+            >
+              <PencilIcon className="h-3.5 w-3.5 text-white" />
+            </div>
+          </div>
+        )}
+
+        {/* Delete Button - Only show if image exists */}
+        {editable && hasImage && onDelete && !isUploading && !isDeleting && showActions && (
+          <div
+            className="absolute top-0 left-0 transform -translate-x-1 -translate-y-1 z-10"
+            onMouseEnter={() => setHoveringAvatar(false)}
+            onMouseLeave={() => setHoveringAvatar(false)}
+          >
+            <div
+              className={cn(
+                "rounded-full p-1.5",
+                "bg-red-600 hover:bg-red-700",
+                "border-2 border-white dark:border-gray-800",
+                "shadow-lg hover:shadow-xl",
+                "cursor-pointer transition-all duration-200",
+                "hover:scale-110 active:scale-95",
+                "animate-in fade-in-0 zoom-in-95 duration-200"
+              )}
+              onClick={e => {
+                e.stopPropagation();
+                handleDelete();
+              }}
+            >
+              <TrashIcon className="h-3.5 w-3.5 text-white" />
+            </div>
+          </div>
+        )}
+
+        {/* Upload/Delete Overlay */}
+        {editable && (isUploading || isDeleting) && (
           <div
             className={cn(
-              "absolute inset-0 bg-black/40 rounded-full",
+              "absolute inset-0 bg-black/60 rounded-full",
               "flex items-center justify-center",
-              "opacity-0 group-hover:opacity-100 transition-opacity",
-              isUploading && "opacity-100"
+              "backdrop-blur-sm z-20"
             )}
           >
             {isUploading ? (
-              <UploadIcon
-                className={cn("text-white animate-pulse", size === "xl" ? "h-8 w-8" : "h-6 w-6")}
-              />
-            ) : (
-              <CameraIcon className={cn("text-white", size === "xl" ? "h-8 w-8" : "h-6 w-6")} />
+              <div className="flex flex-col items-center space-y-2">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-white border-t-transparent"></div>
+                  <UploadIcon className="absolute inset-0 h-4 w-4 text-white m-auto" />
+                </div>
+                <span className="text-white text-sm font-medium">Uploading...</span>
+              </div>
+            ) : isDeleting ? (
+              <div className="flex flex-col items-center space-y-2">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-white border-t-transparent"></div>
+                  <TrashIcon className="absolute inset-0 h-4 w-4 text-white m-auto" />
+                </div>
+                <span className="text-white text-sm font-medium">Removing...</span>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {/* Hover Overlay - Only show when hovering avatar area (not buttons) and no image */}
+        {editable && !isUploading && !isDeleting && hoveringAvatar && !hasImage && !showActions && (
+          <div
+            className={cn(
+              "absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-full",
+              "flex items-center justify-center",
+              "transition-all duration-200 z-5"
             )}
+            onClick={openFileDialog}
+          >
+            <div className="flex flex-col items-center space-y-1">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                <CameraIcon className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-white text-xs font-medium px-2 py-0.5 bg-black/30 rounded-full backdrop-blur-sm">
+                Add Photo
+              </span>
+            </div>
           </div>
         )}
 
         {/* Verification Badge */}
         {isVerified && (
-          <div className="absolute -bottom-1 -right-1">
-            <Badge
-              variant="default"
+          <div className="absolute -bottom-1 -right-1 z-10">
+            <div
               className={cn(
-                "rounded-full p-1",
-                "bg-emerald-500 hover:bg-emerald-500",
-                "border-2 border-white dark:border-gray-900"
+                "rounded-full p-1.5",
+                "bg-emerald-500 hover:bg-emerald-600",
+                "border-2 border-white dark:border-gray-800",
+                "shadow-lg",
+                "transition-all duration-200"
               )}
             >
-              <CheckCircleIcon className="h-3 w-3 text-white" />
-            </Badge>
+              <CheckCircleIcon className="h-4 w-4 text-white" />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Upload Button (Mobile Alternative) */}
-      {editable && size === "xl" && (
-        <div className="mt-4 sm:hidden">
+      {/* Mobile Action Buttons */}
+      {editable && (size === "lg" || size === "xl") && (
+        <div className="mt-4 flex gap-3 sm:hidden">
           <Button
             variant="outline"
             size="sm"
             onClick={openFileDialog}
-            disabled={isUploading}
-            className="w-full"
+            disabled={isUploading || isDeleting}
+            className={cn(
+              "flex-1 border-2 font-medium",
+              "hover:bg-blue-50 hover:border-blue-300",
+              "dark:hover:bg-blue-950 dark:hover:border-blue-700",
+              "transition-all duration-200"
+            )}
           >
             <CameraIcon className="h-4 w-4 mr-2" />
-            {isUploading ? "Uploading..." : "Change Photo"}
+            {isUploading ? "Uploading..." : hasImage ? "Change Photo" : "Add Photo"}
           </Button>
+
+          {hasImage && onDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDelete}
+              disabled={isUploading || isDeleting}
+              className={cn(
+                "border-2 font-medium",
+                "text-red-600 hover:text-red-700 border-red-300 hover:border-red-400",
+                "hover:bg-red-50 dark:hover:bg-red-950",
+                "transition-all duration-200"
+              )}
+            >
+              <TrashIcon className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       )}
 

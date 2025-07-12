@@ -14,6 +14,8 @@ export interface Profile {
   role: UserRole;
   city?: string;
   state?: string;
+  state_id?: number;
+  district_id?: number;
   country: string;
   languages?: string[];
   specialization?: string[];
@@ -108,6 +110,8 @@ export interface ProfileFormData {
   bio?: string;
   city?: string;
   state?: string;
+  state_id?: number;
+  district_id?: number;
   country?: string;
   languages?: string[];
   specialization?: string[];

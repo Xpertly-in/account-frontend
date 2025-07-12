@@ -167,6 +167,8 @@ export default function ProfilePage() {
           gender: formData.gender,
           city: formData.city,
           state: formData.state,
+          state_id: formData.state_id,
+          district_id: formData.district_id,
           country: formData.country,
           languages: formData.languages,
           specialization: formData.specialization,

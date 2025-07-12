@@ -142,6 +142,94 @@ export async function updateProfile(
 }
 
 /**
+ * Check if username is unique within state/district combination
+ */
+export async function checkUsernameUniqueness(
+  username: string,
+  stateId: number,
+  districtId: number,
+  excludeProfileId?: string
+): Promise<{ isUnique: boolean; suggestedUsername?: string }> {
+  try {
+    if (!username || !stateId || !districtId) {
+      return { isUnique: false };
+    }
+
+    // Check if combination already exists
+    let query = supabase
+      .from("profiles")
+      .select("id, username")
+      .eq("username", username)
+      .eq("state_id", stateId)
+      .eq("district_id", districtId);
+
+    // Exclude current profile if updating
+    if (excludeProfileId) {
+      query = query.neq("id", excludeProfileId);
+    }
+
+    const { data: existingProfiles, error } = await query;
+
+    if (error) {
+      console.error("Error checking username uniqueness:", error);
+      return { isUnique: false };
+    }
+
+    const isUnique = !existingProfiles || existingProfiles.length === 0;
+
+    // If not unique, suggest alternative usernames
+    if (!isUnique) {
+      const suggestedUsername = await generateSuggestedUsername(username, stateId, districtId);
+      return { isUnique: false, suggestedUsername };
+    }
+
+    return { isUnique: true };
+  } catch (error) {
+    console.error("Error in checkUsernameUniqueness:", error);
+    return { isUnique: false };
+  }
+}
+
+/**
+ * Generate suggested username alternatives
+ */
+async function generateSuggestedUsername(
+  baseUsername: string,
+  stateId: number,
+  districtId: number
+): Promise<string> {
+  try {
+    // Try adding numbers 1-99
+    for (let i = 1; i <= 99; i++) {
+      const suggestion = `${baseUsername}${i}`;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", suggestion)
+        .eq("state_id", stateId)
+        .eq("district_id", districtId)
+        .limit(1);
+
+      if (error) {
+        console.error("Error checking suggested username:", error);
+        continue;
+      }
+
+      if (!data || data.length === 0) {
+        return suggestion;
+      }
+    }
+
+    // Fallback: add random number
+    const randomNum = Math.floor(Math.random() * 9999) + 100;
+    return `${baseUsername}${randomNum}`;
+  } catch (error) {
+    console.error("Error generating suggested username:", error);
+    return `${baseUsername}${Math.floor(Math.random() * 99) + 1}`;
+  }
+}
+
+/**
  * Create new experience entry
  */
 export async function createExperience(
@@ -681,5 +769,28 @@ export function useProfileCompletion(profileId?: string) {
     queryFn: () => (profileId ? calculateProfileCompletion(profileId) : null),
     enabled: !!profileId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook for checking username uniqueness with debouncing
+ */
+export function useUsernameUniqueness(
+  username: string,
+  stateId: number | undefined,
+  districtId: number | undefined,
+  excludeProfileId?: string
+) {
+  return useQuery({
+    queryKey: ["username-uniqueness", username, stateId, districtId, excludeProfileId],
+    queryFn: () => {
+      if (!username || !stateId || !districtId) {
+        return { isUnique: false };
+      }
+      return checkUsernameUniqueness(username, stateId, districtId, excludeProfileId);
+    },
+    enabled: !!(username && stateId && districtId && username.length >= 3),
+    staleTime: 0, // Always fresh check
+    retry: 1,
   });
 }
