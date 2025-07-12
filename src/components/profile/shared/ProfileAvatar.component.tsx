@@ -1,88 +1,98 @@
+// ProfileAvatar Component - Reusable avatar with upload functionality
+// Mobile-first design, under 200 lines, follows project standards
+
 "use client";
 
-import React, { useRef, useState } from "react";
-import { Avatar } from "@/ui/Avatar.ui";
+import { useState, useRef } from "react";
 import { CameraIcon, CheckCircleIcon, UploadIcon } from "@phosphor-icons/react";
+import { Avatar } from "@/ui/Avatar.ui";
 import { Button } from "@/ui/Button.ui";
-import { cn } from "@/helper/tw.helper";
-import { useAtom } from "jotai";
-import { profileUploadProgressAtom } from "@/store/jotai/profile.store";
+import { Badge } from "@/ui/Badge.ui";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ProfileAvatarProps {
-  src?: string;
-  name?: string;
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
-  isEditable?: boolean;
-  showUploadProgress?: boolean;
-  showCompletionBadge?: boolean;
-  isCompleted?: boolean;
-  onImageUpload?: (file: File) => Promise<void>;
+  /** Current avatar URL */
+  imageUrl?: string | null;
+  /** User's display name for fallback initials */
+  name: string;
+  /** Avatar size variant */
+  size?: "sm" | "md" | "lg" | "xl";
+  /** Whether user can upload/change avatar */
+  editable?: boolean;
+  /** Upload callback function */
+  onUpload?: (file: File) => Promise<void>;
+  /** Loading state during upload */
+  isUploading?: boolean;
+  /** Additional CSS classes */
   className?: string;
-  disabled?: boolean;
+  /** Whether to show verification badge */
+  isVerified?: boolean;
 }
 
-export default function ProfileAvatar({
-  src,
-  name = "User",
-  size = "xl",
-  isEditable = false,
-  showUploadProgress = false,
-  showCompletionBadge = false,
-  isCompleted = false,
-  onImageUpload,
-  className,
-  disabled = false,
-}: ProfileAvatarProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploadProgress] = useAtom(profileUploadProgressAtom);
-  const [isHovered, setIsHovered] = useState(false);
+const sizeClasses = {
+  sm: "h-12 w-12",
+  md: "h-16 w-16",
+  lg: "h-24 w-24",
+  xl: "h-32 w-32 sm:h-40 sm:w-40",
+};
 
-  // Handle file selection
+export function ProfileAvatar({
+  imageUrl,
+  name,
+  size = "lg",
+  editable = false,
+  onUpload,
+  isUploading = false,
+  className,
+  isVerified = false,
+}: ProfileAvatarProps) {
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleFileSelect = async (file: File) => {
-    if (!onImageUpload || disabled) return;
+    if (!onUpload) return;
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      toast.error("Please select an image file");
       return;
     }
 
-    // Validate file size (5MB limit)
+    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size must be less than 5MB");
+      toast.error("Image must be less than 5MB");
       return;
     }
 
     try {
-      await onImageUpload(file);
+      await onUpload(file);
+      toast.success("Profile picture updated successfully");
     } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Failed to upload image. Please try again.");
+      console.error("Upload error:", error);
+      toast.error("Failed to update profile picture");
     }
   };
 
-  // Handle file input change
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       handleFileSelect(file);
     }
   };
 
-  // Handle drag and drop
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
     setDragOver(false);
 
-    const file = event.dataTransfer.files[0];
+    const file = e.dataTransfer.files[0];
     if (file) {
       handleFileSelect(file);
     }
   };
 
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
     setDragOver(true);
   };
 
@@ -90,131 +100,99 @@ export default function ProfileAvatar({
     setDragOver(false);
   };
 
-  // Size configurations for edit overlay
-  const sizeConfig = {
-    xs: { overlay: "h-6 w-6", icon: 12 },
-    sm: { overlay: "h-8 w-8", icon: 14 },
-    md: { overlay: "h-10 w-10", icon: 16 },
-    lg: { overlay: "h-12 w-12", icon: 18 },
-    xl: { overlay: "h-16 w-16", icon: 20 },
-    "2xl": { overlay: "h-20 w-20", icon: 24 },
+  const openFileDialog = () => {
+    fileInputRef.current?.click();
   };
 
-  const config = sizeConfig[size];
-  const isUploading = uploadProgress !== null;
-
   return (
-    <div className={cn("relative group", className)}>
-      {/* Main Avatar */}
+    <div className={cn("relative inline-block", className)}>
+      {/* Avatar Container */}
       <div
         className={cn(
-          "relative transition-all duration-300",
-          isEditable && !disabled && "cursor-pointer",
-          dragOver && "scale-105 ring-4 ring-blue-500/50",
-          isHovered && isEditable && "scale-105"
+          "relative group",
+          sizeClasses[size],
+          editable && "cursor-pointer",
+          dragOver && "ring-2 ring-blue-500 ring-offset-2"
         )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onDrop={isEditable ? handleDrop : undefined}
-        onDragOver={isEditable ? handleDragOver : undefined}
-        onDragLeave={isEditable ? handleDragLeave : undefined}
-        onClick={isEditable && !disabled ? () => fileInputRef.current?.click() : undefined}
+        onDrop={editable ? handleDrop : undefined}
+        onDragOver={editable ? handleDragOver : undefined}
+        onDragLeave={editable ? handleDragLeave : undefined}
+        onClick={editable ? openFileDialog : undefined}
       >
+        {/* Avatar */}
         <Avatar
-          src={src}
+          src={imageUrl || undefined}
+          alt={`${name}'s profile picture`}
           name={name}
-          size={size}
           className={cn(
-            "transition-all duration-300",
-            isEditable && !disabled && "hover:opacity-80",
-            isUploading && "opacity-50"
+            sizeClasses[size],
+            "transition-all duration-200",
+            editable && "group-hover:brightness-75"
           )}
         />
 
-        {/* Upload Progress Overlay */}
-        {isUploading && showUploadProgress && (
+        {/* Upload Overlay */}
+        {editable && (
           <div
             className={cn(
-              "absolute inset-0 flex items-center justify-center",
-              "bg-black/50 rounded-full backdrop-blur-sm"
+              "absolute inset-0 bg-black/40 rounded-full",
+              "flex items-center justify-center",
+              "opacity-0 group-hover:opacity-100 transition-opacity",
+              isUploading && "opacity-100"
             )}
           >
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
-              <span className="text-white text-xs font-medium">{uploadProgress}%</span>
-            </div>
+            {isUploading ? (
+              <UploadIcon
+                className={cn("text-white animate-pulse", size === "xl" ? "h-8 w-8" : "h-6 w-6")}
+              />
+            ) : (
+              <CameraIcon className={cn("text-white", size === "xl" ? "h-8 w-8" : "h-6 w-6")} />
+            )}
           </div>
         )}
 
-        {/* Edit Overlay */}
-        {isEditable && !disabled && !isUploading && isHovered && (
-          <div
-            className={cn(
-              "absolute inset-0 flex items-center justify-center",
-              "bg-black/60 rounded-full backdrop-blur-sm",
-              "transition-all duration-300 opacity-0 group-hover:opacity-100"
-            )}
-          >
-            <CameraIcon size={config.icon} weight="bold" className="text-white drop-shadow-lg" />
-          </div>
-        )}
-
-        {/* Drag Overlay */}
-        {dragOver && isEditable && !disabled && (
-          <div
-            className={cn(
-              "absolute inset-0 flex items-center justify-center",
-              "bg-blue-500/80 rounded-full backdrop-blur-sm",
-              "border-2 border-dashed border-white"
-            )}
-          >
-            <UploadIcon size={config.icon} weight="bold" className="text-white drop-shadow-lg" />
+        {/* Verification Badge */}
+        {isVerified && (
+          <div className="absolute -bottom-1 -right-1">
+            <Badge
+              variant="default"
+              className={cn(
+                "rounded-full p-1",
+                "bg-emerald-500 hover:bg-emerald-500",
+                "border-2 border-white dark:border-gray-900"
+              )}
+            >
+              <CheckCircleIcon className="h-3 w-3 text-white" />
+            </Badge>
           </div>
         )}
       </div>
 
-      {/* Completion Badge */}
-      {showCompletionBadge && isCompleted && (
-        <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full p-1.5 border-2 border-white shadow-lg dark:border-gray-800">
-          <CheckCircleIcon size={14} weight="fill" className="text-white" />
+      {/* Upload Button (Mobile Alternative) */}
+      {editable && size === "xl" && (
+        <div className="mt-4 sm:hidden">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openFileDialog}
+            disabled={isUploading}
+            className="w-full"
+          >
+            <CameraIcon className="h-4 w-4 mr-2" />
+            {isUploading ? "Uploading..." : "Change Photo"}
+          </Button>
         </div>
       )}
 
-      {/* Edit Button (Alternative to hover overlay) */}
-      {isEditable && !disabled && size === "2xl" && (
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "absolute bottom-2 right-2 rounded-full w-10 h-10 p-0",
-            "bg-white/90 hover:bg-white border-2 border-white shadow-lg",
-            "dark:bg-gray-800/90 dark:hover:bg-gray-800 dark:border-gray-700",
-            "transition-all duration-300",
-            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-95"
-          )}
-          onClick={e => {
-            e.stopPropagation();
-            fileInputRef.current?.click();
-          }}
-          disabled={isUploading}
-        >
-          {isUploading ? (
-            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <CameraIcon size={16} weight="bold" className="text-primary" />
-          )}
-        </Button>
-      )}
-
       {/* Hidden File Input */}
-      {isEditable && (
+      {editable && (
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          onChange={handleInputChange}
+          onChange={handleFileInputChange}
           className="hidden"
-          disabled={disabled || isUploading}
+          aria-label="Upload profile picture"
         />
       )}
     </div>

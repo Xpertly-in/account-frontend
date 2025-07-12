@@ -11,19 +11,20 @@ export * from "./onboarding.store";
 export * from "./analytics.store";
 export * from "./dashboard.store";
 
-// Profile atoms
+// Profile atoms - Minimal UI state management
 export {
-  profileEditSectionAtom,
-  profileFormDirtyAtom,
-  profileUploadProgressAtom,
-  profileViewModeAtom,
-  profileCompletionExpandedAtom,
-  profileOnboardingStepAtom,
-  profileValidationErrorsAtom,
-  isProfileBeingEditedAtom,
-  hasUnsavedChangesAtom,
+  editingSectionAtom,
+  isEditingProfileAtom,
+  editingExperienceIdAtom,
+  editingEducationIdAtom,
+  isEditingSocialProfileAtom,
+  showCompletionProgressAtom,
+  isUploadingPhotoAtom,
+  isAnyEditingAtom,
+  editingContextAtom,
   startEditingSectionAtom,
-  stopEditingAtom,
-  toggleCompletionSectionAtom,
-  resetProfileStoreAtom,
+  startEditingExperienceAtom,
+  startEditingEducationAtom,
+  cancelAllEditingAtom,
+  toggleCompletionProgressAtom,
 } from "./profile.store";

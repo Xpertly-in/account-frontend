@@ -1,212 +1,179 @@
+// ProfileErrorBoundary Component - Error handling and recovery for profile sections
+// Mobile-first design, under 200 lines, follows project standards
+
 "use client";
 
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ReactNode } from "react";
+import { AlertTriangleIcon, RefreshCwIcon, HomeIcon } from "@phosphor-icons/react";
 import { Button } from "@/ui/Button.ui";
 import { Card } from "@/ui/Card.ui";
-import { AlertTriangleIcon, RefreshCwIcon, HomeIcon } from "@phosphor-icons/react";
+import { cn } from "@/lib/utils";
 
-interface Props {
+interface ProfileErrorBoundaryProps {
   children: ReactNode;
-  fallback?: ReactNode;
-  showDetails?: boolean;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  /** Custom error message */
+  fallbackMessage?: string;
+  /** Whether to show retry button */
+  showRetry?: boolean;
+  /** Whether to show home navigation */
+  showHomeButton?: boolean;
+  /** Custom retry callback */
+  onRetry?: () => void;
+  /** Additional CSS classes */
+  className?: string;
 }
 
-interface State {
+interface ProfileErrorBoundaryState {
   hasError: boolean;
   error?: Error;
-  errorInfo?: ErrorInfo;
+  errorInfo?: string;
 }
 
-export default class ProfileErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+export class ProfileErrorBoundary extends Component<
+  ProfileErrorBoundaryProps,
+  ProfileErrorBoundaryState
+> {
+  constructor(props: ProfileErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): ProfileErrorBoundaryState {
+    return {
+      hasError: true,
+      error,
+    };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log the error to external service
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ProfileErrorBoundary caught an error:", error, errorInfo);
-    
-    // Update state with error details
-    this.setState({ error, errorInfo });
-    
-    // Call custom error handler if provided
-    this.props.onError?.(error, errorInfo);
+    this.setState({
+      errorInfo: errorInfo.componentStack,
+    });
   }
 
   handleRetry = () => {
-    // Reset error state to retry rendering
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    if (this.props.onRetry) {
+      this.props.onRetry();
+    } else {
+      // Default retry: reset error state
+      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    }
   };
 
   handleGoHome = () => {
-    // Navigate to home page
     window.location.href = "/";
   };
 
   render() {
     if (this.state.hasError) {
-      // Custom fallback UI provided
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
+      const {
+        fallbackMessage = "Something went wrong with your profile",
+        showRetry = true,
+        showHomeButton = false,
+        className,
+      } = this.props;
 
-      // Default error UI
       return (
-        <Card className="p-8 text-center max-w-md mx-auto">
-          <div className="space-y-6">
-            {/* Error Icon */}
-            <div className="flex justify-center">
-              <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
-                <AlertTriangleIcon 
-                  size={48} 
-                  weight="bold" 
-                  className="text-red-500 dark:text-red-400"
-                />
+        <div className={cn("w-full", className)}>
+          <Card className="p-6 sm:p-8">
+            <div className="flex flex-col items-center text-center space-y-6">
+              {/* Error Icon */}
+              <div className="relative">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                  <AlertTriangleIcon className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
+                </div>
+                {/* Pulse animation */}
+                <div className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500/20 animate-ping" />
               </div>
-            </div>
 
-            {/* Error Message */}
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Something went wrong
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                We encountered an error while loading your profile. Please try again or return to the home page.
+              {/* Error Message */}
+              <div className="space-y-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+                  Oops! Profile Error
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-md">
+                  {fallbackMessage}
+                </p>
+              </div>
+
+              {/* Error Details (Development only) */}
+              {process.env.NODE_ENV === "development" && this.state.error && (
+                <details className="w-full max-w-md">
+                  <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    Error Details (Dev Mode)
+                  </summary>
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs text-left">
+                    <div className="font-mono text-red-600 dark:text-red-400">
+                      {this.state.error.message}
+                    </div>
+                    {this.state.errorInfo && (
+                      <div className="mt-2 text-gray-500 dark:text-gray-400 overflow-auto max-h-32">
+                        {this.state.errorInfo}
+                      </div>
+                    )}
+                  </div>
+                </details>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                {showRetry && (
+                  <Button
+                    onClick={this.handleRetry}
+                    className="flex-1 flex items-center justify-center gap-2"
+                    variant="default"
+                  >
+                    <RefreshCwIcon className="w-4 h-4" />
+                    Try Again
+                  </Button>
+                )}
+
+                {showHomeButton && (
+                  <Button
+                    onClick={this.handleGoHome}
+                    variant="outline"
+                    className="flex-1 flex items-center justify-center gap-2"
+                  >
+                    <HomeIcon className="w-4 h-4" />
+                    Go Home
+                  </Button>
+                )}
+              </div>
+
+              {/* Help Text */}
+              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md">
+                If this problem persists, please refresh the page or contact support.
               </p>
             </div>
-
-            {/* Error Details (Debug Mode) */}
-            {this.props.showDetails && this.state.error && (
-              <details className="text-left">
-                <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Error Details
-                </summary>
-                <div className="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-auto max-h-32">
-                  <p className="font-mono text-red-600 dark:text-red-400 mb-2">
-                    {this.state.error.name}: {this.state.error.message}
-                  </p>
-                  {this.state.error.stack && (
-                    <pre className="whitespace-pre-wrap text-gray-600 dark:text-gray-400">
-                      {this.state.error.stack}
-                    </pre>
-                  )}
-                </div>
-              </details>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                onClick={this.handleRetry}
-                className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white"
-              >
-                <RefreshCwIcon size={16} weight="bold" />
-                Try Again
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={this.handleGoHome}
-                className="flex items-center gap-2"
-              >
-                <HomeIcon size={16} weight="bold" />
-                Go Home
-              </Button>
-            </div>
-
-            {/* Support Message */}
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              If this problem persists, please contact TheFinXperts support.
-            </p>
-          </div>
-        </Card>
+          </Card>
+        </div>
       );
     }
 
-    // No error, render children normally
     return this.props.children;
   }
 }
 
-// Functional wrapper for React hooks compatibility
-export function ProfileErrorBoundaryWrapper({
-  children,
-  fallback,
-  showDetails = false,
-  onError,
-}: Props) {
-  return (
-    <ProfileErrorBoundary
-      fallback={fallback}
-      showDetails={showDetails}
-      onError={onError}
-    >
-      {children}
-    </ProfileErrorBoundary>
-  );
+// Functional wrapper for easier usage in modern React components
+export function withProfileErrorBoundary<P extends object>(
+  Component: React.ComponentType<P>,
+  errorBoundaryProps?: Omit<ProfileErrorBoundaryProps, "children">
+) {
+  return function WrappedComponent(props: P) {
+    return (
+      <ProfileErrorBoundary {...errorBoundaryProps}>
+        <Component {...props} />
+      </ProfileErrorBoundary>
+    );
+  };
 }
 
-// Preset error boundaries for specific contexts
-export function ProfileSectionErrorBoundary({ children }: { children: ReactNode }) {
-  return (
-    <ProfileErrorBoundary
-      showDetails={process.env.NODE_ENV === "development"}
-      fallback={
-        <Card className="p-6 text-center">
-          <div className="space-y-4">
-            <AlertTriangleIcon size={32} className="text-amber-500 mx-auto" />
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">
-                Section Unavailable
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                This profile section could not be loaded. Please refresh the page.
-              </p>
-            </div>
-          </div>
-        </Card>
-      }
-    >
-      {children}
-    </ProfileErrorBoundary>
-  );
-}
+// Hook for functional components to trigger error boundary
+export function useProfileErrorHandler() {
+  const throwError = (error: Error) => {
+    throw error;
+  };
 
-export function ProfileFormErrorBoundary({ children }: { children: ReactNode }) {
-  return (
-    <ProfileErrorBoundary
-      showDetails={process.env.NODE_ENV === "development"}
-      fallback={
-        <Card className="p-6 text-center">
-          <div className="space-y-4">
-            <AlertTriangleIcon size={32} className="text-red-500 mx-auto" />
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">
-                Form Error
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                There was an error with the form. Please try refreshing the page.
-              </p>
-            </div>
-            <Button 
-              onClick={() => window.location.reload()} 
-              size="sm"
-              variant="outline"
-            >
-              Refresh Page
-            </Button>
-          </div>
-        </Card>
-      }
-    >
-      {children}
-    </ProfileErrorBoundary>
-  );
-} 
+  return { throwError };
+}

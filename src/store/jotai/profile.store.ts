@@ -1,124 +1,146 @@
-import { atom } from "jotai/vanilla";
+// Profile Store - Minimal UI state management with Jotai
+// TanStack Query handles all server data fetching
+
+import { atom } from "jotai";
 import { ProfileSection } from "@/types/profile.type";
 
-// ============================================================================
-// PROFILE CLIENT STATE ATOMS
-// ============================================================================
+// =============================================================================
+// UI STATE ATOMS
+// =============================================================================
 
 /**
- * Profile Edit Mode Atom
- * Tracks which section is currently being edited in the profile
- * null means no section is being edited (view mode)
+ * Currently editing profile section
  */
-export const profileEditSectionAtom = atom<ProfileSection | null>(null);
+export const editingSectionAtom = atom<ProfileSection | null>(null);
 
 /**
- * Profile Form Dirty State Atom
- * Tracks whether there are unsaved changes in the profile form
+ * Profile form editing mode
  */
-export const profileFormDirtyAtom = atom<boolean>(false);
+export const isEditingProfileAtom = atom<boolean>(false);
 
 /**
- * Profile Upload Progress Atom
- * Tracks the upload progress for profile picture uploads
- * null means no upload in progress
+ * Experience form editing state (experience ID being edited)
  */
-export const profileUploadProgressAtom = atom<number | null>(null);
+export const editingExperienceIdAtom = atom<string | null>(null);
 
 /**
- * Profile View Mode Atom
- * Tracks whether the profile is in preview mode or edit mode
- * Useful for toggling between preview and edit views
+ * Education form editing state (education ID being edited)
  */
-export const profileViewModeAtom = atom<"view" | "edit">("view");
+export const editingEducationIdAtom = atom<string | null>(null);
 
 /**
- * Profile Completion Expanded Sections Atom
- * Tracks which sections are expanded in the profile completion tracker
- * Helps maintain UI state across component re-renders
+ * Social profile editing state
  */
-export const profileCompletionExpandedAtom = atom<Set<ProfileSection>>(new Set());
+export const isEditingSocialProfileAtom = atom<boolean>(false);
 
 /**
- * Profile Onboarding Step Atom
- * Tracks the current step in the profile onboarding process
- * Only used during initial profile setup
+ * Profile completion progress visibility
  */
-export const profileOnboardingStepAtom = atom<number>(0);
+export const showCompletionProgressAtom = atom<boolean>(true);
 
 /**
- * Profile Validation Errors Atom
- * Stores client-side validation errors for profile forms
- * Complements server-side validation
+ * Profile photo upload state
  */
-export const profileValidationErrorsAtom = atom<Record<string, string>>({});
+export const isUploadingPhotoAtom = atom<boolean>(false);
 
-// ============================================================================
+// =============================================================================
 // DERIVED ATOMS
-// ============================================================================
+// =============================================================================
 
 /**
- * Is Profile Being Edited Atom
- * Derived atom that checks if any section is currently being edited
+ * Check if any section is currently being edited
  */
-export const isProfileBeingEditedAtom = atom(get => get(profileEditSectionAtom) !== null);
+export const isAnyEditingAtom = atom(get => {
+  return (
+    get(isEditingProfileAtom) ||
+    get(editingExperienceIdAtom) !== null ||
+    get(editingEducationIdAtom) !== null ||
+    get(isEditingSocialProfileAtom) ||
+    get(isUploadingPhotoAtom)
+  );
+});
 
 /**
- * Has Unsaved Changes Atom
- * Derived atom that checks if there are any unsaved changes
+ * Get current editing context for UI feedback
  */
-export const hasUnsavedChangesAtom = atom(
-  get => get(profileFormDirtyAtom) && get(isProfileBeingEditedAtom)
-);
+export const editingContextAtom = atom(get => {
+  if (get(isEditingProfileAtom)) return "profile";
+  if (get(editingExperienceIdAtom)) return "experience";
+  if (get(editingEducationIdAtom)) return "education";
+  if (get(isEditingSocialProfileAtom)) return "social";
+  if (get(isUploadingPhotoAtom)) return "photo";
+  return null;
+});
 
-// ============================================================================
-// ACTION ATOMS
-// ============================================================================
+// =============================================================================
+// ACTION ATOMS (Write-only)
+// =============================================================================
 
 /**
- * Start Editing Section Atom
- * Action to start editing a specific profile section
+ * Start editing a specific profile section
  */
 export const startEditingSectionAtom = atom(null, (get, set, section: ProfileSection) => {
-  set(profileEditSectionAtom, section);
-  set(profileViewModeAtom, "edit");
-});
+  // Clear any other editing states
+  set(isEditingProfileAtom, false);
+  set(editingExperienceIdAtom, null);
+  set(editingEducationIdAtom, null);
+  set(isEditingSocialProfileAtom, false);
 
-/**
- * Stop Editing Atom
- * Action to stop editing and return to view mode
- */
-export const stopEditingAtom = atom(null, (get, set) => {
-  set(profileEditSectionAtom, null);
-  set(profileViewModeAtom, "view");
-  set(profileFormDirtyAtom, false);
-  set(profileValidationErrorsAtom, {});
-});
+  // Set the new editing section
+  set(editingSectionAtom, section);
 
-/**
- * Toggle Profile Completion Section Atom
- * Action to toggle the expanded state of a profile completion section
- */
-export const toggleCompletionSectionAtom = atom(null, (get, set, section: ProfileSection) => {
-  const expanded = new Set(get(profileCompletionExpandedAtom));
-  if (expanded.has(section)) {
-    expanded.delete(section);
-  } else {
-    expanded.add(section);
+  switch (section) {
+    case ProfileSection.BASIC_INFO:
+    case ProfileSection.PROFESSIONAL_DETAILS:
+      set(isEditingProfileAtom, true);
+      break;
+    case ProfileSection.SOCIAL_CONTACT:
+      set(isEditingSocialProfileAtom, true);
+      break;
   }
-  set(profileCompletionExpandedAtom, expanded);
 });
 
 /**
- * Reset Profile Store Atom
- * Action to reset all profile-related atoms to their initial state
+ * Start editing a specific experience
  */
-export const resetProfileStoreAtom = atom(null, (get, set) => {
-  set(profileEditSectionAtom, null);
-  set(profileFormDirtyAtom, false);
-  set(profileUploadProgressAtom, null);
-  set(profileViewModeAtom, "view");
-  set(profileCompletionExpandedAtom, new Set());
-  set(profileOnboardingStepAtom, 0);
-  set(profileValidationErrorsAtom, {});
+export const startEditingExperienceAtom = atom(null, (get, set, experienceId: string) => {
+  // Clear other editing states
+  set(isEditingProfileAtom, false);
+  set(editingEducationIdAtom, null);
+  set(isEditingSocialProfileAtom, false);
+
+  set(editingSectionAtom, ProfileSection.EXPERIENCE);
+  set(editingExperienceIdAtom, experienceId);
+});
+
+/**
+ * Start editing a specific education
+ */
+export const startEditingEducationAtom = atom(null, (get, set, educationId: string) => {
+  // Clear other editing states
+  set(isEditingProfileAtom, false);
+  set(editingExperienceIdAtom, null);
+  set(isEditingSocialProfileAtom, false);
+
+  set(editingSectionAtom, ProfileSection.EDUCATION);
+  set(editingEducationIdAtom, educationId);
+});
+
+/**
+ * Cancel all editing states
+ */
+export const cancelAllEditingAtom = atom(null, (get, set) => {
+  set(editingSectionAtom, null);
+  set(isEditingProfileAtom, false);
+  set(editingExperienceIdAtom, null);
+  set(editingEducationIdAtom, null);
+  set(isEditingSocialProfileAtom, false);
+  set(isUploadingPhotoAtom, false);
+});
+
+/**
+ * Toggle completion progress visibility
+ */
+export const toggleCompletionProgressAtom = atom(null, (get, set) => {
+  set(showCompletionProgressAtom, !get(showCompletionProgressAtom));
 });
