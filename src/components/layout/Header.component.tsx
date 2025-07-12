@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/ui/ThemeToggle.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { User, SignOut, List, X, Briefcase } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
-import { UserRole } from "@/types/onboarding.type";
+import { UserRole } from "@/types/auth.type";
 
 export function Header() {
   const { auth, signOut } = useAuth();
@@ -36,14 +36,15 @@ export function Header() {
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")
-          .eq("user_id", session.user.id)
+          .eq("auth_user_id", session.user.id)
           .single();
 
+        console.log("Header role check:", { userId: session.user.id, profile });
         setUserRole(profile?.role || null);
       }
     };
     checkSession();
-  }, []);
+  }, [auth.user]); // Re-run when auth.user changes
 
   const handleSignOut = async () => {
     await signOut();
@@ -51,8 +52,8 @@ export function Header() {
   };
 
   const isLoggedIn = mounted && (auth.user || hasSession);
-  const pathname = usePathname() ?? '';
-  const dashboardPath = userRole === UserRole.ACCOUNTANT ? "/ca/dashboard" : "/user/dashboard";
+  const pathname = usePathname() ?? "";
+  const dashboardPath = userRole === UserRole.ACCOUNTANT ? "/xpert/dashboard" : "/user/dashboard";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background shadow-sm supports-[backdrop-filter]:bg-background dark:border-border/50 dark:bg-background">

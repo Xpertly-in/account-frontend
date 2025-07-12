@@ -1,39 +1,30 @@
 import { User } from "@supabase/supabase-js";
 
-export interface AuthFormData {
-  email: string;
-  password: string;
-}
-
-export interface ExtendedSignUpFormData extends AuthFormData {
-  name: string;
-  acceptTerms: boolean;
-  confirmPassword: string;
-}
-
-export interface SignUpFormData extends AuthFormData {
-  name: string;
-  confirmPassword: string;
-}
-
-export interface ForgotPasswordFormData {
-  email: string;
-}
-
-export interface ResetPasswordFormData {
-  password: string;
-  confirmPassword: string;
-}
-
-// Define simplified Auth types
-export interface MockUser {
-  id: string;
-  email: string;
-  name: string;
-}
-
+// Auth Types - Single source of truth for authentication and user roles
 export interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
+  user: any | null; // Supabase User type
+  loading: boolean;
+}
+
+/**
+ * User roles enum - Single source of truth for all user roles
+ * Values match what's stored in the database profiles.role field
+ */
+export enum UserRole {
+  ACCOUNTANT = "ACCOUNTANT", // CA/Chartered Accountant role
+  CUSTOMER = "CUSTOMER",     // Customer/Client role  
+  ADMIN = "ADMIN",           // Admin role (future use)
+}
+
+/**
+ * Type helper for role checking
+ */
+export type UserRoleType = keyof typeof UserRole;
+
+export interface AuthContextType {
+  auth: AuthState;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }

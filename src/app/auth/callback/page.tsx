@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { ensureCaProfile } from "@/helper/googleAuth.helper";
+import { UserRole } from "@/types/auth.type";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -29,31 +30,29 @@ export default function AuthCallback() {
           // Check for stored redirect path
           const storedRedirect = localStorage.getItem("postLoginRedirect");
 
-          // Check if user has a role and onboarding status
+          // Check if user has a role
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
-            .select("role, onboarding_completed")
-            .eq("user_id", session.user.id)
+            .select("role")
+            .eq("auth_user_id", session.user.id)
             .single();
 
           if (profileError) {
             if (profileError.code === "PGRST116") {
               // No profile exists, create a basic profile and redirect to role selection
-              const { error: insertError } = await supabase
-                .from("profiles")
-                .insert([{
-                  user_id: session.user.id,
+              const { error: insertError } = await supabase.from("profiles").insert([
+                {
+                  auth_user_id: session.user.id,
                   email: session.user.email,
-                  name: session.user.user_metadata?.full_name || session.user.email,
-                  profile_picture: session.user.user_metadata?.avatar_url,
-                  onboarding_completed: false
-                }]);
+                  first_name: session.user.user_metadata?.full_name || session.user.email,
+                },
+              ]);
 
               if (insertError) {
                 console.error("Error creating profile:", insertError);
                 throw insertError;
               }
-              
+
               localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
               router.push("/role-select");
               return;
@@ -62,19 +61,19 @@ export default function AuthCallback() {
             throw profileError;
           }
 
-          // If no role is set, redirect to role selection
-          if (!profile?.role) {
+          if (!profileError && !profile?.role) {
             localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
             router.push("/role-select");
             return;
           }
 
-          // If role exists but onboarding is not completed
-          if (!profile.onboarding_completed) {
-            localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
-            router.push(profile.role === "ACCOUNTANT" ? "/ca/onboarding" : "/user/onboarding");
-            return;
+          // Redirect based on user role (existing user) or role selection for new user above
+          if (profile.role === UserRole.ACCOUNTANT) {
+            router.push("/xpert/dashboard");
+          } else {
+            router.push("/user/dashboard");
           }
+          return;
 
           // If both role exists and onboarding is completed, check for stored redirect
           if (storedRedirect) {
@@ -83,7 +82,7 @@ export default function AuthCallback() {
           } else {
             // Default redirect based on role
             if (profile.role === "ACCOUNTANT") {
-              router.push("/ca/dashboard");
+              router.push("/xpert/dashboard");
             } else {
               router.push("/user/dashboard");
             }

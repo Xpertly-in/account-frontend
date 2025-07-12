@@ -187,7 +187,7 @@ export default function ContactCAPage({ params }: ContactCAPageProps) {
                 Your message has been sent to {ca.name}. They will respond to you within 24 hours.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button onClick={() => router.push(`/ca/${params.id}`)} variant="outline">
+                <Button onClick={() => router.push(`/xpert/${params.id}`)} variant="outline">
                   View CA Profile
                 </Button>
                 <Button onClick={() => router.push("/search")}>Find More CAs</Button>

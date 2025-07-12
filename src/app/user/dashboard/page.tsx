@@ -6,7 +6,7 @@ import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
 import { User } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
-import { UserRole } from "@/types/onboarding.type";
+import { UserRole } from "@/types/auth.type";
 import { CustomerProfile } from "@/types/customer-profile.type";
 
 export default function UserDashboardPage() {
@@ -22,7 +22,7 @@ export default function UserDashboardPage() {
   useEffect(() => {
     const checkRole = async () => {
       if (!auth.user) return;
-      
+
       try {
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -37,7 +37,7 @@ export default function UserDashboardPage() {
 
         // Redirect based on role
         if (profile?.role === UserRole.ACCOUNTANT) {
-          router.push("/ca/dashboard");
+          router.push("/xpert/dashboard");
         }
       } catch (error) {
         console.error("Error checking role:", error);
@@ -58,12 +58,13 @@ export default function UserDashboardPage() {
   useEffect(() => {
     const loadProfileData = async () => {
       if (!auth.user?.id) return;
-      
+
       try {
         // Load profile data
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select(`
+          .select(
+            `
             user_id,
             name,
             gender,
@@ -75,7 +76,8 @@ export default function UserDashboardPage() {
             created_at,
             updated_at,
             onboarding_completed
-          `)
+          `
+          )
           .eq("user_id", auth.user.id)
           .single();
 
@@ -122,22 +124,22 @@ export default function UserDashboardPage() {
 
     const fields = [
       // Personal Details (Total weight: 8)
-      { key: 'name', weight: 2 },
-      { key: 'gender', weight: 1 },
-      { key: 'phone', weight: 1 },
-      { key: 'type_of_user', weight: 1 },
-      { key: 'about', weight: 1 },
-      { key: 'type_of_communication', weight: 1 },
-      { key: 'profile_picture', weight: 1 },
-      
+      { key: "name", weight: 2 },
+      { key: "gender", weight: 1 },
+      { key: "phone", weight: 1 },
+      { key: "type_of_user", weight: 1 },
+      { key: "about", weight: 1 },
+      { key: "type_of_communication", weight: 1 },
+      { key: "profile_picture", weight: 1 },
+
       // Address Details (Total weight: 4)
-      { key: 'address', weight: 1, source: address },
-      { key: 'city', weight: 1, source: address },
-      { key: 'state', weight: 1, source: address },
-      { key: 'pincode', weight: 1, source: address },
-      
+      { key: "address", weight: 1, source: address },
+      { key: "city", weight: 1, source: address },
+      { key: "state", weight: 1, source: address },
+      { key: "pincode", weight: 1, source: address },
+
       // Services (Total weight: 2)
-      { key: 'services', weight: 2, source: services, isArray: true }
+      { key: "services", weight: 2, source: services, isArray: true },
     ];
 
     let totalWeight = 0;
@@ -146,26 +148,28 @@ export default function UserDashboardPage() {
     fields.forEach(field => {
       totalWeight += field.weight;
       let value;
-      
-      if (field.key === 'services') {
+
+      if (field.key === "services") {
         value = services; // Directly use the services array
       } else {
-        value = field.source ? field.source[field.key] : profile[field.key as keyof CustomerProfile];
+        value = field.source
+          ? field.source[field.key]
+          : profile[field.key as keyof CustomerProfile];
       }
-      
+
       console.log(`Field ${field.key}:`, value);
-      
+
       if (field.isArray) {
         if (Array.isArray(value) && value.length > 0) {
           filledWeight += field.weight;
           console.log(`${field.key} is filled (array) with length:`, value.length);
         }
-      } else if (value !== undefined && value !== null && value !== '') {
+      } else if (value !== undefined && value !== null && value !== "") {
         filledWeight += field.weight;
         console.log(`${field.key} is filled`);
       }
     });
-    
+
     const percentage = Math.round((filledWeight / totalWeight) * 100);
     console.log("Completion Calculation:", {
       filledWeight,
@@ -173,11 +177,16 @@ export default function UserDashboardPage() {
       percentage,
       fields: fields.map(f => ({
         key: f.key,
-        value: f.key === 'services' ? services : (f.source ? f.source[f.key] : profile[f.key as keyof CustomerProfile]),
-        weight: f.weight
-      }))
+        value:
+          f.key === "services"
+            ? services
+            : f.source
+            ? f.source[f.key]
+            : profile[f.key as keyof CustomerProfile],
+        weight: f.weight,
+      })),
     });
-    
+
     return percentage;
   };
 
@@ -187,9 +196,7 @@ export default function UserDashboardPage() {
     <div className="container mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold sm:text-4xl">Dashboard</h1>
-        <p className="mt-2 text-muted-foreground">
-          Welcome, {profile?.name || "User"}
-        </p>
+        <p className="mt-2 text-muted-foreground">Welcome, {profile?.name || "User"}</p>
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
@@ -205,9 +212,7 @@ export default function UserDashboardPage() {
             </div>
             <div>
               <h3 className="text-xl font-semibold">Profile</h3>
-              <p className="text-sm text-muted-foreground">
-                Manage your profile information
-              </p>
+              <p className="text-sm text-muted-foreground">Manage your profile information</p>
             </div>
           </div>
 
@@ -225,11 +230,11 @@ export default function UserDashboardPage() {
               {loading ? (
                 <div className="w-full h-full bg-gradient-to-r from-primary/20 to-secondary/20 animate-pulse" />
               ) : (
-                <div 
+                <div
                   className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-500 ease-in-out"
-                  style={{ 
+                  style={{
                     width: `${completionPercentage}%`,
-                    minWidth: '2%'
+                    minWidth: "2%",
                   }}
                 />
               )}
@@ -238,7 +243,9 @@ export default function UserDashboardPage() {
               {loading ? (
                 <span className="inline-block w-48 h-3 bg-muted animate-pulse rounded" />
               ) : (
-                `Complete your profile to get the most out of our services. ${completionPercentage < 100 ? 'You\'re making progress!' : 'Great job!'}`
+                `Complete your profile to get the most out of our services. ${
+                  completionPercentage < 100 ? "You're making progress!" : "Great job!"
+                }`
               )}
             </p>
           </div>

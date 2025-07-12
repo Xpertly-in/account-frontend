@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { UserRole } from "@/types/auth.type";
 import CAProfileDetails from "@/components/features/profile/CAProfileDetails.component";
 
 // Required for static export
@@ -18,8 +19,8 @@ export const dynamicParams = true;
 export default async function CAProfile({ params }: { params: { id: string } }) {
   try {
     // Validate the ID parameter
-    if (!params.id || typeof params.id !== 'string') {
-      console.error('Invalid CA ID:', params.id);
+    if (!params.id || typeof params.id !== "string") {
+      console.error("Invalid CA ID:", params.id);
       notFound();
     }
 
@@ -28,7 +29,7 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
       .from("profiles")
       .select("*")
       .eq("user_id", params.id)
-      .eq("role", "ACCOUNTANT")
+      .eq("role", UserRole.ACCOUNTANT)
       .eq("onboarding_completed", true)
       .single();
 
@@ -43,22 +44,16 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
     }
 
     // Fetch related data with proper error handling
-    const [addressResult, socialProfileResult, servicesResult, experiencesResult, educationsResult] = await Promise.all([
-      supabase
-        .from("address")
-        .select("*")
-        .eq("ca_id", params.id)
-        .single(),
-      supabase
-        .from("social_profile")
-        .select("*")
-        .eq("ca_id", params.id)
-        .single(),
-      supabase
-        .from("services")
-        .select("*")
-        .eq("ca_id", params.id)
-        .eq("is_active", true),
+    const [
+      addressResult,
+      socialProfileResult,
+      servicesResult,
+      experiencesResult,
+      educationsResult,
+    ] = await Promise.all([
+      supabase.from("address").select("*").eq("ca_id", params.id).single(),
+      supabase.from("social_profile").select("*").eq("ca_id", params.id).single(),
+      supabase.from("services").select("*").eq("ca_id", params.id).eq("is_active", true),
       supabase
         .from("experiences")
         .select("*")
@@ -70,14 +65,16 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
         .select("*")
         .eq("ca_id", params.id)
         .eq("is_active", true)
-        .order("start_date", { ascending: false })
+        .order("start_date", { ascending: false }),
     ]);
 
     // Handle any errors from related data fetches
     if (addressResult.error) console.error("Error fetching address:", addressResult.error);
-    if (socialProfileResult.error) console.error("Error fetching social profile:", socialProfileResult.error);
+    if (socialProfileResult.error)
+      console.error("Error fetching social profile:", socialProfileResult.error);
     if (servicesResult.error) console.error("Error fetching services:", servicesResult.error);
-    if (experiencesResult.error) console.error("Error fetching experiences:", experiencesResult.error);
+    if (experiencesResult.error)
+      console.error("Error fetching experiences:", experiencesResult.error);
     if (educationsResult.error) console.error("Error fetching educations:", educationsResult.error);
 
     // Transform the data to match our CA type
@@ -108,36 +105,38 @@ export default async function CAProfile({ params }: { params: { id: string } }) 
     };
 
     // Transform experiences data
-    const transformedExperiences = experiencesResult.data?.map(exp => ({
-      id: exp.id,
-      title: exp.title,
-      employmentType: exp.employment_type,
-      companyName: exp.company_name,
-      location: exp.location,
-      isCurrent: exp.is_current,
-      startDate: exp.start_date,
-      endDate: exp.end_date,
-      industry: exp.industry,
-      description: exp.description,
-      recentService: exp.recent_service,
-    })) || [];
+    const transformedExperiences =
+      experiencesResult.data?.map(exp => ({
+        id: exp.id,
+        title: exp.title,
+        employmentType: exp.employment_type,
+        companyName: exp.company_name,
+        location: exp.location,
+        isCurrent: exp.is_current,
+        startDate: exp.start_date,
+        endDate: exp.end_date,
+        industry: exp.industry,
+        description: exp.description,
+        recentService: exp.recent_service,
+      })) || [];
 
     // Transform education data
-    const transformedEducations = educationsResult.data?.map(edu => ({
-      id: edu.id,
-      instituteName: edu.institute_name,
-      degree: edu.degree,
-      fieldOfStudy: edu.field_of_study,
-      startDate: edu.start_date,
-      endDate: edu.end_date,
-      grade: edu.grade,
-      description: edu.description,
-      isCurrent: edu.is_current,
-    })) || [];
+    const transformedEducations =
+      educationsResult.data?.map(edu => ({
+        id: edu.id,
+        instituteName: edu.institute_name,
+        degree: edu.degree,
+        fieldOfStudy: edu.field_of_study,
+        startDate: edu.start_date,
+        endDate: edu.end_date,
+        grade: edu.grade,
+        description: edu.description,
+        isCurrent: edu.is_current,
+      })) || [];
 
     return (
-      <CAProfileDetails 
-        ca={transformedCA} 
+      <CAProfileDetails
+        ca={transformedCA}
         experiences={transformedExperiences}
         educations={transformedEducations}
       />

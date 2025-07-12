@@ -137,7 +137,7 @@ export default function CACard({ ca }: CACardProps) {
             className="flex-1 border-border bg-card transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary dark:border-blue-700/50 dark:bg-gray-800/50 dark:text-blue-200 dark:hover:border-blue-500 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
             onClick={handleProfileClick}
           >
-            <Link href={`/ca/${ca.id}`}>View Profile</Link>
+            <Link href={`/xpert/${ca.id}`}>View Profile</Link>
           </Button>
           <Button
             asChild

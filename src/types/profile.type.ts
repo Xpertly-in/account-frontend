@@ -1,4 +1,6 @@
 // Profile Types - TypeScript interfaces aligned with supabase.sql schema
+import { UserRole } from "./auth.type";
+
 export interface Profile {
   id: string;
   auth_user_id: string;
@@ -26,7 +28,7 @@ export interface Profile {
   updated_at: string;
 }
 export interface CAProfile extends Profile {
-  role: UserRole.CA;
+  role: UserRole.ACCOUNTANT;
   experiences?: Experience[];
   educations?: Education[];
   social_profile?: SocialProfile;
@@ -82,11 +84,6 @@ export interface CAVerification {
   membership_certificate_url?: string;
   verified_at?: string;
   verified_by?: string;
-}
-export enum UserRole {
-  CA = "ca",
-  CUSTOMER = "customer",
-  ADMIN = "admin",
 }
 export enum ProfileSection {
   BASIC_INFO = "basic_info",
@@ -176,7 +173,7 @@ export interface ProfileQueryFilters {
   search?: string;
 }
 export function isCAProfile(profile: Profile): profile is CAProfile {
-  return profile.role === UserRole.CA;
+  return profile.role === UserRole.ACCOUNTANT;
 }
 
 export function isCustomerProfile(profile: Profile): profile is CustomerProfile {

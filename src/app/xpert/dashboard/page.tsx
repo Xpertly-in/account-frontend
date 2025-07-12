@@ -6,7 +6,7 @@ import { useAuth } from "@/store/context/Auth.provider";
 import { Toaster } from "sonner";
 import { User, EnvelopeSimple, ChatCenteredText } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
-import { UserRole } from "@/types/onboarding.type";
+import { UserRole } from "@/types/auth.type";
 
 export default function CADashboardPage() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function CADashboardPage() {
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <div
           className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"
-          onClick={() => router.push("/ca/profile")}
+          onClick={() => router.push("/xpert/profile")}
         >
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/30 dark:from-primary/30 dark:to-primary/40">
             <User className="h-6 w-6 text-primary dark:text-blue-400" />
@@ -73,7 +73,7 @@ export default function CADashboardPage() {
 
         <div
           className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"
-          onClick={() => router.push("/ca/dashboard/leads")}
+          onClick={() => router.push("/xpert/dashboard/leads")}
         >
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 dark:from-blue-500/30 dark:to-blue-600/40">
             <EnvelopeSimple className="h-6 w-6 text-blue-500 dark:text-blue-400" />
@@ -87,7 +87,7 @@ export default function CADashboardPage() {
 
         <div
           className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"
-          onClick={() => router.push("/ca/dashboard/contact-requests")}
+          onClick={() => router.push("/xpert/dashboard/contact-requests")}
         >
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-600/30 dark:from-emerald-500/30 dark:to-emerald-600/40">
             <ChatCenteredText className="h-6 w-6 text-emerald-500 dark:text-emerald-400" />

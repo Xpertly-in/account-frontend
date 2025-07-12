@@ -2,8 +2,9 @@
 // Following established patterns from leads.service.ts
 
 import { supabase } from "@/lib/supabase";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/store/context/Auth.provider";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { UserRole } from "@/types/auth.type";
 import {
   Profile,
   CAProfile,
@@ -12,18 +13,15 @@ import {
   Education,
   SocialProfile,
   CAVerification,
+  ProfileSection,
+  ProfileCompletionStatus,
   ProfileFormData,
   ExperienceFormData,
   EducationFormData,
   SocialProfileFormData,
-  ProfileCompletionResult,
-  ProfileCompletionStatus,
-  ProfileSection,
-  UserRole,
   ProfileUpdateResponse,
-  ProfileValidationErrors,
+  ProfileCompletionResult,
   isCAProfile,
-  isCustomerProfile,
 } from "@/types/profile.type";
 
 // =============================================================================
@@ -50,7 +48,7 @@ export async function fetchProfile(userId: string): Promise<CAProfile | Customer
     if (!profile) return null;
 
     // For CA profiles, fetch related data
-    if (profile.role === UserRole.CA) {
+    if (profile.role === UserRole.ACCOUNTANT) {
       const [experiencesResult, educationsResult, socialResult, verificationResult] =
         await Promise.all([
           supabase
@@ -69,7 +67,7 @@ export async function fetchProfile(userId: string): Promise<CAProfile | Customer
 
       const caProfile: CAProfile = {
         ...profile,
-        role: UserRole.CA,
+        role: UserRole.ACCOUNTANT,
         experiences: experiencesResult.data || [],
         educations: educationsResult.data || [],
         social_profile: socialResult.data || undefined,

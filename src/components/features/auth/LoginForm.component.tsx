@@ -17,7 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { EventCategory } from "@/helper/googleAnalytics.helper";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
-import { UserRole } from "@/types/onboarding.type";
+import { UserRole } from "@/types/auth.type";
 
 interface LoginFormProps {
   hideContainer?: boolean;
@@ -138,7 +138,7 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
       // If role exists, then check onboarding status
       if (!profile.onboarding_completed) {
         localStorage.removeItem("postLoginRedirect"); // Clear stored redirect
-        router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+        router.push(profile.role === UserRole.ACCOUNTANT ? "/xpert/profile" : "/user/onboarding");
         return;
       }
 
@@ -149,7 +149,7 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
       } else {
         // Default redirect based on role
         if (profile.role === UserRole.ACCOUNTANT) {
-          router.push("/ca/dashboard");
+          router.push("/xpert/dashboard");
         } else {
           router.push("/user/dashboard");
         }
@@ -182,7 +182,7 @@ export default function LoginForm({ hideContainer = false }: LoginFormProps) {
   useEffect(() => {
     if (auth.user) {
       // Only handle non-Google auth redirects here
-      if (!window.location.pathname.includes('/auth/callback')) {
+      if (!window.location.pathname.includes("/auth/callback")) {
         // checkAndRedirect(); // Remove this line, logic is now in handleSubmit
       }
     }

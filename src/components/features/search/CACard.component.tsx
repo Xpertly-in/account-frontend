@@ -20,19 +20,15 @@ export function CACard({ ca }: CACardProps) {
   const router = useRouter();
 
   return (
-    <Card 
+    <Card
       className="p-4 hover:shadow-lg transition-all cursor-pointer"
-      onClick={() => router.push(`/ca/${ca.id}`)}
+      onClick={() => router.push(`/xpert/${ca.id}`)}
     >
       <div className="flex gap-4">
         {/* Profile Image */}
         <div className="w-20 h-20 rounded-full overflow-hidden bg-muted flex-shrink-0">
           {ca.profile_picture ? (
-            <img
-              src={ca.profile_picture}
-              alt={ca.name}
-              className="w-full h-full object-cover"
-            />
+            <img src={ca.profile_picture} alt={ca.name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-primary/10">
               <Camera size={24} className="text-primary" />
@@ -66,14 +62,10 @@ export function CACard({ ca }: CACardProps) {
 
           <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
             <Briefcase size={16} />
-            <span className="truncate">
-              {ca.areas_of_expertise}
-            </span>
+            <span className="truncate">{ca.areas_of_expertise}</span>
           </div>
 
-          <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-            {ca.about}
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{ca.about}</p>
         </div>
       </div>
     </Card>

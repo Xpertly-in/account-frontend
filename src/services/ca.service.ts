@@ -1,15 +1,10 @@
 import { supabase } from '@/lib/supabase';
-import { CA } from "@/types/ca.type";
+import { UserRole } from "@/types/auth.type";
+import type { CA } from "@/types/ca.type";
 import { getCALocation, getPopularCities as getMockPopularCities } from "@/utils/ca-location.utils";
 
-export interface CAWithServices extends CA {
-  services: string[];
-  total_reviews?: number;
-  average_rating?: number;
-}
-
-// Define the role enum based on the database schema
-type UserRole = "ACCOUNTANT" | "customer";
+// Remove the hardcoded type definition - use the enum instead
+// type UserRole = "ACCOUNTANT" | "customer";
 
 // Default profile images for CAs
 const DEFAULT_CA_IMAGES = [
@@ -67,7 +62,7 @@ export class CAService {
           created_at
         `
         )
-        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("role", UserRole.ACCOUNTANT)
         .eq("is_verified", true)
         .order("years_of_experience", { ascending: false })
         .limit(limit);
@@ -180,7 +175,7 @@ export class CAService {
         `
         )
         .eq("user_id", caId)
-        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("role", UserRole.ACCOUNTANT)
         .single();
 
       if (profileError || !profile) {
@@ -276,7 +271,7 @@ export class CAService {
           type_of_user
         `
         )
-        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("role", UserRole.ACCOUNTANT)
         .eq("is_verified", true);
 
       const { data: profiles, error } = await query.limit(limit);
@@ -384,20 +379,20 @@ export class CAService {
       const { count: totalCAs } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
-        .eq("role", "ACCOUNTANT" as UserRole);
+        .eq("role", UserRole.ACCOUNTANT);
 
       // Get verified CAs
       const { count: verifiedCAs } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
-        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("role", UserRole.ACCOUNTANT)
         .eq("is_verified", true);
 
       // Get active CAs (available for leads)
       const { count: activeCAs } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
-        .eq("role", "ACCOUNTANT" as UserRole)
+        .eq("role", UserRole.ACCOUNTANT)
         .eq("is_verified", true);
 
       // Get total services

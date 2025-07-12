@@ -40,3 +40,62 @@ export async function getSignedUrl(path: string, expiresIn = 3600): Promise<stri
 export async function getSignedUrls(paths: string[], expiresIn = 3600): Promise<string[]> {
   return Promise.all(paths.map(p => getSignedUrl(p, expiresIn)));
 }
+
+/**
+ * Upload CA membership certificate with proper naming convention
+ */
+export async function uploadCertificate(file: File, profileId: string): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  
+  // Validate file type
+  const allowedTypes = ['pdf', 'jpg', 'jpeg', 'png'];
+  if (!ext || !allowedTypes.includes(ext)) {
+    throw new Error('Only PDF, JPG, JPEG, and PNG files are allowed for certificates');
+  }
+  
+  // Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    throw new Error('Certificate file size must be less than 5MB');
+  }
+  
+  const filename = `membership-certificate.${ext}`;
+  const path = `${profileId}/${filename}`;
+  
+  const { error } = await supabase.storage
+    .from("ca-certificates")
+    .upload(path, file, { 
+      cacheControl: "3600",
+      upsert: true // Replace existing file if it exists
+    });
+    
+  if (error) throw error;
+  return path;
+}
+
+/**
+ * Get signed URL for certificate
+ */
+export async function getCertificateUrl(path: string, expiresIn = 3600): Promise<string> {
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+
+  const { data, error } = await supabase.storage
+    .from("ca-certificates")
+    .createSignedUrl(path, expiresIn);
+    
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+/**
+ * Delete certificate file
+ */
+export async function deleteCertificate(path: string): Promise<void> {
+  const { error } = await supabase.storage
+    .from("ca-certificates")
+    .remove([path]);
+    
+  if (error) throw error;
+}
