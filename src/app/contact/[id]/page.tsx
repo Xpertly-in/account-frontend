@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Container } from "@/components/layout/Container.component";
 import { ContactForm } from "@/components/contact/ContactForm.component";
 import { CAContactSidebar } from "@/components/contact-requests/CAContactSidebar.component";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/ui/Skeleton.ui";
 import { Button } from "@/ui/Button.ui";
 import { ArrowLeft } from "@phosphor-icons/react";
@@ -187,7 +187,7 @@ export default function ContactCAPage({ params }: ContactCAPageProps) {
                 Your message has been sent to {ca.name}. They will respond to you within 24 hours.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button onClick={() => router.push(`/ca/${params.id}`)} variant="outline">
+                <Button onClick={() => router.push(`/xpert/${params.id}`)} variant="outline">
                   View CA Profile
                 </Button>
                 <Button onClick={() => router.push("/search")}>Find More CAs</Button>

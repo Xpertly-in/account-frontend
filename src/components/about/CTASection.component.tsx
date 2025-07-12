@@ -29,7 +29,7 @@ export const CTASection = () => {
                 asChild
                 className="bg-white text-primary hover:bg-blue-50 hover:text-blue-800 px-10 py-7 text-xl font-semibold rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 dark:bg-blue-100 dark:text-blue-800 dark:hover:bg-white"
               >
-                <Link href="/ca/register">Register as CA</Link>
+                <Link href="/xpert/register">Register as Xpert</Link>
               </Button>
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { UserRole } from "./auth.type";
+
 // Remove the specific import, rely on global File type
 // import { File } from 'buffer';
 
@@ -169,41 +171,6 @@ export interface SectionValidation {
 
 export interface FormValidationConfig {
   [sectionId: string]: SectionValidation;
-}
-
-/**
- * User role enum for role selection screen
- */
-export enum UserRole {
-  ACCOUNTANT = "ACCOUNTANT",
-  CUSTOMER = "CUSTOMER",
-}
-
-/**
- * CA Services enum - these represent services that CAs can offer
- */
-export enum CAService {
-  TAX_FILING = "Tax Filing",
-  GST_REGISTRATION = "GST Registration",
-  COMPANY_REGISTRATION = "Company Registration",
-  ACCOUNTING = "Accounting",
-  AUDIT = "Audit",
-  BUSINESS_ADVISORY = "Business Advisory",
-  COMPLIANCE = "Compliance",
-  PAYROLL = "Payroll",
-  TAX_PLANNING = "Tax Planning",
-  FINANCIAL_PLANNING = "Financial Planning",
-}
-
-/**
- * Service categories for grouping related services
- */
-export enum ServiceCategory {
-  TAX = "Tax",
-  REGISTRATION = "Registration",
-  ACCOUNTING = "Accounting",
-  ADVISORY = "Advisory",
-  COMPLIANCE = "Compliance",
 }
 
 /**

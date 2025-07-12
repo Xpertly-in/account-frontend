@@ -14,7 +14,7 @@ import SignUpFormTerms from "./SignUpFormTerms.component";
 import { ExtendedSignUpFormData } from "@/types/auth.type";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { UserRole } from "@/types/onboarding.type";
+import { UserRole } from "@/types/auth.type";
 
 interface SignUpFormProps {
   hideContainer?: boolean;
@@ -125,13 +125,13 @@ export default function SignUpForm({ hideContainer = false }: SignUpFormProps) {
 
       // If role exists but onboarding is not completed
       if (!profile.onboarding_completed) {
-        router.push(profile.role === UserRole.ACCOUNTANT ? "/ca/onboarding" : "/user/onboarding");
+        router.push(profile.role === UserRole.ACCOUNTANT ? "/xpert/profile" : "/user/onboarding");
         return;
       }
 
       // If both role exists and onboarding is completed, go to dashboard
       if (profile.role === UserRole.ACCOUNTANT) {
-        router.push("/ca/dashboard");
+        router.push("/xpert/dashboard");
       } else {
         router.push("/user/dashboard");
       }
