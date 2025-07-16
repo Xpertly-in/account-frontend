@@ -4172,8 +4172,6 @@ WHERE public.profiles.state ILIKE s.name;
 
 ---
 
-## 🔄 Profile Pages Complete Redesign Initiative (January 2025)
-
 ## 🎯 Service Layer Architecture Analysis (January 2025)
 
 **OBJECTIVE**: Document established service layer patterns from leads.service.ts to ensure consistency in profile service implementation.
@@ -4278,5 +4276,57 @@ import { ContactRequestCard } from "@/components/contact-requests";
 - Large module boundaries with stable interfaces (rare)
 
 **Action Required**: Remove the previously created index file and update component architecture to use direct imports.
+
+## 🖼️ CA Profile Picture Flow & Component Directory Cleanup (Started – July 2025)
+
+**Context:** The CA/xpert profile wizard page (`app/xpert/profile/page.tsx`) is functioning, but the avatar upload logic is still mocked and profile components live in an outdated `steps` directory. A full end-to-end storage flow plus directory cleanup is required.
+
+### Objectives
+- Move profile-specific components into a clean `profile/xpert` folder structure (no redundant prefixes)
+- Implement real profile-picture upload & delete with Supabase Storage
+- Expose React-Query hooks for avatar mutations
+- Serve avatars through signed URLs
+- Update completion-percentage logic to count the picture
+- Add tests & documentation
+
+### Task Breakdown
+
+1. **Directory Renaming & Import Cleanup**
+   - [ ] Move all files from `src/components/profile/steps/` → `src/components/profile/xpert/`
+   - [ ] Update every import path referencing the old `steps` folder
+   - [ ] Delete the legacy `steps` folder after verification
+
+2. **Service Layer Enhancements** (`src/services/profile.service.ts`)
+   - [ ] Add `uploadProfilePicture(file, profileId)` → returns storage path
+   - [ ] Add `deleteProfilePicture(profileId)`
+   - [ ] Wire both to `storage.service.uploadImage` / `.remove`
+   - [ ] Update `profiles.profile_picture_url` column accordingly
+   - [ ] Return new signed URL via `getSignedUrl`
+
+3. **React-Query Mutation Hooks**
+   - [ ] `useUploadProfilePicture(profileId)` (optimistic UI + cache invalidation)
+   - [ ] `useDeleteProfilePicture(profileId)`
+
+4. **UI Integration** (`PersonalInfoStep.component.tsx`)
+   - [ ] Replace stub `handleProfilePictureUpload` with `useUploadProfilePicture`
+   - [ ] Replace stub `handleProfilePictureDelete` with `useDeleteProfilePicture`
+   - [ ] Ensure optimistic preview & error toasts remain functional
+
+5. **Signed URL Handling**
+   - [ ] In `fetchProfile`, convert stored path to signed URL before setting `profile_picture_url`
+
+6. **Completion Percentage Logic**
+   - [ ] Update `calculateProfileCompletion` to include avatar (Basic Info 20 %)
+
+7. **Testing**
+   - [ ] Unit tests for new service functions
+   - [ ] Integration tests for mutation hooks
+   - [ ] Component tests for avatar upload/delete flow (Jest + RTL)
+
+8. **Documentation**
+   - [ ] Append details of storage flow & new tasks in this `progress.md` (✓ — _you are here_)
+   - [ ] Update PRD section 11 (Profile redesign) with avatar storage design & signed URL strategy
+
+---
 
 // ... existing code ...

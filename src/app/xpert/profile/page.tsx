@@ -23,10 +23,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Step Components
-import PersonalInfoStep from "@/components/profile/steps/PersonalInfoStep.component";
-import EducationMembershipStep from "@/components/profile/steps/EducationMembershipStep.component";
-import ExperienceStep from "@/components/profile/steps/ExperienceStep.component";
-import SocialLinksStep from "@/components/profile/steps/SocialLinksStep.component";
+import PersonalInfoStep from "@/components/profile/xpert/PersonalInfoStep.component";
+import EducationMembershipStep from "@/components/profile/xpert/EducationMembershipStep.component";
+import ExperienceStep from "@/components/profile/xpert/ExperienceStep.component";
+import SocialLinksStep from "@/components/profile/xpert/SocialLinksStep.component";
 
 const STEPS = [
   {
