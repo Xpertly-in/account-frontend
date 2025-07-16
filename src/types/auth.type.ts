@@ -3,7 +3,8 @@ import { User } from "@supabase/supabase-js";
 // Auth Types - Single source of truth for authentication and user roles
 export interface AuthState {
   user: any | null; // Supabase User type
-  loading: boolean;
+  isLoading: boolean;
+  isAuthenticated: boolean;
 }
 
 /**

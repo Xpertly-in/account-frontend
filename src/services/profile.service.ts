@@ -23,6 +23,7 @@ import {
   ProfileCompletionResult,
   isCAProfile,
 } from "@/types/profile.type";
+import { uploadImage, getSignedUrl } from "@/services/storage.service";
 
 // =============================================================================
 // CORE SERVICE FUNCTIONS
@@ -33,6 +34,8 @@ import {
  */
 export async function fetchProfile(userId: string): Promise<CAProfile | CustomerProfile | null> {
   try {
+    console.log("fetchProfile: Starting fetch for user", { userId });
+
     // Fetch base profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -41,11 +44,25 @@ export async function fetchProfile(userId: string): Promise<CAProfile | Customer
       .single();
 
     if (profileError) {
+      // If profile doesn't exist, return null instead of logging error
+      if (profileError.code === "PGRST116") {
+        console.log("fetchProfile: Profile not found for user", { userId });
+        return null;
+      }
       console.error("Error fetching profile:", profileError);
       return null;
     }
 
-    if (!profile) return null;
+    if (!profile) {
+      console.log("fetchProfile: No profile data returned", { userId });
+      return null;
+    }
+
+    console.log("fetchProfile: Profile data retrieved", {
+      profileId: profile.id,
+      profilePictureUrl: profile.profile_picture_url,
+      role: profile.role,
+    });
 
     // For CA profiles, fetch related data
     if (profile.role === UserRole.ACCOUNTANT) {
@@ -544,6 +561,94 @@ export async function calculateProfileCompletion(
   }
 }
 
+/**
+ * Upload a profile picture to Supabase storage and update the profile
+ * @param file - The image file to upload
+ * @param profileId - The profile DB id (for DB update)
+ * @param authUserId - The Supabase Auth UID (for storage path and RLS)
+ * @returns The storage path of the uploaded file
+ */
+export async function uploadProfilePicture(
+  file: File,
+  profileId: string,
+  authUserId: string
+): Promise<string> {
+  console.log("uploadProfilePicture: Starting upload", {
+    fileName: file.name,
+    fileSize: file.size,
+    profileId,
+    authUserId,
+  });
+
+  // Upload to storage (profile-pictures bucket, path: {authUserId}/avatar.ext)
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  const path = `${authUserId}/avatar.${ext}`;
+
+  console.log("uploadProfilePicture: Generated storage path", { path });
+
+  // Upload directly to ensure correct path for RLS
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("profile-pictures")
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: true, // Replace existing avatar if it exists
+    });
+
+  if (uploadError) {
+    console.error("uploadProfilePicture: Storage upload failed", uploadError);
+    throw uploadError;
+  }
+
+  console.log("uploadProfilePicture: Storage upload successful", {
+    uploadData,
+    path: uploadData.path,
+  });
+
+  // Update DB
+  const { error } = await supabase
+    .from("profiles")
+    .update({ profile_picture_url: path, updated_at: new Date().toISOString() })
+    .eq("id", profileId);
+
+  if (error) {
+    console.error("uploadProfilePicture: Database update failed", error);
+    throw error;
+  }
+
+  console.log("uploadProfilePicture: Database update successful", {
+    profileId,
+    savedPath: path,
+  });
+
+  return path;
+}
+
+/**
+ * Delete the current profile picture from storage and DB
+ * @param profileId - The profile DB id (for DB update)
+ * @param authUserId - The Supabase Auth UID (for storage path and RLS)
+ */
+export async function deleteProfilePicture(profileId: string, authUserId: string): Promise<void> {
+  // Fetch current profile_picture_url
+  const { data: profile, error: fetchError } = await supabase
+    .from("profiles")
+    .select("profile_picture_url")
+    .eq("id", profileId)
+    .single();
+  if (fetchError) throw fetchError;
+  const path = profile?.profile_picture_url;
+  if (path) {
+    // Remove from storage
+    await supabase.storage.from("profile-pictures").remove([path]);
+  }
+  // Update DB
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({ profile_picture_url: null, updated_at: new Date().toISOString() })
+    .eq("id", profileId);
+  if (updateError) throw updateError;
+}
+
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
@@ -616,9 +721,17 @@ export function useProfile() {
   return useQuery({
     queryKey: ["profile", auth.user?.id],
     queryFn: () => (auth.user?.id ? fetchProfile(auth.user.id) : null),
-    enabled: !!auth.user?.id,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    enabled: !!auth.user?.id && !auth.isLoading,
+    staleTime: 0, // Always refetch to get latest data
     gcTime: 60 * 60 * 1000, // 1 hour
+    retry: (failureCount, error) => {
+      // Don't retry if profile doesn't exist
+      if (error && typeof error === "object" && "code" in error && error.code === "PGRST116") {
+        return false;
+      }
+      // Retry other errors up to 3 times
+      return failureCount < 3;
+    },
   });
 }
 
@@ -792,5 +905,31 @@ export function useUsernameUniqueness(
     enabled: !!(username && stateId && districtId && username.length >= 3),
     staleTime: 0, // Always fresh check
     retry: 1,
+  });
+}
+
+/**
+ * React Query mutation: upload profile picture
+ */
+export function useUploadProfilePicture(profileId: string, authUserId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadProfilePicture(file, profileId, authUserId),
+    onSuccess: () => {
+      queryClient.refetchQueries({ queryKey: ["profile", authUserId] });
+    },
+  });
+}
+
+/**
+ * React Query mutation: delete profile picture
+ */
+export function useDeleteProfilePicture(profileId: string, authUserId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteProfilePicture(profileId, authUserId),
+    onSuccess: () => {
+      queryClient.refetchQueries({ queryKey: ["profile", authUserId] });
+    },
   });
 }

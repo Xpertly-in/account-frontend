@@ -452,7 +452,7 @@ export const useLeads = (filter?: LeadFilter, pagination?: PaginationParams, sor
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["leads", auth.user?.id, filter, pagination, sort],
     queryFn: () => fetchLeads(auth.user?.id, filter, pagination, sort),
-    enabled: !!auth.user?.id,
+    enabled: !!auth.user?.id && !auth.isLoading,
     staleTime: 0, // Always refetch when query key changes
     refetchOnWindowFocus: false,
   });

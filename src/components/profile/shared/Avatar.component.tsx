@@ -17,6 +17,7 @@ import { Button } from "@/ui/Button.ui";
 import { Badge } from "@/ui/Badge.ui";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getProfilePictureUrl } from "@/helper/storage.helper";
 
 interface ProfileAvatarProps {
   /** Current avatar URL */
@@ -139,6 +140,14 @@ export function ProfileAvatar({
   };
 
   const hasImage = imageUrl && imageUrl !== "";
+  const displayUrl = getProfilePictureUrl(imageUrl);
+
+  console.log("Avatar component render:", {
+    imageUrl,
+    hasImage,
+    displayUrl,
+    name,
+  });
 
   return (
     <div className={cn("relative inline-block", className)}>
@@ -166,7 +175,7 @@ export function ProfileAvatar({
       >
         {/* Avatar */}
         <Avatar
-          src={imageUrl || undefined}
+          src={displayUrl || undefined}
           alt={`${name}'s profile picture`}
           name={name}
           className={cn(

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
-import { supabase } from "@/lib/supabase";
 import { UserRole } from "@/types/auth.type";
 import type { CAProfile } from "@/types/profile.type";
 import { ProfileLoader } from "@/components/profile/shared/Loader.component";
@@ -21,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useProfile, useUpdateProfile } from "@/services/profile.service";
 
 // Step Components
 import PersonalInfoStep from "@/components/profile/xpert/PersonalInfoStep.component";
@@ -62,77 +62,39 @@ const STEPS = [
 export default function ProfilePage() {
   const { auth } = useAuth();
   const router = useRouter();
-  const [profile, setProfile] = useState<CAProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<CAProfile>>({});
   const [saving, setSaving] = useState(false);
 
+  // Use the profile service hook
+  const { data: profile, isLoading: loading, error: profileError } = useProfile();
+  const updateProfileMutation = useUpdateProfile();
+
+  // Handle authentication and role checking
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!auth.user) {
-        router.push("/login");
-        return;
-      }
+    // Don't redirect if still loading authentication
+    if (auth.isLoading) {
+      return;
+    }
 
-      try {
-        // Fetch profile data
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("auth_user_id", auth.user.id)
-          .single();
+    if (!auth.user) {
+      router.push("/login");
+      return;
+    }
 
-        if (profileError) {
-          throw profileError;
-        }
+    // Check if user is CA when profile is loaded
+    if (profile && profile.role !== UserRole.ACCOUNTANT) {
+      router.replace("/user/profile");
+      return;
+    }
 
-        // Check if user is CA
-        if (profileData?.role !== UserRole.ACCOUNTANT) {
-          router.replace("/user/profile");
-          return;
-        }
+    // Initialize form data when profile is loaded
+    if (profile) {
+      setFormData(profile);
+    }
+  }, [auth.user, auth.isLoading, router, profile]);
 
-        // Fetch related data
-        const [experiencesResult, educationsResult, socialResult, verificationResult] =
-          await Promise.all([
-            supabase
-              .from("experiences")
-              .select("*")
-              .eq("profile_id", profileData.id)
-              .order("start_date", { ascending: false }),
-            supabase
-              .from("educations")
-              .select("*")
-              .eq("profile_id", profileData.id)
-              .order("start_date", { ascending: false }),
-            supabase.from("social_profile").select("*").eq("profile_id", profileData.id).single(),
-            supabase.from("ca_verifications").select("*").eq("profile_id", profileData.id).single(),
-          ]);
-
-        // Transform to CAProfile
-        const caProfile: CAProfile = {
-          ...profileData,
-          role: UserRole.ACCOUNTANT,
-          experiences: experiencesResult.data || [],
-          educations: educationsResult.data || [],
-          social_profile: socialResult.data || undefined,
-          ca_verification: verificationResult.data || undefined,
-        };
-
-        setProfile(caProfile);
-        setFormData(caProfile);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-        setError("Failed to load profile. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [auth.user, router]);
+  const error = profileError ? "Failed to load profile. Please try again." : null;
 
   const handleNext = () => {
     if (currentStep < STEPS.length) {
@@ -151,72 +113,16 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    if (!profile || !formData) return;
+    if (!profile || profile.role !== UserRole.ACCOUNTANT) return;
 
     setSaving(true);
     try {
-      // Update profile in database
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          first_name: formData.first_name,
-          middle_name: formData.middle_name,
-          last_name: formData.last_name,
-          username: formData.username,
-          phone: formData.phone,
-          gender: formData.gender,
-          city: formData.city,
-          state: formData.state,
-          state_id: formData.state_id,
-          district_id: formData.district_id,
-          country: formData.country,
-          languages: formData.languages,
-          specialization: formData.specialization,
-          bio: formData.bio,
-        })
-        .eq("id", profile.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      // Handle social profile
-      if (formData.social_profile) {
-        const { data: existingSocial } = await supabase
-          .from("social_profile")
-          .select("id")
-          .eq("profile_id", profile.id)
-          .single();
-
-        if (existingSocial) {
-          await supabase
-            .from("social_profile")
-            .update(formData.social_profile)
-            .eq("profile_id", profile.id);
-        } else {
-          await supabase.from("social_profile").insert({
-            ...formData.social_profile,
-            profile_id: profile.id,
-          });
-        }
-      }
-
-      // Handle experiences
-      if (formData.experiences) {
-        // For now, we'll handle this in the component
-        // Full CRUD operations would be implemented in the ExperienceStep component
-      }
-
-      // Handle educations
-      if (formData.educations) {
-        // For now, we'll handle this in the component
-        // Full CRUD operations would be implemented in the EducationMembershipStep component
-      }
+      await updateProfileMutation.mutateAsync({
+        profileId: profile.id,
+        data: formData,
+      });
 
       toast.success("Profile updated successfully!");
-
-      // Refresh profile data
-      setProfile({ ...profile, ...formData });
     } catch (err) {
       console.error("Error updating profile:", err);
       toast.error("Failed to update profile. Please try again.");
@@ -229,7 +135,7 @@ export default function ProfilePage() {
     setFormData(prev => ({ ...prev, ...stepData }));
   };
 
-  if (loading) {
+  if (auth.isLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8">
@@ -337,7 +243,7 @@ export default function ProfilePage() {
           {/* Step Content */}
           <Card className="p-6 sm:p-8 mb-8">
             <CurrentStepComponent
-              profile={profile}
+              profile={profile as CAProfile}
               formData={formData}
               onFormDataChange={handleFormDataChange}
             />

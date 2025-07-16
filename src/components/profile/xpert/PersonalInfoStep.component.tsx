@@ -3,16 +3,25 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/ui/Input.ui";
 import { Textarea } from "@/ui/Textarea.ui";
 import { Select } from "@/ui/Select.ui";
 import { CheckboxGroup } from "@/ui/CheckboxGroup.ui";
 import { ProfileAvatar } from "@/components/profile/shared/Avatar.component";
 import { useStates, useDistrictsByState } from "@/services/location.service";
-import { useUsernameUniqueness } from "@/services/profile.service";
+import {
+  useUsernameUniqueness,
+  useUploadProfilePicture,
+  useDeleteProfilePicture,
+  useProfile,
+} from "@/services/profile.service";
+import { useAuth } from "@/store/context/Auth.provider";
+import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { CAProfile } from "@/types/profile.type";
+import { supabase } from "@/lib/supabase";
+import { getProfilePictureUrl } from "@/helper/storage.helper";
 
 interface PersonalInfoStepProps {
   profile: CAProfile;
@@ -61,6 +70,7 @@ export default function PersonalInfoStep({
   formData,
   onFormDataChange,
 }: PersonalInfoStepProps) {
+  const { auth } = useAuth();
   const [localData, setLocalData] = useState({
     first_name: formData.first_name || "",
     middle_name: formData.middle_name || "",
@@ -76,7 +86,7 @@ export default function PersonalInfoStep({
     bio: formData.bio || "",
     languages: formData.languages || [],
     specialization: formData.specialization || [],
-    profile_picture_url: formData.profile_picture_url || "",
+    profile_picture_url: profile.profile_picture_url || formData.profile_picture_url || "",
     whatsapp_available: formData.whatsapp_available || false,
   });
 
@@ -88,10 +98,14 @@ export default function PersonalInfoStep({
     localData.state_id
   );
 
+  const uploadMutation = useUploadProfilePicture(profile.id, auth.user?.id || "");
+  const deleteMutation = useDeleteProfilePicture(profile.id, auth.user?.id || "");
+  const profileQuery = useProfile();
+
   // Debounce username for uniqueness check
   const debouncedUsername = useDebounce(localData.username, 500);
 
-  // Check username uniqueness
+  // Check username uniqueness only if we have all required data
   const {
     data: usernameCheck,
     isLoading: isCheckingUsername,
@@ -103,9 +117,67 @@ export default function PersonalInfoStep({
     profile.id
   );
 
+  // Memoize the form data change handler to prevent excessive re-renders
+  const handleFormDataChange = useCallback(
+    (data: Partial<CAProfile>) => {
+      onFormDataChange(data);
+    },
+    [onFormDataChange]
+  );
+
+  // Sync localData with profile data when profile is loaded or updated
   useEffect(() => {
-    onFormDataChange(localData);
-  }, [localData, onFormDataChange]);
+    if (profile) {
+      console.log("Syncing profile data:", {
+        profilePictureUrl: profile.profile_picture_url,
+        formDataPictureUrl: formData.profile_picture_url,
+        currentLocalUrl: localData.profile_picture_url,
+      });
+
+      setLocalData(prev => ({
+        ...prev,
+        first_name: profile.first_name || formData.first_name || "",
+        middle_name: profile.middle_name || formData.middle_name || "",
+        last_name: profile.last_name || formData.last_name || "",
+        username: profile.username || formData.username || "",
+        phone: profile.phone || formData.phone || "",
+        gender: profile.gender || formData.gender || "",
+        city: profile.city || formData.city || "",
+        state: profile.state || formData.state || "",
+        state_id: profile.state_id || formData.state_id || 0,
+        district_id: profile.district_id || formData.district_id || 0,
+        country: profile.country || formData.country || "India",
+        bio: profile.bio || formData.bio || "",
+        languages: profile.languages || formData.languages || [],
+        specialization: profile.specialization || formData.specialization || [],
+        profile_picture_url: profile.profile_picture_url || formData.profile_picture_url || "",
+        whatsapp_available: profile.whatsapp_available || formData.whatsapp_available || false,
+      }));
+    }
+  }, [profile, formData]);
+
+  // Additional effect to sync profile picture URL specifically when profile changes
+  useEffect(() => {
+    if (profile && profile.profile_picture_url !== localData.profile_picture_url) {
+      console.log("Profile picture URL changed, updating local state:", {
+        from: localData.profile_picture_url,
+        to: profile.profile_picture_url,
+      });
+      setLocalData(prev => ({
+        ...prev,
+        profile_picture_url: profile.profile_picture_url || "",
+      }));
+    }
+  }, [profile?.profile_picture_url]);
+
+  useEffect(() => {
+    // Debounce form data updates to prevent excessive re-renders
+    const timeoutId = setTimeout(() => {
+      handleFormDataChange(localData);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [localData, handleFormDataChange]);
 
   const handleInputChange = (field: string, value: string) => {
     setLocalData(prev => ({ ...prev, [field]: value }));
@@ -138,44 +210,81 @@ export default function PersonalInfoStep({
   };
 
   const handleProfilePictureUpload = async (file: File) => {
+    if (!auth.user?.id) {
+      toast.error("You must be logged in to upload a profile picture");
+      return;
+    }
+
+    // Check if user is authenticated with Supabase
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      toast.error("Authentication error. Please try logging in again.");
+      return;
+    }
+
     setIsUploadingPicture(true);
-
     try {
-      // TODO: Implement actual upload to Supabase storage
-      // For now, create a local URL for preview
-      const imageUrl = URL.createObjectURL(file);
+      // Optimistic preview
+      const previewUrl = URL.createObjectURL(file);
+      setLocalData(prev => ({ ...prev, profile_picture_url: previewUrl }));
 
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Upload to Supabase
+      const storagePath = await uploadMutation.mutateAsync(file);
 
-      setLocalData(prev => ({ ...prev, profile_picture_url: imageUrl }));
+      console.log("Profile picture uploaded successfully:", {
+        storagePath,
+        willRefetchProfile: true,
+      });
 
-      // In a real implementation, this would upload to Supabase storage
-      // and update the profile_picture_url with the permanent URL
-      console.log("Profile picture upload:", file.name, file.size);
+      toast.success("Profile picture updated!");
+
+      // Clean up the preview URL
+      URL.revokeObjectURL(previewUrl);
+
+      // Don't update local state with storage path - let the profile refetch handle it
+      // The refetchQueries in the mutation will trigger profile data sync
     } catch (error) {
-      console.error("Upload failed:", error);
-      throw error; // Let ProfileAvatar handle the error
+      console.error("Upload error details:", {
+        error,
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      // Check if it's a specific Supabase error
+      if (error && typeof error === "object" && "message" in error) {
+        console.error("Supabase error message:", error.message);
+      }
+
+      toast.error(
+        `Failed to upload profile picture: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+      // Rollback preview
+      setLocalData(prev => ({ ...prev, profile_picture_url: formData.profile_picture_url || "" }));
     } finally {
       setIsUploadingPicture(false);
     }
   };
 
   const handleProfilePictureDelete = async () => {
+    if (!auth.user?.id) {
+      toast.error("You must be logged in to delete your profile picture");
+      return;
+    }
+
     setIsDeletingPicture(true);
-
     try {
-      // Simulate delete delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Clear the profile picture URL
+      await deleteMutation.mutateAsync();
       setLocalData(prev => ({ ...prev, profile_picture_url: "" }));
-
-      // TODO: In a real implementation, this would delete from Supabase storage
-      console.log("Profile picture deleted");
+      toast.success("Profile picture removed");
     } catch (error) {
-      console.error("Delete failed:", error);
-      throw error; // Let ProfileAvatar handle the error
+      console.error("Delete error:", error);
+      toast.error("Failed to delete profile picture");
     } finally {
       setIsDeletingPicture(false);
     }
@@ -198,6 +307,58 @@ export default function PersonalInfoStep({
 
   return (
     <div className="space-y-6">
+      {/* Debug Panel - Remove this after fixing */}
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+          Debug Info:
+        </h3>
+        <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+          <div>Profile Picture URL: {profile.profile_picture_url || "null"}</div>
+          <div>Local Picture URL: {localData.profile_picture_url || "null"}</div>
+          <div>FormData Picture URL: {formData.profile_picture_url || "null"}</div>
+          <div>Converted URL: {getProfilePictureUrl(localData.profile_picture_url) || "null"}</div>
+          <div>Is Uploading: {isUploadingPicture.toString()}</div>
+        </div>
+        <button
+          onClick={() => profileQuery.refetch()}
+          className="mt-2 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+        >
+          Refetch Profile
+        </button>
+        <button
+          onClick={() => {
+            const testPath = `${auth.user?.id}/avatar.jpg`;
+            const testUrl = getProfilePictureUrl(testPath);
+            console.log("Test URL generation:", { testPath, testUrl });
+            alert(`Test URL: ${testUrl}`);
+          }}
+          className="mt-2 ml-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+        >
+          Test URL
+        </button>
+        <button
+          onClick={() => {
+            const currentUrl = getProfilePictureUrl(localData.profile_picture_url);
+            console.log("Testing current image URL:", currentUrl);
+
+            // Test if image loads
+            const img = new Image();
+            img.onload = () => {
+              console.log("✅ Image loads successfully!");
+              alert("✅ Image loads successfully!");
+            };
+            img.onerror = e => {
+              console.log("❌ Image failed to load:", e);
+              alert("❌ Image failed to load - check console for details");
+            };
+            img.src = currentUrl;
+          }}
+          className="mt-2 ml-2 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+        >
+          Test Image Load
+        </button>
+      </div>
+
       {/* Header with Profile Picture */}
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">

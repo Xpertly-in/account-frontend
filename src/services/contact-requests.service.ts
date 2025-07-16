@@ -440,7 +440,7 @@ export const useContactRequests = (
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["contact-requests", auth.user?.id, filter, pagination, sort],
     queryFn: () => fetchContactRequests(auth.user?.id, filter, pagination, sort),
-    enabled: !!auth.user?.id,
+    enabled: !!auth.user?.id && !auth.isLoading,
     staleTime: 0, // Always refetch when query key changes
     refetchOnWindowFocus: false,
   });

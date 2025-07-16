@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
 import { supabase } from "@/lib/supabase";
-import { UserRole } from "@/types/onboarding.type";
+import { UserRole } from "@/types/auth.type";
 
 export function useProtectedRoute() {
   const { auth } = useAuth();
@@ -15,7 +15,12 @@ export function useProtectedRoute() {
       if (!pathname) return;
       if (["/login", "/signup", "/role-select", "/auth/callback"].includes(pathname)) return;
 
-      // If not authenticated, store current path and redirect to login
+      // Wait for auth loading to complete before checking authentication
+      if (auth.isLoading) {
+        return;
+      }
+
+      // If not authenticated after loading is complete, store current path and redirect to login
       if (!auth.user) {
         // Store the current path for redirect after login
         localStorage.setItem("postLoginRedirect", pathname);
@@ -28,7 +33,7 @@ export function useProtectedRoute() {
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("role, onboarding_completed")
-          .eq("user_id", auth.user.id)
+          .eq("auth_user_id", auth.user.id)
           .single();
 
         if (error) {
@@ -60,5 +65,5 @@ export function useProtectedRoute() {
     };
 
     checkAuth();
-  }, [auth.user, pathname, router]);
+  }, [auth.user, auth.isLoading, pathname, router]);
 } 

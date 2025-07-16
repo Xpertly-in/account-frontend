@@ -4292,25 +4292,30 @@ import { ContactRequestCard } from "@/components/contact-requests";
 ### Task Breakdown
 
 1. **Directory Renaming & Import Cleanup**
-   - [ ] Move all files from `src/components/profile/steps/` → `src/components/profile/xpert/`
-   - [ ] Update every import path referencing the old `steps` folder
-   - [ ] Delete the legacy `steps` folder after verification
+   - [x] Move all files from `src/components/profile/steps/` → `src/components/profile/xpert/`
+   - [x] Update every import path referencing the old `steps` folder
+   - [x] Delete the legacy `steps` folder after verification
+   - [x] Update all code references from `images` bucket to `profile-pictures` (storage, service, dashboard)
+   - [x] Create `profile-pictures` bucket in Supabase and apply RLS policy (see migration: profile-picture-storage-2025-07-13.sql)
 
 2. **Service Layer Enhancements** (`src/services/profile.service.ts`)
-   - [ ] Add `uploadProfilePicture(file, profileId)` → returns storage path
-   - [ ] Add `deleteProfilePicture(profileId)`
-   - [ ] Wire both to `storage.service.uploadImage` / `.remove`
-   - [ ] Update `profiles.profile_picture_url` column accordingly
+   - [x] Add `uploadProfilePicture(file, profileId, authUserId)` → returns storage path
+   - [x] Add `deleteProfilePicture(profileId, authUserId)`
+   - [x] Wire both to `storage.service.uploadImage` / `.remove`
+   - [x] Update `profiles.profile_picture_url` column accordingly
+   - [x] Fixed RLS policy compliance by using auth.user.id as folder name
    - [ ] Return new signed URL via `getSignedUrl`
 
 3. **React-Query Mutation Hooks**
-   - [ ] `useUploadProfilePicture(profileId)` (optimistic UI + cache invalidation)
-   - [ ] `useDeleteProfilePicture(profileId)`
+   - [x] `useUploadProfilePicture(profileId, authUserId)` (optimistic UI + cache invalidation)
+   - [x] `useDeleteProfilePicture(profileId, authUserId)`
+   - [x] Fixed multiple API call issue with debounced form updates
 
 4. **UI Integration** (`PersonalInfoStep.component.tsx`)
-   - [ ] Replace stub `handleProfilePictureUpload` with `useUploadProfilePicture`
-   - [ ] Replace stub `handleProfilePictureDelete` with `useDeleteProfilePicture`
-   - [ ] Ensure optimistic preview & error toasts remain functional
+   - [x] Replace stub `handleProfilePictureUpload` with `useUploadProfilePicture`
+   - [x] Replace stub `handleProfilePictureDelete` with `useDeleteProfilePicture`
+   - [x] Ensure optimistic preview & error toasts remain functional
+   - [x] PersonalInfoStep now uses real Supabase storage flow for avatar upload/delete
 
 5. **Signed URL Handling**
    - [ ] In `fetchProfile`, convert stored path to signed URL before setting `profile_picture_url`
@@ -4324,8 +4329,73 @@ import { ContactRequestCard } from "@/components/contact-requests";
    - [ ] Component tests for avatar upload/delete flow (Jest + RTL)
 
 8. **Documentation**
-   - [ ] Append details of storage flow & new tasks in this `progress.md` (✓ — _you are here_)
+   - [x] Append details of storage flow & new tasks in this `progress.md` (✓ — _you are here_)
    - [ ] Update PRD section 11 (Profile redesign) with avatar storage design & signed URL strategy
+
+---
+
+## 🔧 Profile Picture Cache Fix & Authentication Improvements (January 15, 2025)
+
+**CRITICAL BUG FIXES** ✅ **COMPLETED**
+
+### Issues Resolved:
+
+#### 1. Profile Picture Upload Cache Invalidation Fix ✅
+
+**Problem**: Profile picture uploads were successful but Avatar component still showed initials instead of uploaded image.
+
+**Root Cause**: Cache invalidation was using wrong query key (`profileId` instead of `authUserId`) causing profile data to not refresh after upload.
+
+**Solution**:
+- ✅ **Fixed cache invalidation in profile service** (`src/services/profile.service.ts`)
+  - Updated `useUploadProfilePicture` and `useDeleteProfilePicture` hooks
+  - Changed query key from `["profile", profileId]` to `["profile", authUserId]`
+  - Now matches the query key used by `useProfile` hook
+
+- ✅ **Enhanced profile data synchronization** (`src/components/profile/xpert/PersonalInfoStep.component.tsx`)
+  - Added comprehensive profile data sync when profile is loaded or updated
+  - Ensures local component state reflects server state changes
+  - Properly handles profile picture URL updates from server
+
+#### 2. Authentication Redirect Issue on Profile Page Refresh ✅
+
+**Problem**: Xpert profile page was redirecting to login on page refresh even for authenticated users.
+
+**Root Cause**: Page was checking `!auth.user` immediately without waiting for authentication loading state to complete.
+
+**Solution**:
+- ✅ **Fixed authentication state handling** (`src/app/xpert/profile/page.tsx`)
+  - Added `auth.isLoading` check before redirecting to login
+  - Updated loading condition to show loader during both auth and profile loading
+  - Now properly waits for authentication state to be determined
+
+#### 3. Profile Service Integration Improvements ✅
+
+**Enhanced Data Flow**:
+- ✅ **Migrated to useProfile hook** in parent component instead of manual profile fetching
+- ✅ **Consistent cache management** across all profile-related queries
+- ✅ **Proper error handling** for profile loading states
+- ✅ **Optimized loading states** for better user experience
+
+### Technical Implementation:
+
+**Files Modified**:
+- `src/services/profile.service.ts`: Fixed cache invalidation query keys
+- `src/components/profile/xpert/PersonalInfoStep.component.tsx`: Added comprehensive profile data sync
+- `src/app/xpert/profile/page.tsx`: Fixed auth loading state handling and migrated to useProfile hook
+- `src/helper/storage.helper.ts`: Storage URL conversion (already working correctly)
+
+**Expected Results**:
+- ✅ Profile pictures display correctly after upload
+- ✅ No redirect to login on page refresh for authenticated users
+- ✅ Proper cache invalidation ensures UI updates reflect server state
+- ✅ Consistent profile data flow across all components
+
+**Testing Completed**:
+- ✅ Upload profile picture - displays immediately
+- ✅ Refresh profile page - no redirect to login for authenticated users
+- ✅ Profile picture persists across page refreshes
+- ✅ Cache invalidation works correctly
 
 ---
 

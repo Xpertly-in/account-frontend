@@ -10,7 +10,7 @@ export async function uploadImage(file: File, prefix = ""): Promise<string> {
   const filename = `${ts}_${Math.random().toString(36).slice(2)}.${ext}`;
   const path = prefix ? `${prefix}/${filename}` : filename;
   const { error: upErr } = await supabase.storage
-    .from("images")
+    .from("profile-pictures")
     .upload(path, file, { cacheControl: "3600" });
   if (upErr) throw upErr;
   // ← Return the storage path only, not a public URL
@@ -31,7 +31,9 @@ export async function getSignedUrl(path: string, expiresIn = 3600): Promise<stri
     return path;
   }
 
-  const { data, error } = await supabase.storage.from("images").createSignedUrl(path, expiresIn);
+  const { data, error } = await supabase.storage
+    .from("profile-pictures")
+    .createSignedUrl(path, expiresIn);
   if (error) throw error;
   return data.signedUrl;
 }
