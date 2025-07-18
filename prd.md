@@ -1,5 +1,8 @@
 # Xpertly – CA Listing Portal Product Requirements Document (PRD)
 
+## Update (July 2025)
+- The Leads and Feed (Forum) features have been removed from the product scope. All related code, components, and requirements are deprecated and no longer part of the platform.
+
 ## 1. Overview
 
 **Project Name:** Xpertly.in  

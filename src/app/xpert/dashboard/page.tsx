@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
+import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { Toaster } from "sonner";
 import { User, EnvelopeSimple, ChatCenteredText } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
@@ -14,6 +15,9 @@ export default function CADashboardPage() {
   const [userName, setUserName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
 
+  // Use the protected route hook to handle authentication and redirects
+  useProtectedRoute();
+
   useEffect(() => {
     const checkRole = async () => {
       if (!auth.user) return;
@@ -22,7 +26,7 @@ export default function CADashboardPage() {
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("role")
-          .eq("user_id", auth.user.id)
+          .eq("auth_user_id", auth.user.id)
           .single();
 
         if (error) {
@@ -32,7 +36,7 @@ export default function CADashboardPage() {
 
         // Redirect based on role
         if (profile?.role === UserRole.CUSTOMER) {
-          router.push("/user/profile");
+          router.push("/user/dashboard");
         }
       } catch (error) {
         console.error("Error checking role:", error);
@@ -70,20 +74,7 @@ export default function CADashboardPage() {
             Manage your profile information and preferences.
           </p>
         </div>
-
-        <div
-          className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"
-          onClick={() => router.push("/xpert/dashboard/leads")}
-        >
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 dark:from-blue-500/30 dark:to-blue-600/40">
-            <EnvelopeSimple className="h-6 w-6 text-blue-500 dark:text-blue-400" />
-          </div>
-          <h3 className="text-xl font-semibold">Leads</h3>
-          <p className="mt-2 text-muted-foreground">View and manage your potential client leads.</p>
-          <div className="mt-3 inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary dark:bg-primary/20">
-            New
-          </div>
-        </div>
+        {/* Removed Leads card/section */}
 
         <div
           className="cursor-pointer rounded-xl border border-border/50 bg-card p-6 shadow-md transition-all hover:shadow-lg dark:border-blue-800/30 dark:bg-gray-900/95"

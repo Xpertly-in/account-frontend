@@ -86,17 +86,6 @@ export function Header() {
               >
                 About
               </Link>
-              <Link
-                href="/feed"
-                className={cn(
-                  "font-medium transition-colors hover:text-primary dark:hover:text-primary",
-                  pathname?.startsWith("/feed")
-                    ? "text-primary dark:text-primary"
-                    : "text-foreground/90 hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
-                )}
-              >
-                Feed
-              </Link>
             </nav>
           </div>
 
@@ -165,13 +154,6 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               About
-            </Link>
-            <Link
-              href="/feed"
-              className="font-medium text-foreground/90 transition-colors hover:text-foreground dark:text-foreground/80 dark:hover:text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Feed
             </Link>
 
             <div className="pt-2">

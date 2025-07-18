@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
+import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { Toaster } from "sonner";
 import { User } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +20,9 @@ export default function UserDashboardPage() {
   const [address, setAddress] = useState<any>(null);
   const [services, setServices] = useState<string[]>([]);
 
+  // Use the protected route hook to handle authentication and redirects
+  useProtectedRoute();
+
   useEffect(() => {
     const checkRole = async () => {
       if (!auth.user) return;
@@ -27,7 +31,7 @@ export default function UserDashboardPage() {
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("role")
-          .eq("user_id", auth.user.id)
+          .eq("auth_user_id", auth.user.id)
           .single();
 
         if (error) {
@@ -65,31 +69,30 @@ export default function UserDashboardPage() {
           .from("profiles")
           .select(
             `
-            user_id,
-            name,
+            auth_user_id,
+            first_name,
+            last_name,
             gender,
-            profile_picture,
+            profile_picture_url,
             phone,
-            about,
-            type_of_user,
-            type_of_communication,
+            bio,
             created_at,
             updated_at,
             onboarding_completed
           `
           )
-          .eq("user_id", auth.user.id)
+          .eq("auth_user_id", auth.user.id)
           .single();
 
         if (profileError) throw profileError;
         setProfile(profileData);
         console.log("Profile Data:", profileData);
 
-        // Load address data
+        // Load address data - if it exists for customers
         const { data: addressData, error: addressError } = await supabase
           .from("address")
           .select("*")
-          .eq("ca_id", auth.user.id)
+          .eq("profile_id", profileData.id)
           .single();
 
         if (!addressError && addressData) {
@@ -97,11 +100,11 @@ export default function UserDashboardPage() {
           console.log("Address Data:", addressData);
         }
 
-        // Load services data
+        // Load services data - if it exists for customers
         const { data: servicesData, error: servicesError } = await supabase
           .from("services")
           .select("service_name")
-          .eq("ca_id", auth.user.id)
+          .eq("profile_id", profileData.id)
           .eq("is_active", true);
 
         if (!servicesError && servicesData) {

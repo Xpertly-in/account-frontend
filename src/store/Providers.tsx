@@ -15,11 +15,6 @@ const GoogleAnalytics = dynamic(
   { ssr: false }
 );
 
-const AnalyticsOptOut = dynamic(
-  () => import("@/components/features/analytics/AnalyticsOptOut.component"),
-  { ssr: false }
-);
-
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   // Ensure consistent hydration across environments
@@ -48,8 +43,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
               {mounted && (
                 <>
                   <GoogleAnalytics />
-                  {/* hide privacy toggle on forum pages */}
-                  {pathname && !pathname.startsWith("/feed") && <AnalyticsOptOut />}
                 </>
               )}
             </GoogleAuthProvider>

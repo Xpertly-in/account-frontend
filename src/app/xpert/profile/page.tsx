@@ -77,16 +77,16 @@ export default function ProfilePage() {
       return;
     }
 
-    if (!auth.user) {
-      router.push("/login");
-      return;
-    }
+      if (!auth.user) {
+        router.push("/login");
+        return;
+      }
 
     // Check if user is CA when profile is loaded
     if (profile && profile.role !== UserRole.ACCOUNTANT) {
-      router.replace("/user/profile");
-      return;
-    }
+          router.replace("/user/profile");
+          return;
+        }
 
     // Initialize form data when profile is loaded
     if (profile) {
@@ -120,7 +120,7 @@ export default function ProfilePage() {
       await updateProfileMutation.mutateAsync({
         profileId: profile.id,
         data: formData,
-      });
+          });
 
       toast.success("Profile updated successfully!");
     } catch (err) {
