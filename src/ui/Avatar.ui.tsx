@@ -13,6 +13,8 @@ interface AvatarProps extends React.ComponentProps<typeof AvatarPrimitive.Root> 
 }
 
 function Avatar({ className, src, alt, name, size = "md", children, ...props }: AvatarProps) {
+  console.log("Avatar render:", { src, alt, name, size });
+
   // Helper function to get customer initials for avatar fallback
   const getInitials = (fullName: string): string => {
     if (!fullName || fullName.trim() === "") return "?";
@@ -223,6 +225,8 @@ function Avatar({ className, src, alt, name, size = "md", children, ...props }: 
 }
 
 function AvatarImage({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  console.log("AvatarImage render:", { src: props.src, alt: props.alt });
+
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
@@ -231,6 +235,8 @@ function AvatarImage({ className, ...props }: React.ComponentProps<typeof Avatar
         "transition-all duration-300 ease-out",
         className
       )}
+      onLoad={() => console.log("Avatar image loaded successfully:", props.src)}
+      onError={e => console.log("Avatar image failed to load:", props.src, e)}
       {...props}
     />
   );

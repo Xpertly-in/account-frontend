@@ -5,7 +5,7 @@ import LoginForm from "@/components/features/auth/LoginForm.component";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import { useAuth } from "@/store/context/Auth.provider";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 
 // Separate component to handle search params safely
 function Login() {

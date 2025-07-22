@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/ca/dashboard")}
+            onClick={() => router.push("/xpert/dashboard")}
             className="p-2 text-white hover:bg-white/10 lg:hidden"
           >
             <ArrowLeft className="h-4 w-4" />

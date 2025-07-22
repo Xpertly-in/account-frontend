@@ -2,17 +2,15 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
+import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import ProfileCard from "@/components/features/dashboard/ProfileCard.component";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { auth } = useAuth();
 
-  useEffect(() => {
-    if (!auth.user) {
-      router.push("/login");
-    }
-  }, [auth.user, router]);
+  // Use the protected route hook to handle authentication and redirects
+  useProtectedRoute();
 
   if (!auth.user) {
     return null;

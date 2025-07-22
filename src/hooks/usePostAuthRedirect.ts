@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/store/context/Auth.provider";
-import { supabase } from "@/helper/supabase.helper";
-import { UserRole } from "@/types/onboarding.type";
+import { supabase } from "@/lib/supabase";
+import { UserRole } from "@/types/auth.type";
 
 export function usePostAuthRedirect() {
   const { auth } = useAuth();

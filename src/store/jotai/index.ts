@@ -10,3 +10,21 @@ export { atom, useAtom, useAtomValue, useSetAtom, Provider, atomWithStorage };
 export * from "./onboarding.store";
 export * from "./analytics.store";
 export * from "./dashboard.store";
+
+// Profile atoms - Minimal UI state management
+export {
+  editingSectionAtom,
+  isEditingProfileAtom,
+  editingExperienceIdAtom,
+  editingEducationIdAtom,
+  isEditingSocialProfileAtom,
+  showCompletionProgressAtom,
+  isUploadingPhotoAtom,
+  isAnyEditingAtom,
+  editingContextAtom,
+  startEditingSectionAtom,
+  startEditingExperienceAtom,
+  startEditingEducationAtom,
+  cancelAllEditingAtom,
+  toggleCompletionProgressAtom,
+} from "./profile.store";

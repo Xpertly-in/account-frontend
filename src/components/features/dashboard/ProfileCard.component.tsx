@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/ui/Card.ui";
 import { useAuth } from "@/store/context/Auth.provider";
-import { supabase } from "@/helper/supabase.helper";
+import { supabase } from "@/lib/supabase";
 import { CustomerProfile } from "@/types/customer-profile.type";
 import { Camera } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -98,17 +98,17 @@ export default function ProfileCard() {
       const filePath = `profile-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from("profile-pictures")
         .upload(filePath, file, {
           upsert: true,
-          cacheControl: '3600'
+          cacheControl: "3600",
         });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("profile-pictures").getPublicUrl(filePath);
 
       const { error: updateError } = await supabase
         .from('profiles')

@@ -1,58 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SearchBar } from "@/components/features/search";
-import { Container } from "@/components/layout/Container.component";
-import { Feed } from "@/components/features/feed/Feed.component";
-import { supabase } from "@/lib/supabase";
 import Head from "next/head";
-import Image from "next/image";
-import { Button } from "@/ui/Button.ui";
-import { Badge } from "@/ui/Badge.ui";
-import { Card, CardContent } from "@/ui/Card.ui";
+
 import HeroSection from "@/components/features/landing/HeroSection.component";
 import CategorySection from "@/components/features/landing/CategorySection.component";
 import TestimonialsSection from "@/components/features/landing/TestimonialsSection.component";
 import FinanceNewsSection from "@/components/features/landing/FinanceNewsSection.component";
 import FAQSection from "@/components/features/landing/FAQSection.component";
 
-const CITIES = [
-  { name: "Mumbai", href: "/search?city=Mumbai", image: "/mumbai-icon.svg" },
-  { name: "Delhi", href: "/search?city=Delhi", image: "/delhi-icon.svg" },
-  { name: "Chennai", href: "/search?city=Chennai", image: "/chennai-icon.svg" },
-  { name: "Bengaluru", href: "/search?city=Bengaluru", image: "/bengaluru-icon.svg" },
-];
 
-const SERVICES = [
-  { name: "GST Filing", icon: "/gst.svg", href: "/search?service=GST" },
-  { name: "ITR", icon: "/itr.svg", href: "/search?service=ITR" },
-  { name: "Audit", icon: "/audit.svg", href: "/search?service=Audit" },
-  { name: "Business Advisory", icon: "/advisory.svg", href: "/search?service=Advisory" },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Priya S.",
-    location: "Mumbai",
-    quote: "Xpertly connected me with a CA in minutes. My GST filing was smooth and stress-free!",
-    image: "/profile1.jpg",
-    category: { name: "GST Filing", icon: "/globe.svg" },
-  },
-  {
-    name: "Rahul M.",
-    location: "Bengaluru",
-    quote: "I got expert advice for my startup's finances. Highly recommend for any business owner!",
-    image: "/profile2.jpg",
-    category: { name: "Business Advisory", icon: "/next.svg" },
-  },
-  {
-    name: "Anita D.",
-    location: "Delhi",
-    quote: "The online consultation was safe, easy, and saved me a trip. My CA was very knowledgeable.",
-    image: "/profile3.jpg",
-    category: { name: "Audit", icon: "/window.svg" },
-  },
-];
 
 const FAQS = [
   {
