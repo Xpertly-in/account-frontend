@@ -1,20 +1,30 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/ui/Card.ui";
-import { useAuth } from "@/store/context/Auth.provider";
-import { supabase } from "@/lib/supabase";
-import { CustomerProfile } from "@/types/customer-profile.type";
+import { Progress } from "@/ui/Progress.ui";
 import { Camera } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/store/context/Auth.provider";
+import type { CustomerProfile } from "@/types/customer-profile.type";
+import { useProfilePictureUrl } from "@/hooks/useProfilePictureUrl";
+import { clearUrlCache } from "@/helper/storage.helper";
 
-function getInitials(name: string) {
-  if (!name) return "";
-  return name
+// Helper function to get initials from a name
+const getInitials = (name: string): string => {
+  if (!name || name.trim() === "") return "U";
+
+  const words = name
+    .trim()
     .split(" ")
-    .map(n => n[0])
-    .join("")
-    .toUpperCase();
-}
+    .filter(word => word.length > 0);
+  if (words.length === 0) return "U";
+  if (words.length === 1) return words[0].charAt(0).toUpperCase();
+
+  const firstInitial = words[0].charAt(0).toUpperCase();
+  const lastInitial = words[words.length - 1].charAt(0).toUpperCase();
+  return `${firstInitial}${lastInitial}`;
+};
 
 export default function ProfileCard() {
   const { auth } = useAuth();
@@ -22,29 +32,33 @@ export default function ProfileCard() {
   const [loading, setLoading] = useState(true);
   const [imageUploading, setImageUploading] = useState(false);
 
+  // Use the new hook for profile picture URL
+  const { url: profilePictureUrl } = useProfilePictureUrl(profile?.profile_picture_url);
+
   useEffect(() => {
     const loadProfile = async () => {
       if (!auth.user?.id) return;
-      
+
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select(`
+          .select(
+            `
             id,
-            user_id,
-            name,
+            auth_user_id,
+            first_name,
+            last_name,
             gender,
-            profile_picture,
+            profile_picture_url,
             phone,
-            about,
-            type_of_user,
-            type_of_communication,
-            verification_status,
+            bio,
+            role,
             created_at,
             updated_at,
             onboarding_completed
-          `)
-          .eq("user_id", auth.user.id)
+          `
+          )
+          .eq("auth_user_id", auth.user.id)
           .single();
 
         if (error) throw error;
@@ -64,13 +78,13 @@ export default function ProfileCard() {
     if (!profile) return 0;
 
     const fields = [
-      { key: 'name', weight: 2 },
-      { key: 'gender', weight: 1 },
-      { key: 'phone', weight: 1 },
-      { key: 'type_of_user', weight: 1 },
-      { key: 'about', weight: 1 },
-      { key: 'type_of_communication', weight: 1 },
-      { key: 'profile_picture', weight: 1 }
+      { key: "first_name", weight: 2 },
+      { key: "last_name", weight: 2 },
+      { key: "gender", weight: 1 },
+      { key: "phone", weight: 1 },
+      { key: "role", weight: 1 },
+      { key: "bio", weight: 1 },
+      { key: "profile_picture_url", weight: 1 },
     ];
 
     let totalWeight = 0;
@@ -79,49 +93,50 @@ export default function ProfileCard() {
     fields.forEach(field => {
       totalWeight += field.weight;
       const value = profile[field.key as keyof CustomerProfile];
-      
-      if (value !== undefined && value !== null && value !== '') {
+
+      if (value !== undefined && value !== null && value !== "") {
         filledWeight += field.weight;
       }
     });
-    
+
     return Math.round((filledWeight / totalWeight) * 100);
   };
 
   const handleProfileImageChange = async (file: File | null) => {
-    if (!file || !auth.user?.id) return;
+    if (!file || !auth.user?.id || !profile?.id) return;
     setImageUploading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${auth.user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `profile-images/${fileName}`;
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${auth.user.id}/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("profile-pictures")
-        .upload(filePath, file, {
+        .upload(fileName, file, {
           upsert: true,
           cacheControl: "3600",
         });
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("profile-pictures").getPublicUrl(filePath);
+      // Clear the cache for this path
+      clearUrlCache("profile-pictures", fileName);
 
       const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ profile_picture: publicUrl })
-        .eq('user_id', auth.user.id);
+        .from("profiles")
+        .update({
+          profile_picture_url: fileName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", profile.id);
 
       if (updateError) throw updateError;
 
-      setProfile(prev => prev ? { ...prev, profile_picture: publicUrl } : null);
-      toast.success('Profile image updated successfully');
+      setProfile(prev => (prev ? { ...prev, profile_picture_url: fileName } : null));
+      toast.success("Profile image updated successfully");
     } catch (error) {
-      console.error('Error uploading profile image:', error);
-      toast.error('Failed to upload profile image');
+      console.error("Error uploading profile image:", error);
+      toast.error("Failed to upload profile image");
     } finally {
       setImageUploading(false);
     }
@@ -140,7 +155,10 @@ export default function ProfileCard() {
   }
 
   const completionPercentage = calculateCompletionPercentage(profile);
-  const initials = getInitials(profile?.name || "User");
+  const initials = getInitials(
+    `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "User"
+  );
+  const displayName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "User";
 
   return (
     <Card className="w-1/3 p-6">
@@ -148,12 +166,8 @@ export default function ProfileCard() {
         {/* Profile Image */}
         <div className="relative">
           <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center text-3xl font-bold text-primary border-2 border-primary/30">
-            {profile?.profile_picture ? (
-              <img 
-                src={profile.profile_picture} 
-                alt="Profile" 
-                className="object-cover w-full h-full" 
-              />
+            {profilePictureUrl ? (
+              <img src={profilePictureUrl} alt="Profile" className="object-cover w-full h-full" />
             ) : (
               <span>{initials}</span>
             )}
@@ -161,7 +175,7 @@ export default function ProfileCard() {
           <button
             type="button"
             className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 shadow-lg border-2 border-white hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => document.getElementById('profile-image-input')?.click()}
+            onClick={() => document.getElementById("profile-image-input")?.click()}
             aria-label="Upload profile photo"
             disabled={imageUploading}
           >
@@ -176,40 +190,23 @@ export default function ProfileCard() {
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => handleProfileImageChange(e.target.files?.[0] || null)}
+            onChange={e => handleProfileImageChange(e.target.files?.[0] || null)}
           />
         </div>
 
         {/* Name */}
         <div className="text-center">
-          <h3 className="text-xl font-semibold">{profile?.name || "User"}</h3>
-          <p className="text-sm text-muted-foreground">{profile?.type_of_user || "User"}</p>
+          <h3 className="text-xl font-semibold">{displayName}</h3>
+          <p className="text-sm text-muted-foreground">{profile?.role || "User"}</p>
         </div>
 
         {/* Progress Bar */}
         <div className="w-full">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium">Profile Completion</span>
-            <span className="text-sm font-medium">{completionPercentage}%</span>
+            <span className="text-sm text-muted-foreground">{completionPercentage}%</span>
           </div>
-          <div className="w-full bg-muted rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${completionPercentage}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-4 w-full mt-4">
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Phone</p>
-            <p className="font-medium">{profile?.phone || "Not set"}</p>
-          </div>
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Gender</p>
-            <p className="font-medium">{profile?.gender || "Not set"}</p>
-          </div>
+          <Progress value={completionPercentage} className="w-full" />
         </div>
       </div>
     </Card>

@@ -24,6 +24,8 @@ import {
   isCAProfile,
 } from "@/types/profile.type";
 import { uploadImage, getSignedUrl } from "@/services/storage.service";
+import { clearUrlCache } from "@/helper/storage.helper";
+import { useLanguageMap } from "@/services/language.service";
 
 // =============================================================================
 // CORE SERVICE FUNCTIONS
@@ -34,8 +36,6 @@ import { uploadImage, getSignedUrl } from "@/services/storage.service";
  */
 export async function fetchProfile(userId: string): Promise<CAProfile | CustomerProfile | null> {
   try {
-    console.log("fetchProfile: Starting fetch for user", { userId });
-
     // Fetch base profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -46,7 +46,6 @@ export async function fetchProfile(userId: string): Promise<CAProfile | Customer
     if (profileError) {
       // If profile doesn't exist, return null instead of logging error
       if (profileError.code === "PGRST116") {
-        console.log("fetchProfile: Profile not found for user", { userId });
         return null;
       }
       console.error("Error fetching profile:", profileError);
@@ -54,15 +53,8 @@ export async function fetchProfile(userId: string): Promise<CAProfile | Customer
     }
 
     if (!profile) {
-      console.log("fetchProfile: No profile data returned", { userId });
       return null;
     }
-
-    console.log("fetchProfile: Profile data retrieved", {
-      profileId: profile.id,
-      profilePictureUrl: profile.profile_picture_url,
-      role: profile.role,
-    });
 
     // For CA profiles, fetch related data
     if (profile.role === UserRole.ACCOUNTANT) {
@@ -573,18 +565,12 @@ export async function uploadProfilePicture(
   profileId: string,
   authUserId: string
 ): Promise<string> {
-  console.log("uploadProfilePicture: Starting upload", {
-    fileName: file.name,
-    fileSize: file.size,
-    profileId,
-    authUserId,
-  });
-
   // Upload to storage (profile-pictures bucket, path: {authUserId}/avatar.ext)
   const ext = file.name.split(".").pop()?.toLowerCase();
   const path = `${authUserId}/avatar.${ext}`;
 
-  console.log("uploadProfilePicture: Generated storage path", { path });
+  // Clear existing cache for this user's profile pictures
+  clearUrlCache("profile-pictures", path);
 
   // Upload directly to ensure correct path for RLS
   const { data: uploadData, error: uploadError } = await supabase.storage
@@ -599,11 +585,6 @@ export async function uploadProfilePicture(
     throw uploadError;
   }
 
-  console.log("uploadProfilePicture: Storage upload successful", {
-    uploadData,
-    path: uploadData.path,
-  });
-
   // Update DB
   const { error } = await supabase
     .from("profiles")
@@ -614,11 +595,6 @@ export async function uploadProfilePicture(
     console.error("uploadProfilePicture: Database update failed", error);
     throw error;
   }
-
-  console.log("uploadProfilePicture: Database update successful", {
-    profileId,
-    savedPath: path,
-  });
 
   return path;
 }
@@ -636,11 +612,17 @@ export async function deleteProfilePicture(profileId: string, authUserId: string
     .eq("id", profileId)
     .single();
   if (fetchError) throw fetchError;
+
   const path = profile?.profile_picture_url;
+
   if (path) {
+    // Clear cache for this path
+    clearUrlCache("profile-pictures", path);
+
     // Remove from storage
     await supabase.storage.from("profile-pictures").remove([path]);
   }
+
   // Update DB
   const { error: updateError } = await supabase
     .from("profiles")
@@ -722,7 +704,7 @@ export function useProfile() {
     queryKey: ["profile", auth.user?.id],
     queryFn: () => (auth.user?.id ? fetchProfile(auth.user.id) : null),
     enabled: !!auth.user?.id && !auth.isLoading,
-    staleTime: 0, // Always refetch to get latest data
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevent excessive refetching
     gcTime: 60 * 60 * 1000, // 1 hour
     retry: (failureCount, error) => {
       // Don't retry if profile doesn't exist

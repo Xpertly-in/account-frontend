@@ -3,9 +3,9 @@ import { Input } from "@/ui/Input.ui";
 import { useAuth } from "@/store/context/Auth.provider";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { getServiceLabels } from "@/constants/services.constants";
+import { getSpecializationLabels } from "@/constants/specialization.constants";
 
-const SERVICE_OPTIONS = getServiceLabels();
+const SERVICE_OPTIONS = getSpecializationLabels();
 
 export default function CustomerServicesForm({ formData, setFormData, errors, setErrors }: any) {
   const { auth } = useAuth();

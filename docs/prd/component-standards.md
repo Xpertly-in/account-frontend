@@ -356,6 +356,31 @@ All components must meet WCAG AA accessibility standards:
 - **Color Contrast**: Minimum 4.5:1 contrast ratio for text
 - **Focus Management**: Clear focus indicators and logical tab order
 
+### Async Resource Management
+
+For handling async resources like profile pictures, follow these patterns:
+
+```typescript
+// ✅ GOOD: Using dedicated hook for async URLs
+const { url, loading, error } = useProfilePictureUrl(profilePicturePath);
+
+// ✅ GOOD: Proper fallback handling
+<Avatar
+  src={url || undefined}
+  name={name}
+  className={loading ? "animate-pulse" : ""}
+/>
+
+// ❌ BAD: Synchronous URL generation in render
+const displayUrl = getProfilePictureUrl(profilePicturePath); // Causes re-renders
+```
+
+### Caching Best Practices
+
+- **URL Caching**: Use intelligent caching for expensive operations
+- **Cache Invalidation**: Clear cache when resources are updated
+- **Expiry Management**: Set appropriate expiry times (default: 55 minutes)
+
 ### Implementation Standards
 
 ```typescript
@@ -385,12 +410,15 @@ Before submitting any component for review, ensure:
 - [ ] **Size**: Component is under 200 lines
 - [ ] **Naming**: Follows `ComponentName.component.tsx` convention
 - [ ] **Mobile-First**: Uses mobile-first responsive design
-- [ ] **TypeScript**: Passes strict mode compilation
+- [ ] **TypeScript**: Passes strict mode compilation with proper type safety
 - [ ] **Testing**: Has 90%+ test coverage
 - [ ] **Icons**: Uses Phosphor icons with "Icon" suffix
 - [ ] **Performance**: Optimized for rendering and bundle size
 - [ ] **Accessibility**: Meets WCAG AA standards
 - [ ] **Error Handling**: Includes proper error states and boundaries
+- [ ] **Async Resources**: Uses dedicated hooks for async URL management
+- [ ] **Caching**: Implements proper cache invalidation for resource updates
+- [ ] **Re-rendering**: Avoids infinite loops with proper dependency management
 
 ---
 

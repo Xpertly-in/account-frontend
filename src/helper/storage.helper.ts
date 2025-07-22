@@ -1,45 +1,98 @@
 import { supabase } from "@/lib/supabase";
 
+// Cache for signed URLs to prevent re-generation
+const urlCache = new Map<string, { url: string; expires: number }>();
+
 /**
- * Convert a storage path to a full Supabase storage URL
+ * Convert a storage path to a signed Supabase storage URL
  * @param bucket - The storage bucket name
  * @param path - The file path within the bucket
- * @returns Full public URL for the file
+ * @param expiresIn - Expiration time in seconds (default: 1 hour)
+ * @returns Signed URL for the file
  */
-export function getStorageUrl(bucket: string, path: string): string {
+export async function getStorageUrl(
+  bucket: string,
+  path: string,
+  expiresIn = 3600
+): Promise<string> {
   if (!path) {
-    console.log("getStorageUrl: No path provided", { bucket, path });
     return "";
   }
 
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  console.log("getStorageUrl: Generated URL", {
-    bucket,
-    path,
-    publicUrl: data.publicUrl,
-  });
+  // Check cache first
+  const cacheKey = `${bucket}:${path}`;
+  const cached = urlCache.get(cacheKey);
+  const now = Date.now();
 
-  return data.publicUrl;
+  if (cached && cached.expires > now) {
+    return cached.url;
+  }
+
+  try {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
+
+    if (error) {
+      console.error("Failed to create signed URL:", error);
+      return "";
+    }
+
+    // Cache the URL (expires 5 minutes before actual expiry for safety)
+    const cacheExpiry = now + (expiresIn - 300) * 1000;
+    urlCache.set(cacheKey, { url: data.signedUrl, expires: cacheExpiry });
+
+    return data.signedUrl;
+  } catch (error) {
+    console.error("Error creating signed URL:", error);
+    return "";
+  }
 }
 
 /**
- * Get the public URL for a profile picture
+ * Get the signed URL for a profile picture (synchronous version for render methods)
  * @param profilePicturePath - The storage path of the profile picture
- * @returns Full public URL for the profile picture
+ * @returns Cached signed URL or empty string if not available
  */
 export function getProfilePictureUrl(profilePicturePath?: string | null): string {
   if (!profilePicturePath) {
-    console.log("getProfilePictureUrl: No path provided", { profilePicturePath });
     return "";
   }
 
-  const url = getStorageUrl("profile-pictures", profilePicturePath);
-  console.log("getProfilePictureUrl: Converting path to URL", {
-    path: profilePicturePath,
-    url,
-  });
+  // Check if it's already a full URL
+  if (profilePicturePath.startsWith("http://") || profilePicturePath.startsWith("https://")) {
+    return profilePicturePath;
+  }
 
-  return url;
+  // Return cached URL if available
+  const cacheKey = `profile-pictures:${profilePicturePath}`;
+  const cached = urlCache.get(cacheKey);
+  const now = Date.now();
+
+  if (cached && cached.expires > now) {
+    return cached.url;
+  }
+
+  // Return empty string if not cached (async version should be used to populate cache)
+  return "";
+}
+
+/**
+ * Async version to get profile picture URL and populate cache
+ * @param profilePicturePath - The storage path of the profile picture
+ * @returns Promise with signed URL
+ */
+export async function getProfilePictureUrlAsync(
+  profilePicturePath?: string | null
+): Promise<string> {
+  if (!profilePicturePath) {
+    return "";
+  }
+
+  // Check if it's already a full URL
+  if (profilePicturePath.startsWith("http://") || profilePicturePath.startsWith("https://")) {
+    return profilePicturePath;
+  }
+
+  return getStorageUrl("profile-pictures", profilePicturePath);
 }
 
 /**
@@ -55,9 +108,9 @@ export function isFullUrl(url: string): boolean {
  * Convert a storage path to a full URL if it's not already a full URL
  * @param bucket - The storage bucket name
  * @param pathOrUrl - Either a storage path or a full URL
- * @returns Full URL
+ * @returns Promise with full URL
  */
-export function ensureFullUrl(bucket: string, pathOrUrl?: string | null): string {
+export async function ensureFullUrl(bucket: string, pathOrUrl?: string | null): Promise<string> {
   if (!pathOrUrl) return "";
 
   if (isFullUrl(pathOrUrl)) {
@@ -65,4 +118,26 @@ export function ensureFullUrl(bucket: string, pathOrUrl?: string | null): string
   }
 
   return getStorageUrl(bucket, pathOrUrl);
+}
+
+/**
+ * Clear URL cache (useful when user updates profile picture)
+ * @param bucket - Optional bucket to clear specific cache
+ * @param path - Optional path to clear specific cache
+ */
+export function clearUrlCache(bucket?: string, path?: string): void {
+  if (bucket && path) {
+    const cacheKey = `${bucket}:${path}`;
+    urlCache.delete(cacheKey);
+  } else if (bucket) {
+    // Clear all entries for a bucket
+    for (const key of urlCache.keys()) {
+      if (key.startsWith(`${bucket}:`)) {
+        urlCache.delete(key);
+      }
+    }
+  } else {
+    // Clear entire cache
+    urlCache.clear();
+  }
 }

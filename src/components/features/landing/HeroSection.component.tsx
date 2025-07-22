@@ -24,7 +24,7 @@ import {
 } from "@phosphor-icons/react";
 import { CAService } from "@/services/ca.service";
 import { CA } from "@/types/ca.type";
-import { getAllServices } from "@/constants/services.constants";
+import { getAllSpecialization } from "@/constants/specialization.constants";
 
 const HeroSection = () => {
   const [selectedService, setSelectedService] = useState<SelectOption | null>(null);
@@ -134,7 +134,7 @@ const HeroSection = () => {
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 mb-8 border border-gray-100 dark:border-gray-700 max-w-4xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <CustomSelect
-                  options={getAllServices()}
+                  options={getAllSpecialization()}
                   value={selectedService}
                   onChange={option => {
                     // CustomSelect can return array for multi-select, but we only want single values

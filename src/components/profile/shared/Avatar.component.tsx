@@ -17,7 +17,7 @@ import { Button } from "@/ui/Button.ui";
 import { Badge } from "@/ui/Badge.ui";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { getProfilePictureUrl } from "@/helper/storage.helper";
+import { useProfilePictureUrl } from "@/hooks/useProfilePictureUrl";
 
 interface ProfileAvatarProps {
   /** Current avatar URL */
@@ -72,6 +72,9 @@ export function ProfileAvatar({
   const [showActions, setShowActions] = useState(false);
   const [hoveringAvatar, setHoveringAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use the new hook to get profile picture URL
+  const { url: displayUrl, loading: urlLoading } = useProfilePictureUrl(imageUrl);
 
   const handleFileSelect = async (file: File) => {
     if (!onUpload) return;
@@ -140,14 +143,6 @@ export function ProfileAvatar({
   };
 
   const hasImage = imageUrl && imageUrl !== "";
-  const displayUrl = getProfilePictureUrl(imageUrl);
-
-  console.log("Avatar component render:", {
-    imageUrl,
-    hasImage,
-    displayUrl,
-    name,
-  });
 
   return (
     <div className={cn("relative inline-block", className)}>
@@ -181,7 +176,8 @@ export function ProfileAvatar({
           className={cn(
             sizeClasses[size],
             "transition-all duration-200",
-            editable && hoveringAvatar && "brightness-90"
+            editable && hoveringAvatar && "brightness-90",
+            urlLoading && "animate-pulse"
           )}
           onClick={editable ? openFileDialog : undefined}
         />
@@ -269,45 +265,35 @@ export function ProfileAvatar({
         )}
 
         {/* Hover Overlay - Only show when hovering avatar area (not buttons) and no image */}
-        {editable && !isUploading && !isDeleting && hoveringAvatar && !hasImage && !showActions && (
+        {editable && hoveringAvatar && !hasImage && !isUploading && !isDeleting && (
           <div
             className={cn(
-              "absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-full",
+              "absolute inset-0 bg-black/40 rounded-full",
               "flex items-center justify-center",
-              "transition-all duration-200 z-5"
+              "backdrop-blur-sm z-10",
+              "animate-in fade-in-0 duration-200"
             )}
             onClick={openFileDialog}
           >
-            <div className="flex flex-col items-center space-y-1">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
-                <CameraIcon className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-white text-xs font-medium px-2 py-0.5 bg-black/30 rounded-full backdrop-blur-sm">
-                Add Photo
-              </span>
+            <div className="flex flex-col items-center space-y-2">
+              <CameraIcon className="h-8 w-8 text-white" />
+              <span className="text-white text-sm font-medium">Add Photo</span>
             </div>
           </div>
         )}
 
         {/* Verification Badge */}
         {isVerified && (
-          <div className="absolute -bottom-1 -right-1 z-10">
-            <div
-              className={cn(
-                "rounded-full p-1.5",
-                "bg-emerald-500 hover:bg-emerald-600",
-                "border-2 border-white dark:border-gray-800",
-                "shadow-lg",
-                "transition-all duration-200"
-              )}
-            >
-              <CheckCircleIcon className="h-4 w-4 text-white" />
-            </div>
-          </div>
+          <Badge
+            variant="secondary"
+            className="absolute -bottom-2 -right-2 bg-green-500 text-white border-2 border-white dark:border-gray-800 shadow-lg"
+          >
+            <CheckCircleIcon className="h-4 w-4" />
+          </Badge>
         )}
       </div>
 
-      {/* Mobile Action Buttons */}
+      {/* Mobile Upload Buttons */}
       {editable && (size === "lg" || size === "xl") && (
         <div className="mt-4 flex gap-3 sm:hidden">
           <Button

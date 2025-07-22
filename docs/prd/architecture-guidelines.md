@@ -244,6 +244,75 @@ export function useProfile(userId: string) {
 3. **Error Recovery**: Implement retry logic with exponential backoff
 4. **Optimistic Updates**: Use optimistic updates for better UX
 5. **Background Sync**: Leverage TanStack Query's background refetching
+6. **Async Resources**: Use dedicated hooks for expensive async operations
+7. **Cache Invalidation**: Clear caches when resources are updated
+
+#### Async Resource Management
+
+For handling expensive async operations like signed URL generation:
+
+```typescript
+// ✅ GOOD: Dedicated hook with caching
+export function useProfilePictureUrl(profilePicturePath?: string | null) {
+  const [url, setUrl] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!profilePicturePath) return;
+    
+    async function loadUrl() {
+      setLoading(true);
+      try {
+        const signedUrl = await getProfilePictureUrlAsync(profilePicturePath);
+        setUrl(signedUrl);
+      } catch (error) {
+        console.error("Failed to load URL:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadUrl();
+  }, [profilePicturePath]);
+
+  return { url, loading };
+}
+
+// ❌ BAD: Synchronous call in render
+function Component({ profilePath }) {
+  const url = getProfilePictureUrl(profilePath); // Causes re-renders
+  return <img src={url} />;
+}
+```
+
+#### Cache Management Strategy
+
+```typescript
+// URL cache with expiry
+const urlCache = new Map<string, { url: string; expires: number }>();
+
+export function clearUrlCache(bucket?: string, path?: string): void {
+  if (bucket && path) {
+    const cacheKey = `${bucket}:${path}`;
+    urlCache.delete(cacheKey);
+  } else {
+    urlCache.clear();
+  }
+}
+
+// Clear cache on mutations
+export function useUploadProfilePicture(profileId: string, authUserId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadProfilePicture(file, profileId, authUserId),
+    onSuccess: (storagePath) => {
+      // Clear URL cache for updated resource
+      clearUrlCache("profile-pictures", storagePath);
+      queryClient.refetchQueries({ queryKey: ["profile", authUserId] });
+    },
+  });
+}
+```
 
 ---
 

@@ -13,8 +13,6 @@ interface AvatarProps extends React.ComponentProps<typeof AvatarPrimitive.Root> 
 }
 
 function Avatar({ className, src, alt, name, size = "md", children, ...props }: AvatarProps) {
-  console.log("Avatar render:", { src, alt, name, size });
-
   // Helper function to get customer initials for avatar fallback
   const getInitials = (fullName: string): string => {
     if (!fullName || fullName.trim() === "") return "?";
@@ -36,60 +34,67 @@ function Avatar({ className, src, alt, name, size = "md", children, ...props }: 
     return `${firstInitial}${lastInitial}`;
   };
 
-  // Helper function to get dynamic avatar color based on customer name
-  const getAvatarColor = (fullName: string): { light: string; dark: string } => {
+  const getAvatarColor = (fullName: string) => {
     const colorPairs = [
       {
-        light: "from-blue-100 via-blue-200 to-blue-300",
-        dark: "from-blue-500 via-blue-600 to-blue-700",
-      },
-      {
-        light: "from-emerald-100 via-emerald-200 to-emerald-300",
-        dark: "from-emerald-500 via-emerald-600 to-emerald-700",
+        light: "from-indigo-100 via-indigo-200 to-indigo-300",
+        dark: "from-indigo-500 via-indigo-600 to-indigo-700",
       },
       {
         light: "from-purple-100 via-purple-200 to-purple-300",
         dark: "from-purple-500 via-purple-600 to-purple-700",
       },
       {
-        light: "from-orange-100 via-orange-200 to-orange-300",
-        dark: "from-orange-500 via-orange-600 to-orange-700",
-      },
-      {
         light: "from-pink-100 via-pink-200 to-pink-300",
         dark: "from-pink-500 via-pink-600 to-pink-700",
-      },
-      {
-        light: "from-indigo-100 via-indigo-200 to-indigo-300",
-        dark: "from-indigo-500 via-indigo-600 to-indigo-700",
-      },
-      {
-        light: "from-teal-100 via-teal-200 to-teal-300",
-        dark: "from-teal-500 via-teal-600 to-teal-700",
       },
       {
         light: "from-red-100 via-red-200 to-red-300",
         dark: "from-red-500 via-red-600 to-red-700",
       },
       {
-        light: "from-cyan-100 via-cyan-200 to-cyan-300",
-        dark: "from-cyan-500 via-cyan-600 to-cyan-700",
+        light: "from-orange-100 via-orange-200 to-orange-300",
+        dark: "from-orange-500 via-orange-600 to-orange-700",
       },
       {
         light: "from-amber-100 via-amber-200 to-amber-300",
         dark: "from-amber-500 via-amber-600 to-amber-700",
       },
       {
+        light: "from-yellow-100 via-yellow-200 to-yellow-300",
+        dark: "from-yellow-500 via-yellow-600 to-yellow-700",
+      },
+      {
         light: "from-lime-100 via-lime-200 to-lime-300",
         dark: "from-lime-500 via-lime-600 to-lime-700",
       },
       {
-        light: "from-rose-100 via-rose-200 to-rose-300",
-        dark: "from-rose-500 via-rose-600 to-rose-700",
+        light: "from-emerald-100 via-emerald-200 to-emerald-300",
+        dark: "from-emerald-500 via-emerald-600 to-emerald-700",
+      },
+      {
+        light: "from-teal-100 via-teal-200 to-teal-300",
+        dark: "from-teal-500 via-teal-600 to-teal-700",
+      },
+      {
+        light: "from-cyan-100 via-cyan-200 to-cyan-300",
+        dark: "from-cyan-500 via-cyan-600 to-cyan-700",
+      },
+      {
+        light: "from-sky-100 via-sky-200 to-sky-300",
+        dark: "from-sky-500 via-sky-600 to-sky-700",
+      },
+      {
+        light: "from-blue-100 via-blue-200 to-blue-300",
+        dark: "from-blue-500 via-blue-600 to-blue-700",
       },
       {
         light: "from-violet-100 via-violet-200 to-violet-300",
         dark: "from-violet-500 via-violet-600 to-violet-700",
+      },
+      {
+        light: "from-rose-100 via-rose-200 to-rose-300",
+        dark: "from-rose-500 via-rose-600 to-rose-700",
       },
       {
         light: "from-sky-100 via-sky-200 to-sky-300",
@@ -225,8 +230,6 @@ function Avatar({ className, src, alt, name, size = "md", children, ...props }: 
 }
 
 function AvatarImage({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
-  console.log("AvatarImage render:", { src: props.src, alt: props.alt });
-
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
@@ -235,8 +238,6 @@ function AvatarImage({ className, ...props }: React.ComponentProps<typeof Avatar
         "transition-all duration-300 ease-out",
         className
       )}
-      onLoad={() => console.log("Avatar image loaded successfully:", props.src)}
-      onError={e => console.log("Avatar image failed to load:", props.src, e)}
       {...props}
     />
   );
@@ -250,11 +251,7 @@ function AvatarFallback({
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "flex h-full w-full items-center justify-center rounded-full",
-        "bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800",
-        "text-gray-700 dark:text-gray-200 font-semibold",
-        "transition-all duration-300 ease-out",
-        "border border-gray-300/50 dark:border-gray-600/50",
+        "flex h-full w-full items-center justify-center rounded-full bg-muted",
         className
       )}
       {...props}

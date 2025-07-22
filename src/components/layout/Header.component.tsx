@@ -39,7 +39,6 @@ export function Header() {
           .eq("auth_user_id", session.user.id)
           .single();
 
-        console.log("Header role check:", { userId: session.user.id, profile });
         setUserRole(profile?.role || null);
       }
     };

@@ -86,7 +86,6 @@ export default function UserDashboardPage() {
 
         if (profileError) throw profileError;
         setProfile(profileData);
-        console.log("Profile Data:", profileData);
 
         // Load address data - if it exists for customers
         const { data: addressData, error: addressError } = await supabase
@@ -97,7 +96,6 @@ export default function UserDashboardPage() {
 
         if (!addressError && addressData) {
           setAddress(addressData);
-          console.log("Address Data:", addressData);
         }
 
         // Load services data - if it exists for customers
@@ -110,7 +108,6 @@ export default function UserDashboardPage() {
         if (!servicesError && servicesData) {
           const serviceNames = servicesData.map(s => s.service_name);
           setServices(serviceNames);
-          console.log("Services Data:", serviceNames);
         }
       } catch (error) {
         console.error("Error loading profile data:", error);
@@ -160,35 +157,16 @@ export default function UserDashboardPage() {
           : profile[field.key as keyof CustomerProfile];
       }
 
-      console.log(`Field ${field.key}:`, value);
-
       if (field.isArray) {
         if (Array.isArray(value) && value.length > 0) {
           filledWeight += field.weight;
-          console.log(`${field.key} is filled (array) with length:`, value.length);
         }
       } else if (value !== undefined && value !== null && value !== "") {
         filledWeight += field.weight;
-        console.log(`${field.key} is filled`);
       }
     });
 
     const percentage = Math.round((filledWeight / totalWeight) * 100);
-    console.log("Completion Calculation:", {
-      filledWeight,
-      totalWeight,
-      percentage,
-      fields: fields.map(f => ({
-        key: f.key,
-        value:
-          f.key === "services"
-            ? services
-            : f.source
-            ? f.source[f.key]
-            : profile[f.key as keyof CustomerProfile],
-        weight: f.weight,
-      })),
-    });
 
     return percentage;
   };

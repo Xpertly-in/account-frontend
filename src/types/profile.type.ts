@@ -12,13 +12,14 @@ export interface Profile {
   bio?: string;
   gender?: string;
   role: UserRole;
-  city?: string;
-  state?: string;
+  // Removed: city and state (replaced by foreign keys)
   state_id?: number;
   district_id?: number;
   country: string;
-  languages?: string[];
-  specialization?: string[];
+  languages?: string[]; // DEPRECATED: Use language_ids instead
+  language_ids?: number[]; // New normalized field
+  specialization?: string[]; // DEPRECATED: Use specialization_ids instead
+  specialization_ids?: number[]; // New normalized field
   email: string;
   phone?: string;
   whatsapp_available: boolean;

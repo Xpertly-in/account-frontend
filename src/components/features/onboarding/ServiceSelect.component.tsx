@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/ui/Button.ui";
 import { Input } from "@/ui/Input.ui";
 import { useAuth } from "@/store/context/Auth.provider";
-import { getServiceLabels } from "@/constants/services.constants";
+import { getSpecializationLabels } from "@/constants/specialization.constants";
 
 interface ServiceSelectProps {
   value?: string[]; // Not used, but for compatibility
@@ -15,7 +15,7 @@ interface ServiceSelectProps {
   disabled?: boolean;
 }
 
-const SERVICE_OPTIONS = getServiceLabels();
+const SERVICE_OPTIONS = getSpecializationLabels();
 
 export function ServiceSelect({ error, disabled }: ServiceSelectProps) {
   const { auth } = useAuth();

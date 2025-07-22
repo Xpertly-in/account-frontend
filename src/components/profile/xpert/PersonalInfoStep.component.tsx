@@ -3,25 +3,49 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/ui/Input.ui";
 import { Textarea } from "@/ui/Textarea.ui";
 import { Select } from "@/ui/Select.ui";
 import { CheckboxGroup } from "@/ui/CheckboxGroup.ui";
+import { toast } from "sonner";
 import { ProfileAvatar } from "@/components/profile/shared/Avatar.component";
-import { useStates, useDistrictsByState } from "@/services/location.service";
+import { useAuth } from "@/store/context/Auth.provider";
+import { supabase } from "@/lib/supabase";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
-  useUsernameUniqueness,
   useUploadProfilePicture,
   useDeleteProfilePicture,
-  useProfile,
+  useUsernameUniqueness,
 } from "@/services/profile.service";
-import { useAuth } from "@/store/context/Auth.provider";
-import { toast } from "sonner";
-import { useDebounce } from "@/hooks/useDebounce";
-import type { CAProfile } from "@/types/profile.type";
-import { supabase } from "@/lib/supabase";
-import { getProfilePictureUrl } from "@/helper/storage.helper";
+import { CAProfile } from "@/types/profile.type";
+import { useDistrictsByState, useStates } from "@/services/location.service";
+import { useLanguageMap } from "@/services/language.service";
+import {
+  useSpecializationsWithCategories,
+  groupSpecializationsByCategory,
+} from "@/services/specialization.service";
+
+// Common options - now fetched from database
+
+// Type for local form data (updated for new schema)
+type PersonalInfoData = Pick<
+  CAProfile,
+  | "first_name"
+  | "middle_name"
+  | "last_name"
+  | "username"
+  | "phone"
+  | "gender"
+  | "state_id"
+  | "district_id"
+  | "country"
+  | "bio"
+  | "language_ids"
+  | "specialization_ids"
+  | "profile_picture_url"
+  | "whatsapp_available"
+>;
 
 interface PersonalInfoStepProps {
   profile: CAProfile;
@@ -29,65 +53,31 @@ interface PersonalInfoStepProps {
   onFormDataChange: (data: Partial<CAProfile>) => void;
 }
 
-// Curated list of common CA specializations
-const COMMON_SPECIALIZATIONS = [
-  "Tax Planning & Filing",
-  "GST Registration & Filing",
-  "Company Registration",
-  "Statutory Audit",
-  "Financial Audit",
-  "Accounting & Bookkeeping",
-  "Compliance Management",
-  "Business Advisory",
-  "Investment Planning",
-  "Startup Services",
-  "Payroll Management",
-  "TDS Filing",
-  "LLP Registration",
-  "Internal Audit",
-  "Financial Planning",
-  "Business Setup",
-];
-
-const COMMON_LANGUAGES = [
-  "English",
-  "Hindi",
-  "Gujarati",
-  "Marathi",
-  "Tamil",
-  "Telugu",
-  "Kannada",
-  "Malayalam",
-  "Bengali",
-  "Punjabi",
-  "Urdu",
-  "Odia",
-  "Assamese",
-];
-
 export default function PersonalInfoStep({
   profile,
   formData,
   onFormDataChange,
 }: PersonalInfoStepProps) {
   const { auth } = useAuth();
-  const [localData, setLocalData] = useState({
-    first_name: formData.first_name || "",
-    middle_name: formData.middle_name || "",
-    last_name: formData.last_name || "",
-    username: formData.username || "",
-    phone: formData.phone || "",
-    gender: formData.gender || "",
-    city: formData.city || "",
-    state: formData.state || "",
-    state_id: formData.state_id || 0,
-    district_id: formData.district_id || 0,
-    country: formData.country || "India",
-    bio: formData.bio || "",
-    languages: formData.languages || [],
-    specialization: formData.specialization || [],
-    profile_picture_url: profile.profile_picture_url || formData.profile_picture_url || "",
-    whatsapp_available: formData.whatsapp_available || false,
+
+  // Add ref to track if component is initialized
+  const isInitialized = useRef(false);
+
+  const [localData, setLocalData] = useState<PersonalInfoData>({
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    username: "",
+    phone: "",
+    gender: "",
+    state_id: 0,
+    district_id: 0,
+    country: "India",
+    bio: "",
+    language_ids: [],
+    specialization_ids: [],
+    profile_picture_url: "",
+    whatsapp_available: false,
   });
 
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
@@ -95,15 +85,17 @@ export default function PersonalInfoStep({
 
   const { data: states = [], isLoading: statesLoading } = useStates();
   const { data: districts = [], isLoading: districtsLoading } = useDistrictsByState(
-    localData.state_id
+    localData.state_id || undefined
   );
+  const { languages, isLoading: languagesLoading } = useLanguageMap();
+  const { data: specializationsWithCategories = [], isLoading: specializationsLoading } =
+    useSpecializationsWithCategories();
 
-  const uploadMutation = useUploadProfilePicture(profile.id, auth.user?.id || "");
-  const deleteMutation = useDeleteProfilePicture(profile.id, auth.user?.id || "");
-  const profileQuery = useProfile();
+  const uploadMutation = useUploadProfilePicture(profile.id || "", auth.user?.id || "");
+  const deleteMutation = useDeleteProfilePicture(profile.id || "", auth.user?.id || "");
 
   // Debounce username for uniqueness check
-  const debouncedUsername = useDebounce(localData.username, 500);
+  const debouncedUsername = useDebounce(localData.username || "", 500);
 
   // Check username uniqueness only if we have all required data
   const {
@@ -112,10 +104,14 @@ export default function PersonalInfoStep({
     error: usernameError,
   } = useUsernameUniqueness(
     debouncedUsername,
-    localData.state_id,
-    localData.district_id,
-    profile.id
-  );
+    localData.state_id || 0,
+    localData.district_id || 0,
+    profile.id || ""
+  ) as {
+    data: { isUnique: boolean; suggestedUsername?: string } | undefined;
+    isLoading: boolean;
+    error: any;
+  };
 
   // Memoize the form data change handler to prevent excessive re-renders
   const handleFormDataChange = useCallback(
@@ -125,44 +121,37 @@ export default function PersonalInfoStep({
     [onFormDataChange]
   );
 
-  // Sync localData with profile data when profile is loaded or updated
+  // Initialize localData with profile data only once when profile is first loaded
   useEffect(() => {
-    if (profile) {
-      console.log("Syncing profile data:", {
-        profilePictureUrl: profile.profile_picture_url,
-        formDataPictureUrl: formData.profile_picture_url,
-        currentLocalUrl: localData.profile_picture_url,
+    if (profile && !isInitialized.current) {
+      setLocalData({
+        first_name: profile.first_name || "",
+        middle_name: profile.middle_name || "",
+        last_name: profile.last_name || "",
+        username: profile.username || "",
+        phone: profile.phone || "",
+        gender: profile.gender || "",
+        state_id: profile.state_id || 0,
+        district_id: profile.district_id || 0,
+        country: profile.country || "India",
+        bio: profile.bio || "",
+        language_ids: profile.language_ids || [],
+        specialization_ids: profile.specialization_ids || [],
+        profile_picture_url: profile.profile_picture_url || "",
+        whatsapp_available: profile.whatsapp_available || false,
       });
 
-      setLocalData(prev => ({
-        ...prev,
-        first_name: profile.first_name || formData.first_name || "",
-        middle_name: profile.middle_name || formData.middle_name || "",
-        last_name: profile.last_name || formData.last_name || "",
-        username: profile.username || formData.username || "",
-        phone: profile.phone || formData.phone || "",
-        gender: profile.gender || formData.gender || "",
-        city: profile.city || formData.city || "",
-        state: profile.state || formData.state || "",
-        state_id: profile.state_id || formData.state_id || 0,
-        district_id: profile.district_id || formData.district_id || 0,
-        country: profile.country || formData.country || "India",
-        bio: profile.bio || formData.bio || "",
-        languages: profile.languages || formData.languages || [],
-        specialization: profile.specialization || formData.specialization || [],
-        profile_picture_url: profile.profile_picture_url || formData.profile_picture_url || "",
-        whatsapp_available: profile.whatsapp_available || formData.whatsapp_available || false,
-      }));
+      isInitialized.current = true;
     }
-  }, [profile, formData]);
+  }, [profile]);
 
-  // Additional effect to sync profile picture URL specifically when profile changes
+  // Sync profile picture URL when it changes (e.g., after upload)
   useEffect(() => {
-    if (profile && profile.profile_picture_url !== localData.profile_picture_url) {
-      console.log("Profile picture URL changed, updating local state:", {
-        from: localData.profile_picture_url,
-        to: profile.profile_picture_url,
-      });
+    if (
+      profile?.profile_picture_url &&
+      isInitialized.current &&
+      profile.profile_picture_url !== localData.profile_picture_url
+    ) {
       setLocalData(prev => ({
         ...prev,
         profile_picture_url: profile.profile_picture_url || "",
@@ -170,40 +159,52 @@ export default function PersonalInfoStep({
     }
   }, [profile?.profile_picture_url]);
 
-  useEffect(() => {
-    // Debounce form data updates to prevent excessive re-renders
-    const timeoutId = setTimeout(() => {
-      handleFormDataChange(localData);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [localData, handleFormDataChange]);
-
+  // Handle input changes and update form data immediately (no debounce in effect)
   const handleInputChange = (field: string, value: string) => {
-    setLocalData(prev => ({ ...prev, [field]: value }));
+    const newLocalData = { ...localData, [field]: value };
+    setLocalData(newLocalData);
+
+    // Update form data immediately when user makes changes
+    if (isInitialized.current) {
+      handleFormDataChange(newLocalData);
+    }
   };
 
   const handlePhoneChange = (value: string) => {
-    // Remove all non-digits
-    let cleanValue = value.replace(/\D/g, "");
-
-    // Handle +91 prefix
-    if (cleanValue.startsWith("91") && cleanValue.length > 2) {
-      cleanValue = cleanValue.substring(2);
+    // If the input is empty or just "+91", clear it completely
+    if (!value || value === "+91" || value === "+91 ") {
+      setLocalData(prev => ({ ...prev, phone: "" }));
+      return;
     }
 
-    // Limit to 10 digits
+    // Remove all non-digits for processing
+    let cleanValue = value.replace(/\D/g, "");
+
+    // Handle the case where user is backspacing from "+91 X" format
+    // If the clean value starts with "91" and has more digits, remove the "91" prefix
+    if (cleanValue.startsWith("91") && cleanValue.length > 2) {
+      cleanValue = cleanValue.substring(2);
+    } else if (cleanValue.startsWith("91") && cleanValue.length === 2) {
+      // If only "91" remains, clear the input completely
+      setLocalData(prev => ({ ...prev, phone: "" }));
+      return;
+    }
+
+    // Limit to 10 digits (Indian mobile number)
     cleanValue = cleanValue.substring(0, 10);
 
+    // Only format if we have actual digits
+    if (cleanValue.length === 0) {
+      setLocalData(prev => ({ ...prev, phone: "" }));
+      return;
+    }
+
     // Format as +91 XXXXX XXXXX
-    let formattedValue = "";
-    if (cleanValue.length > 0) {
-      formattedValue = "+91 ";
-      if (cleanValue.length <= 5) {
-        formattedValue += cleanValue;
-      } else {
-        formattedValue += cleanValue.substring(0, 5) + " " + cleanValue.substring(5);
-      }
+    let formattedValue = "+91 ";
+    if (cleanValue.length <= 5) {
+      formattedValue += cleanValue;
+    } else {
+      formattedValue += cleanValue.substring(0, 5) + " " + cleanValue.substring(5);
     }
 
     setLocalData(prev => ({ ...prev, phone: formattedValue }));
@@ -234,11 +235,6 @@ export default function PersonalInfoStep({
 
       // Upload to Supabase
       const storagePath = await uploadMutation.mutateAsync(file);
-
-      console.log("Profile picture uploaded successfully:", {
-        storagePath,
-        willRefetchProfile: true,
-      });
 
       toast.success("Profile picture updated!");
 
@@ -307,58 +303,6 @@ export default function PersonalInfoStep({
 
   return (
     <div className="space-y-6">
-      {/* Debug Panel - Remove this after fixing */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-          Debug Info:
-        </h3>
-        <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-          <div>Profile Picture URL: {profile.profile_picture_url || "null"}</div>
-          <div>Local Picture URL: {localData.profile_picture_url || "null"}</div>
-          <div>FormData Picture URL: {formData.profile_picture_url || "null"}</div>
-          <div>Converted URL: {getProfilePictureUrl(localData.profile_picture_url) || "null"}</div>
-          <div>Is Uploading: {isUploadingPicture.toString()}</div>
-        </div>
-        <button
-          onClick={() => profileQuery.refetch()}
-          className="mt-2 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
-        >
-          Refetch Profile
-        </button>
-        <button
-          onClick={() => {
-            const testPath = `${auth.user?.id}/avatar.jpg`;
-            const testUrl = getProfilePictureUrl(testPath);
-            console.log("Test URL generation:", { testPath, testUrl });
-            alert(`Test URL: ${testUrl}`);
-          }}
-          className="mt-2 ml-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-        >
-          Test URL
-        </button>
-        <button
-          onClick={() => {
-            const currentUrl = getProfilePictureUrl(localData.profile_picture_url);
-            console.log("Testing current image URL:", currentUrl);
-
-            // Test if image loads
-            const img = new Image();
-            img.onload = () => {
-              console.log("✅ Image loads successfully!");
-              alert("✅ Image loads successfully!");
-            };
-            img.onerror = e => {
-              console.log("❌ Image failed to load:", e);
-              alert("❌ Image failed to load - check console for details");
-            };
-            img.src = currentUrl;
-          }}
-          className="mt-2 ml-2 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-        >
-          Test Image Load
-        </button>
-      </div>
-
       {/* Header with Profile Picture */}
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
@@ -533,7 +477,7 @@ export default function PersonalInfoStep({
                 ) : usernameCheck?.isUnique === false ? (
                   <div className="text-red-600">
                     <p>Username not available in your location</p>
-                    {usernameCheck.suggestedUsername && (
+                    {usernameCheck?.suggestedUsername && (
                       <p className="mt-1">
                         Suggestion:
                         <button
@@ -600,7 +544,7 @@ export default function PersonalInfoStep({
             Professional Bio
           </label>
           <Textarea
-            value={localData.bio}
+            value={localData.bio || ""}
             onChange={e => handleInputChange("bio", e.target.value)}
             placeholder="Tell us about your professional background and expertise..."
             rows={4}
@@ -612,12 +556,20 @@ export default function PersonalInfoStep({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Languages Spoken
           </label>
-          <CheckboxGroup
-            options={COMMON_LANGUAGES.map(lang => ({ value: lang, label: lang }))}
-            value={localData.languages}
-            onChange={languages => setLocalData(prev => ({ ...prev, languages }))}
-            className="grid grid-cols-2 md:grid-cols-3 gap-2"
-          />
+          {languagesLoading ? (
+            <div className="text-sm text-gray-500">Loading languages...</div>
+          ) : (
+            <CheckboxGroup
+              id="languages"
+              label=""
+              options={languages.map(lang => ({ value: lang.id.toString(), label: lang.name }))}
+              value={(localData.language_ids || []).map(id => id.toString())}
+              onChange={(selectedIds: string[]) => {
+                const languageIds = selectedIds.map(id => parseInt(id));
+                setLocalData(prev => ({ ...prev, language_ids: languageIds }));
+              }}
+            />
+          )}
         </div>
 
         {/* Specializations */}
@@ -625,12 +577,23 @@ export default function PersonalInfoStep({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Areas of Specialization
           </label>
-          <CheckboxGroup
-            options={COMMON_SPECIALIZATIONS.map(spec => ({ value: spec, label: spec }))}
-            value={localData.specialization}
-            onChange={specialization => setLocalData(prev => ({ ...prev, specialization }))}
-            className="grid grid-cols-1 md:grid-cols-2 gap-2"
-          />
+          {specializationsLoading ? (
+            <div className="text-sm text-gray-500">Loading specializations...</div>
+          ) : (
+            <CheckboxGroup
+              id="specializations"
+              label=""
+              options={specializationsWithCategories.map(spec => ({
+                value: spec.id.toString(),
+                label: spec.name,
+              }))}
+              value={(localData.specialization_ids || []).map(id => id.toString())}
+              onChange={(selectedIds: string[]) => {
+                const specializationIds = selectedIds.map(id => parseInt(id));
+                setLocalData(prev => ({ ...prev, specialization_ids: specializationIds }));
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

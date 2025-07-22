@@ -8,7 +8,7 @@ import { useAuth } from "@/store/context/Auth.provider";
 import { useCreateContactRequest } from "@/services/contact-requests.service";
 import { CreateContactRequestData } from "@/types/dashboard/contact-request.type";
 import { UrgencyLevel, ContactPreference } from "@/types/common.type";
-import { URGENCY_OPTIONS, CONTACT_PREFERENCE_OPTIONS } from "@/constants/services.constants";
+import { URGENCY_OPTIONS, CONTACT_PREFERENCE_OPTIONS } from "@/constants/specialization.constants";
 import { Button } from "@/ui/Button.ui";
 import { Input } from "@/ui/Input.ui";
 import { Textarea } from "@/ui/Textarea.ui";

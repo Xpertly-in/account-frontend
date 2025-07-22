@@ -1,130 +1,86 @@
-# Location Data Processing
+# Scripts Directory
 
-This script processes CSV files containing Indian postal location data and imports them into Supabase database.
+This directory contains utility scripts for the Xpertly CA Platform.
 
-## Setup
+## Available Scripts
 
-1. **Create location-data directory:**
+### Migration Management
 
-   ```bash
-   mkdir location-data
-   ```
+#### `rename-migrations.js`
+Automatically renames SQL migration files with sequential prefixes for clear execution order.
 
-2. **Add your CSV files:**
-   Place your CSV files in the `location-data` directory. The script will process all `.csv` files in this directory.
+**Purpose**: Ensures migration files have a clear, sequential naming convention (001-, 002-, etc.) based on chronological order.
 
-3. **Environment variables:**
-   Make sure you have the following environment variables set:
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   ```
-
-## Usage
-
-Run the location processing script:
-
+**Usage:**
 ```bash
-npm run process-locations
+# Preview changes without making any modifications
+node scripts/rename-migrations.js --dry-run
+
+# Rename files with interactive confirmation
+node scripts/rename-migrations.js
+
+# Rename files without confirmation prompt
+node scripts/rename-migrations.js --confirm
 ```
 
-## CSV Format
+**Features:**
+- Extracts dates from filenames (YYYY-MM-DD format)
+- Sorts files chronologically, then alphabetically
+- Adds three-digit sequential prefixes (001-, 002-, 003-, etc.)
+- Safety measures with dry-run mode and confirmation prompts
+- Comprehensive logging and error handling
 
-The script expects CSV files with the following columns (in order):
-
-1. `circlename` - Postal circle name
-2. `regionname` - Region name
-3. `divisionname` - Division name
-4. `officename` - Post office name
-5. `pincode` - PIN code
-6. `officetype` - Office type
-7. `delivery` - Delivery status
-8. `district` - District name
-9. `statename` - State name
-
-## Features
-
-- **Batch Processing**: Processes data in batches of 1000 records to avoid overwhelming the database
-- **Duplicate Detection**: Uses file hashing to avoid processing the same file twice
-- **Progress Tracking**: Shows detailed progress for states and districts processing
-- **Error Handling**: Gracefully handles errors and continues processing other files
-- **Resume Support**: Can resume processing if interrupted (skips already processed files)
-
-## Database Tables
-
-The script populates two main tables:
-
-### States Table
-
-- `id` - Primary key
-- `name` - State name
-- `code` - State code (first 2 letters)
-- `created_at` - Timestamp
-
-### Districts Table
-
-- `id` - Primary key
-- `name` - District name
-- `state_id` - Foreign key to states table
-- `created_at` - Timestamp
-
-### Data Imports Table
-
-- `id` - Primary key
-- `file_name` - Name of processed file
-- `file_hash` - Hash for duplicate detection
-- `status` - Processing status (pending/processing/completed/failed)
-- `records_processed` - Number of records successfully processed
-- `records_skipped` - Number of records skipped
-- `stats` - JSON with processing statistics
-- `created_at` - Timestamp
-- `completed_at` - Completion timestamp
-
-## Architecture
-
-The location processing system uses a **local-first approach**:
-
-1. **CSV files** are placed in the `location-data/` directory
-2. **Node.js script** processes files locally with full control
-3. **Batch processing** prevents database overload
-4. **Duplicate detection** ensures data integrity
-5. **Supabase database** stores the processed location data
-
-This approach avoids the limitations of edge functions (timeouts, memory limits) and provides reliable processing of large datasets.
-
-## Example Output
-
+**Example Output:**
 ```
-🚀 Starting location data processing...
-📋 Found 1 CSV files to process
+📋 Proposed execution order:
 
-📄 Processing file: location-data.csv
-📊 Processing 150000 rows from location-data.csv
-📋 Headers: ['circlename', 'regionname', 'divisionname', ...]
-📍 Parsed 149500 valid locations
-🏛️  Processing 36 unique states
-   Processed 36/36 states
-🏘️  Processing 640 unique districts
-   Processed 640/640 districts
-✅ Successfully processed location-data.csv
-   States: 36
-   Districts: 640
-   Skipped: 500
-
-✅ All files processed successfully!
-🎉 Location data processing completed!
+   001. 🔄 RENAME base.sql
+        → 001-base.sql
+   002. 🔄 RENAME location-management-simple-2025-01-15.sql
+        → 002-location-management-simple-2025-01-15.sql
 ```
 
-## Troubleshooting
+### Location Data Processing
 
-- **Missing environment variables**: Make sure Supabase URL and service role key are set
-- **File not found**: Ensure CSV files are in the `location-data` directory
-- **Database errors**: Check Supabase connection and table structure
-- **Memory issues**: The script processes files in batches to avoid memory problems
+#### `process-location-data.js`
+Processes CSV location data and imports it into the database.
 
-## Performance
+**Purpose**: Import Indian postal data (states, districts) from CSV files into the database.
 
-- Processes approximately 1000 records per batch
-- Includes 100ms delay between batches to prevent overwhelming the database
-- Can handle large CSV files (tested with 150k+ records)
-- Duplicate detection prevents reprocessing the same data
+**Features:**
+- Batch processing for performance
+- Duplicate detection and prevention
+- File hash tracking to avoid reprocessing
+- Comprehensive logging and statistics
+
+#### `clear-location-imports.js`
+Utility to clear imported location data and reset the import tracking.
+
+**Purpose**: Clean up location data for testing or re-importing fresh data.
+
+## Usage Guidelines
+
+### Before Running Scripts
+
+1. **Backup your data**: Always ensure you have backups before running scripts that modify files or data
+2. **Test mode first**: Use dry-run or test modes when available
+3. **Check dependencies**: Ensure Node.js and required packages are installed
+4. **Review output**: Always review script output before confirming destructive operations
+
+### Adding New Scripts
+
+When adding new scripts:
+1. Follow the existing naming conventions
+2. Include comprehensive error handling
+3. Add dry-run or preview modes for destructive operations
+4. Include clear logging and progress indicators
+5. Update this README with script documentation
+
+## Error Handling
+
+All scripts include:
+- Input validation and error checking
+- Graceful failure handling
+- Clear error messages with context
+- Exit codes for programmatic usage
+- Safety confirmations for destructive operations

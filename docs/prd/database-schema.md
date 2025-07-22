@@ -123,71 +123,57 @@ CREATE TRIGGER trigger_update_completion_timestamp
 
 ### Core Tables
 
-#### Profiles Table
-```sql
-CREATE TABLE public.profiles (
-  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  auth_user_id uuid NOT NULL UNIQUE REFERENCES auth.users(id),
-  username text UNIQUE,
-  first_name text,
-  middle_name text,
-  last_name text,
-  profile_picture_url text,
-  bio text,
-  gender text,
-  role text,
-  city text,
-  state text,
-  state_id INTEGER REFERENCES public.states(id),
-  district_id INTEGER REFERENCES public.districts(id),
-  country text DEFAULT 'India',
-  languages text[],
-  specialization text[],
-  email text UNIQUE,
-  phone text UNIQUE,
-  whatsapp_available boolean DEFAULT false,
-  is_active boolean DEFAULT true,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now()
-);
-```
+### `profiles` - User Profile Data
 
-#### Contact Requests Table
-```sql
-CREATE TABLE public.contact_requests (
-  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  customer_name text NOT NULL,
-  customer_email text NOT NULL,
-  customer_phone text,
-  service_needed text NOT NULL,
-  urgency text NOT NULL,
-  contact_preference text NOT NULL,
-  subject text NOT NULL,
-  message text NOT NULL,
-  status text DEFAULT 'new',
-  ca_id uuid NOT NULL REFERENCES public.profiles(id),
-  notes text,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now()
-);
-```
+**Purpose**: Central user profile information for both CAs and customers
 
-#### Location Data Tables
-```sql
-CREATE TABLE public.states (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+**Key Fields**:
+- `id` - Primary key (UUID)
+- `auth_user_id` - Foreign key to Supabase auth.users
+- `role` - User type (CA or Customer)
+- `first_name`, `middle_name`, `last_name` - Name components
+- `username` - Unique identifier within location
+- `state_id`, `district_id` - Foreign keys to location tables (normalized)
+- `language_ids` - Array of language IDs (normalized)
+- `specialization` - Array of service specializations
+- `profile_completion_percentage` - Completion tracking
 
-CREATE TABLE public.districts (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  state_id INTEGER NOT NULL REFERENCES public.states(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  UNIQUE(name, state_id)
-);
-```
+**Schema Changes (January 16, 2025)**:
+- ✅ **Removed**: `city` and `state` text columns (replaced by foreign keys)
+- ✅ **Added**: `language_ids` INTEGER[] for normalized language references
+- ✅ **Deprecated**: `languages` TEXT[] (kept temporarily for migration safety)
+
+### `languages` - Language Reference Table ✨ **NEW**
+
+**Purpose**: Normalized language data for multi-language support
+
+**Key Fields**:
+- `id` - Primary key (SERIAL)
+- `name` - Language name in English
+- `code` - ISO language code (optional)
+- `native_name` - Language name in native script
+- `is_active` - Enable/disable languages
+
+**Benefits**:
+- Consistent language data across the platform
+- Support for native language names and ISO codes
+- Easy to add new languages without schema changes
+- Better data integrity and referential consistency
+
+### `states` and `districts` - Location Reference Tables
+
+**Purpose**: Hierarchical location data for India
+
+**Key Features**:
+- States table with standardized state names and codes
+- Districts table with foreign key relationships to states
+- Proper indexing for performance
+- Unique constraints to prevent duplicates
+
+**Integration**:
+- Profiles reference `state_id` and `district_id` instead of text fields
+- Eliminates data inconsistency and typos
+- Enables proper location-based filtering and search
 
 ### Profile Completion Tracking
 
